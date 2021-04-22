@@ -10,7 +10,7 @@ lane :update_dependencies do |options|
   git_pull
   yarn(
     command: "install",
-    package_path: "../../../../package.json"
+    package_path: "#{ENV['PROJECT_DIR']}/package.json"
   )
 end
 
@@ -27,12 +27,12 @@ end
 
 desc "Commit changes to repo"
 lane :sync_git do |options|
-  git_add(path: "../../../../*")
-  git_commit(path: "../../../../*", message: options[:message])
+  git_add(path: "#{ENV['PROJECT_DIR']}/*")
+  git_commit(path: "#{ENV['PROJECT_DIR']}/*", message: options[:message])
   push_to_git_remote
 end
 
-ios_project_path = "../../../../ios"
+ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
 xcodeproj = "#{ios_project_path}/edular.xcodeproj"
 
 desc 'Process build'
@@ -79,8 +79,8 @@ lane :process_build do |options|
     include_symbols: true,
     include_bitcode: true,
     skip_profile_detection: true,
-    build_path: "./builds",
-    output_directory: "./builds"
+    build_path: "#{ENV['PROJECT_DIR']}/fastlane/builds",
+    output_directory: "#{ENV['PROJECT_DIR']}/fastlane/builds"
   )
   if options[:installr]
     file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
@@ -209,7 +209,7 @@ lane :process_prod_build do |options|
 end
 
 
-desc "Process Staging build"
+desc "Process android build"
 lane :process_android_build do |options|
   update_dependencies(
     git_branch: options[:branch]
@@ -218,13 +218,103 @@ lane :process_android_build do |options|
     task: 'assemble',
     flavor: options[:flavor],
     build_type: options[:build_type],
-    project_dir: '../../../../android'
+    project_dir: "#{ENV['PROJECT_DIR']}/android",
+    properties: options[:properties]
   )
   if options[:installr]
     file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
     upload_installr(
       file: file,
       notes: options[:notes] || "Fastlane build"
+    )
+  end
+end
+
+platform :ios do
+  desc "Prepare staging build"
+  lane :staging do |options|
+    process_staging_build(
+      branch: options[:branch],
+      installr: options[:installr],
+    )
+  end
+
+  desc "Prepare adhoc build"
+  lane :adhoc do |options|
+    process_adhoc_build(
+      branch: options[:branch],
+      installr: options[:installr],
+    )
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :prod do |options|
+    process_prod_build(
+      branch: options[:branch],
+      installr: options[:installr],
+      version_number: options[:version_number],
+      build_number: options[:build_number]
+    )
+  end
+end
+
+platform :android do
+  desc "Process Staging build"
+  lane :staging do |options|
+    process_android_build(
+      branch: options[:branch],
+      installr: options[:installr],
+      flavor: ENV["FLAVOR"],
+      build_type: 'ReleaseStaging'
+    )
+  end
+
+  desc "Process Adhoc build"
+  lane :adhoc do
+    process_android_build(
+      branch: options[:branch],
+      installr: options[:installr],
+      flavor: ENV["FLAVOR"],
+      build_type: 'Release'
+    )
+  end
+
+  desc "Process Prod build"
+  lane :prod do |options|
+    process_android_build(
+      branch: options[:branch],
+      installr: options[:installr],
+      flavor: ENV["FLAVOR"],
+      build_type: 'Release',
+      properties: {
+        "versionCode" => options[:build_number],
+        "versionName" => options[:version_number]
+      }
+    )
+    upload_to_play_store(
+      track: 'internal',
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Update Store Listing"
+  lane :store_listing do |options|
+    metadata = options[:metadata] || false
+    changelogs = options[:changelogs] || false
+    images = options[:images] || false
+    screenshots = options[:screenshots] || false
+    UI.message "Update Store Listing with metadata:#{metadata} changelogs:#{changelogs} images:#{images} screenshots:#{screenshots}"
+    upload_to_play_store(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: !metadata,
+      skip_upload_changelogs: !changelogs,
+      skip_upload_images: !images,
+      skip_upload_screenshots: !screenshots ,
     )
   end
 end

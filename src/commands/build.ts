@@ -119,7 +119,7 @@ hello world from ./src/build.ts!
     const params = await this.askForMissingFields(flags)
     const {client, target, env, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
-    shell.cd(`builder/clients/${client}/${target}`)
-    shell.exec(`fastlane ${env} ${parameters.join(' ')}`)
+    shell.cd(`fastlane/clients/${client}`)
+    shell.exec(`fastlane ${target} ${env} ${parameters.join(' ')}`)
   }
 }
