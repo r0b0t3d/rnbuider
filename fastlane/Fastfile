@@ -1,0 +1,27 @@
+desc "Update project dependencies"
+lane :update_dependencies do |options|
+  sh("git checkout " + options[:git_branch])
+  git_pull
+  yarn(
+    command: "install",
+    package_path: "../../../../package.json"
+  )
+end
+
+desc "Upload build to installr"
+lane :upload_installr do |options|
+  notes = options[:notes] || "Build from Fastlane"
+  installr(
+      api_token: "6gVCS6yya8gyfh0HD9hZeWGPUuyxxAoZ",
+      ipa: options[:file],
+      notes: notes,
+      notify: "true"
+    )
+end
+
+desc "Commit changes to repo"
+lane :sync_git do |options|
+  git_add(path: "../../../../*")
+  git_commit(path: "../../../../*", message: options[:message])
+  push_to_git_remote
+end
