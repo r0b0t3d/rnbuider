@@ -119,6 +119,7 @@ hello world from ./src/build.ts!
     const params = await this.askForMissingFields(flags)
     const {client, target, env, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
+    shell.exec('bundle install')
     shell.cd(`fastlane/clients/${client}`)
     shell.exec(`bundle exec fastlane ${target} ${env} ${parameters.join(' ')}`)
   }
