@@ -68,14 +68,6 @@ lane :process_build do |options|
     scheme: options[:scheme],
     export_method: options[:export_method],
     output_name: options[:output_name],
-    # export_options: {
-    #   provisioningProfiles: {
-    #     "#{ENV['APP_IDENTIFIER']}.staging" => ENV["sigh_#{ENV['APP_IDENTIFIER']}.staging_adhoc_profile-name"],
-    #     "#{ENV['APP_IDENTIFIER']}.staging.AnuNotificationServiceExtension" => ENV["sigh_#{ENV['APP_IDENTIFIER']}.staging.AnuNotificationServiceExtension_adhoc_profile-name"],
-    #     "#{ENV['APP_IDENTIFIER']}" => ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-name"],
-    #     "#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension" => ENV["sigh_#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension_adhoc_profile-name"]
-    #   }
-    # },
     include_symbols: true,
     include_bitcode: true,
     skip_profile_detection: true,
@@ -93,8 +85,10 @@ end
 
 desc "Process staging build"
 lane :process_staging_build do |options|
+  app_id = ENV['APP_IDENTIFIER_STAGING'] || ENV['APP_IDENTIFIER'] + ".staging"
+  app_name = ENV['APP_NAME_STAGING'] || ENV['APP_NAME']
   match(
-    app_identifier: ["#{ENV['APP_IDENTIFIER']}.staging", "#{ENV['APP_IDENTIFIER']}.staging.AnuNotificationServiceExtension"],
+    app_identifier: [app_id, "#{app_id}.AnuNotificationServiceExtension"],
     type: 'adhoc',
     username: ENV['APPLE_ID'],
     team_id: ENV['APPLE_TEAM_ID'],
@@ -105,10 +99,10 @@ lane :process_staging_build do |options|
     branch: options[:branch],
     installr: options[:installr],
     scheme: "#{ENV['CLIENT']} staging",
-    output_name: ENV['STAGING_NAME'],
+    output_name: app_name,
     export_method: "ad-hoc",
-    profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}.staging_adhoc_profile-path"],
-    profile_notification: ENV["sigh_#{ENV['APP_IDENTIFIER']}.staging.AnuNotificationServiceExtension_adhoc_profile-path"]
+    profile: ENV["sigh_#{app_id}_adhoc_profile-path"],
+    profile_notification: ENV["sigh_#{app_id}.AnuNotificationServiceExtension_adhoc_profile-path"]
   )
   sync_git(
     message: "chore: staging build"
@@ -129,7 +123,7 @@ lane :process_adhoc_build do |options|
     branch: options[:branch],
     installr: options[:installr],
     scheme: "#{ENV['CLIENT']} prod",
-    output_name: ENV['PROD_NAME'],
+    output_name: ENV['APP_NAME'],
     export_method: "ad-hoc",
     profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-path"],
     profile_notification: ENV["sigh_#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension_adhoc_profile-path"]
@@ -193,7 +187,7 @@ lane :process_prod_build do |options|
     branch: options[:branch],
     installr: options[:installr],
     scheme: "#{ENV['CLIENT']} prod",
-    output_name: ENV['PROD_NAME'],
+    output_name: ENV['APP_NAME'],
     export_method: "app-store",
     profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-path"],
     profile_notification: ENV["sigh_#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension_adhoc_profile-path"]
@@ -261,11 +255,13 @@ end
 platform :android do
   desc "Process Staging build"
   lane :staging do |options|
+    flavor = ENV["FLAVOR_STAGING"] || ENV["FLAVOR"]
+    build_type = ENV["BUILD_TYPE_STAGING"] || ENV["BUILD_TYPE"]
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
-      flavor: ENV["FLAVOR"],
-      build_type: 'ReleaseStaging'
+      flavor: flavor,
+      build_type: build_type
     )
   end
 
@@ -275,7 +271,7 @@ platform :android do
       branch: options[:branch],
       installr: options[:installr],
       flavor: ENV["FLAVOR"],
-      build_type: 'Release'
+      build_type: ENV["BUILD_TYPE"],
     )
   end
 
@@ -285,7 +281,7 @@ platform :android do
       branch: options[:branch],
       installr: options[:installr],
       flavor: ENV["FLAVOR"],
-      build_type: 'Release',
+      build_type: ENV["BUILD_TYPE"],
       properties: {
         "versionCode" => options[:build_number],
         "versionName" => options[:version_number]

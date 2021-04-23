@@ -30,7 +30,6 @@ USAGE
 # Commands
 <!-- commands -->
 * [`rnbuilder build [BUILD]`](#rnbuilder-build-build)
-* [`rnbuilder hello [FILE]`](#rnbuilder-hello-file)
 * [`rnbuilder help [COMMAND]`](#rnbuilder-help-command)
 
 ## `rnbuilder build [BUILD]`
@@ -56,26 +55,6 @@ EXAMPLE
 ```
 
 _See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.0.0/src/commands/build.ts)_
-
-## `rnbuilder hello [FILE]`
-
-describe the command here
-
-```
-USAGE
-  $ rnbuilder hello [FILE]
-
-OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
-
-EXAMPLE
-  $ rnbuilder hello
-  hello world from ./src/hello.ts!
-```
-
-_See code: [src/commands/hello.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.0.0/src/commands/hello.ts)_
 
 ## `rnbuilder help [COMMAND]`
 
