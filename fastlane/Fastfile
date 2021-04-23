@@ -55,7 +55,7 @@ end
 
 platform :ios do
   ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
-  xcodeproj = "#{ios_project_path}/edular.xcodeproj"
+  xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ']}"
 
   def ensure_temp_keychain(name)
     delete_keychain(
@@ -83,23 +83,30 @@ platform :ios do
       use_bundle_exec: true,
       try_repo_update_on_error: true,
     )
+    targets = [ENV['CLIENT']]
+    if ENV['SERVICE_EXTENSION_NAME']
+      targets = targets.push(ENV['SERVICE_EXTENSION_NAME'])
+    end
+    
     update_project_team( # Set the right team on your project
       path: xcodeproj,
       teamid: ENV['APPLE_TEAM_ID'],
-      targets: ["anu", "AnuNotificationServiceExtension"]
+      targets: targets
     )
     update_project_provisioning(
       xcodeproj: xcodeproj,
       profile: options[:profile],
-      target_filter: "anu", # matches name or type of a target
+      target_filter: ENV['CLIENT'], # matches name or type of a target
       build_configuration: "Release",
     )
-    update_project_provisioning(
-      xcodeproj: xcodeproj,
-      profile: options[:profile_notification],
-      target_filter: "AnuNotificationServiceExtension",
-      build_configuration: "Release",
-    )
+    if ENV['SERVICE_EXTENSION_NAME']
+      update_project_provisioning(
+        xcodeproj: xcodeproj,
+        profile: options[:profile_service_extension],
+        target_filter: ENV['SERVICE_EXTENSION_NAME'],
+        build_configuration: "Release",
+      )
+    end
     build_app(
       workspace: "#{ios_project_path}/edular.xcworkspace",
       clean: true,
@@ -125,8 +132,12 @@ platform :ios do
   lane :staging do |options|
     app_id = ENV['APP_IDENTIFIER_STAGING'] || ENV['APP_IDENTIFIER'] + ".staging"
     app_name = ENV['APP_NAME_STAGING'] || ENV['APP_NAME']
+    app_identifier = [app_id]
+    if ENV['SERVICE_EXTENSION_NAME'] 
+      app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
+    end
     match(
-      app_identifier: [app_id, "#{app_id}.AnuNotificationServiceExtension"],
+      app_identifier: app_identifier,
       type: 'adhoc',
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
@@ -142,7 +153,7 @@ platform :ios do
       output_name: app_name,
       export_method: "ad-hoc",
       profile: ENV["sigh_#{app_id}_adhoc_profile-path"],
-      profile_notification: ENV["sigh_#{app_id}.AnuNotificationServiceExtension_adhoc_profile-path"]
+      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_adhoc_profile-path"]
     )
     sync_git(
       message: "chore: staging build"
@@ -151,8 +162,12 @@ platform :ios do
 
   desc "Prepare adhoc build"
   lane :adhoc do |options|
+    app_identifier = [ENV['APP_IDENTIFIER']]
+    if ENV['SERVICE_EXTENSION_NAME']
+      app_identifier = app_identifier.push("#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}")
+    end
     match(
-      app_identifier: [ENV['APP_IDENTIFIER'], "#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension"],
+      app_identifier: app_identifier,
       type: 'adhoc',
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
@@ -168,7 +183,7 @@ platform :ios do
       output_name: ENV['APP_NAME'],
       export_method: "ad-hoc",
       profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-path"],
-      profile_notification: ENV["sigh_#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension_adhoc_profile-path"]
+      profile_service_extension: ENV["sigh_#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}_adhoc_profile-path"]
     )
     sync_git(
       message: "chore: adhoc build"
@@ -192,7 +207,7 @@ platform :ios do
         UI.error "latest_testflight_build_number got error #{ex}. Trying to get build number from plist"
         latest_build = get_build_number_from_plist(
           xcodeproj: xcodeproj,
-          target: 'anu',
+          target: ENV['CLIENT'],
         ).to_i
         UI.message "Build number in plist: #{latest_build}"
       end
@@ -201,25 +216,33 @@ platform :ios do
     increment_version_number_in_plist(
       xcodeproj: xcodeproj,
       version_number: options[:version_number], # Set a specific version number
-      target: 'anu'
+      target: ENV['CLIENT']
     )
-    increment_version_number_in_plist(
-      xcodeproj: xcodeproj,
-      version_number: options[:version_number], # Set a specific version number
-      target: 'AnuNotificationServiceExtension'
-    )
+    if ENV['SERVICE_EXTENSION_NAME']
+      increment_version_number_in_plist(
+        xcodeproj: xcodeproj,
+        version_number: options[:version_number], # Set a specific version number
+        target: ENV['SERVICE_EXTENSION_NAME']
+      )
+    end
     increment_build_number_in_plist(
       xcodeproj: xcodeproj,
       build_number: build_number.to_s,
-      target: 'anu'
+      target: ENV['CLIENT']
     )
-    increment_build_number_in_plist(
-      xcodeproj: xcodeproj,
-      build_number: build_number.to_s,
-      target: 'AnuNotificationServiceExtension'
-    )
+    if ENV['SERVICE_EXTENSION_NAME']
+      increment_build_number_in_plist(
+        xcodeproj: xcodeproj,
+        build_number: build_number.to_s,
+        target: ENV['SERVICE_EXTENSION_NAME']
+      )
+    end
+    app_identifier = [ENV['APP_IDENTIFIER']]
+    if ENV['SERVICE_EXTENSION_NAME']
+      app_identifier = app_identifier.push("#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}")
+    end
     match(
-      app_identifier: [ENV['APP_IDENTIFIER'], "#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension"],
+      app_identifier: app_identifier,
       type: 'appstore',
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
@@ -234,7 +257,7 @@ platform :ios do
       output_name: ENV['APP_NAME'],
       export_method: "app-store",
       profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-path"],
-      profile_notification: ENV["sigh_#{ENV['APP_IDENTIFIER']}.AnuNotificationServiceExtension_adhoc_profile-path"]
+      profile_service_extension: ENV["sigh_#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}_adhoc_profile-path"]
     )
     upload_to_testflight(
       username: ENV['APPLE_ID'],
