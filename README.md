@@ -20,7 +20,7 @@ $ npm install -g rnbuilder
 $ rnbuilder COMMAND
 running command...
 $ rnbuilder (-v|--version|version)
-rnbuilder/0.0.1 darwin-x64 node-v12.19.1
+rnbuilder/0.0.2 darwin-x64 node-v12.19.1
 $ rnbuilder --help [COMMAND]
 USAGE
   $ rnbuilder COMMAND
@@ -54,7 +54,7 @@ EXAMPLE
   hello world from ./src/build.ts!
 ```
 
-_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.0.1/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.0.2/src/commands/build.ts)_
 
 ## `rnbuilder help [COMMAND]`
 
