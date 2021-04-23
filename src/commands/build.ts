@@ -120,6 +120,6 @@ hello world from ./src/build.ts!
     const {client, target, env, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
     shell.cd(`fastlane/clients/${client}`)
-    shell.exec(`fastlane ${target} ${env} ${parameters.join(' ')}`)
+    shell.exec(`bundle exec fastlane ${target} ${env} ${parameters.join(' ')}`)
   }
 }
