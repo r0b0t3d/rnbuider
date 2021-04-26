@@ -30,7 +30,11 @@ end
 desc "Commit changes to repo"
 private_lane :sync_git do |options|
   git_add(path: "#{ENV['PROJECT_DIR']}/*")
-  git_commit(path: "#{ENV['PROJECT_DIR']}/*", message: options[:message])
+  git_commit(
+    path: "#{ENV['PROJECT_DIR']}/*",
+    message: options[:message],
+    allow_nothing_to_commit: true
+  )
   push_to_git_remote
 end
 
