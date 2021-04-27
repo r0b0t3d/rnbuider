@@ -11,7 +11,6 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
-    "@types/shelljs": "^0.8.8",
     "inquirer": "^8.0.0",
     "shelljs": "^0.8.4",
     "tslib": "^1"
@@ -23,6 +22,7 @@
     "@types/inquirer": "^7.3.1",
     "@types/mocha": "^5",
     "@types/node": "^10",
+    "@types/shelljs": "^0.8.8",
     "chai": "^4",
     "eslint": "^5.13",
     "eslint-config-oclif": "^3.1",

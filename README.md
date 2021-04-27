@@ -31,6 +31,7 @@ USAGE
 <!-- commands -->
 * [`rnbuilder build [BUILD]`](#rnbuilder-build-build)
 * [`rnbuilder help [COMMAND]`](#rnbuilder-help-command)
+* [`rnbuilder initialize`](#rnbuilder-initialize)
 
 ## `rnbuilder build [BUILD]`
 
@@ -72,4 +73,19 @@ OPTIONS
 ```
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.2/src/commands/help.ts)_
+
+## `rnbuilder initialize`
+
+Initialize the environment for first run
+
+```
+USAGE
+  $ rnbuilder initialize
+
+EXAMPLE
+  $ rnbuilder initialize
+  initialize environment for first run from ./src/initialize.ts!
+```
+
+_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.0.2/src/commands/initialize.ts)_
 <!-- commandsstop -->
