@@ -283,7 +283,8 @@ platform :android do
       git_branch: options[:branch]
     )
     gradle(
-      task: "clean"
+      task: "clean",
+      project_dir: "#{ENV['PROJECT_DIR']}/android",
     )
     gradle(
       task: 'assemble',
