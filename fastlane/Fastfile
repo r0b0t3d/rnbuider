@@ -261,8 +261,8 @@ platform :ios do
       scheme: "#{ENV['CLIENT']} prod",
       output_name: ENV['APP_NAME'],
       export_method: "app-store",
-      profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-path"],
-      profile_service_extension: ENV["sigh_#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}_adhoc_profile-path"]
+      profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_appstore_profile-path"],
+      profile_service_extension: ENV["sigh_#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}_appstore_profile-path"]
     )
     upload_to_testflight(
       username: ENV['APPLE_ID'],
