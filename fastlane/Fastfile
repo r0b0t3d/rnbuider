@@ -326,16 +326,20 @@ platform :android do
 
   desc "Process Prod build"
   lane :prod do |options|
+    android_set_version_name(
+      version_name: options[:version_number],
+      gradle_file: "#{ENV['PROJECT_DIR']}/android/app/build.gradle"
+    )
+    android_set_version_code(
+      version_code: options[:build_number],
+      gradle_file: "#{ENV['PROJECT_DIR']}/android/app/build.gradle"
+    )
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
       task: 'bundle',
       flavor: ENV["FLAVOR"],
-      build_type: ENV["BUILD_TYPE"],
-      properties: {
-        "versionCode" => options[:build_number],
-        "versionName" => options[:version_number]
-      }
+      build_type: ENV["BUILD_TYPE"]
     )
     upload_to_play_store(
       track: 'internal',
