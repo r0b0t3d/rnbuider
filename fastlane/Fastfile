@@ -287,7 +287,7 @@ platform :android do
       project_dir: "#{ENV['PROJECT_DIR']}/android",
     )
     gradle(
-      task: 'assemble',
+      task: options[:task] || 'assemble',
       flavor: options[:flavor],
       build_type: options[:build_type],
       project_dir: "#{ENV['PROJECT_DIR']}/android",
@@ -329,6 +329,7 @@ platform :android do
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
+      task: 'bundle',
       flavor: ENV["FLAVOR"],
       build_type: ENV["BUILD_TYPE"],
       properties: {
