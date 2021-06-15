@@ -70,7 +70,7 @@ platform :ios do
       name: name,
       password: 'rnbuilder',
       unlock: true,
-      timeout: false
+      timeout: 3600
     )
   end
 
