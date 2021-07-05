@@ -3,6 +3,7 @@ import {Command, flags} from '@oclif/command'
 import * as inquirer from 'inquirer'
 import * as shell from 'shelljs'
 import {buildKeyValuePairs, getDirectories} from '../utils'
+import * as fs from 'fs'
 
 export default class Build extends Command {
   static description = 'Build react native apps'
@@ -86,11 +87,13 @@ hello world from ./src/build.ts!
         default: true,
       })
     } else {
+      const appVersions = require(process.cwd() + '/app.json')
+      const appVersion = appVersions[result.client][result.target]
       postQuestions.push({
         type: 'input',
         name: 'version_number',
         message: 'What is the version number?',
-        suffix: '(e.g: 1.0.0)',
+        suffix: appVersion ? ` (latest: ${appVersion.version})` : ' (e.g: 1.0.0)',
         validate: (input: string) => {
           if (!input) {
             return 'You need to specify the version'
@@ -102,6 +105,7 @@ hello world from ./src/build.ts!
         type: 'input',
         name: 'build_number',
         message: 'What is the build number?',
+        suffix: appVersion ? ` (latest: ${appVersion.build})` : ' (e.g: 1)',
       })
     }
     if (postQuestions.length > 0) {
@@ -109,6 +113,17 @@ hello world from ./src/build.ts!
       result = {
         ...result,
         ...answers,
+      }
+
+      if (result.version_number) {
+        const appVersions = require(process.cwd() + '/app.json')
+        appVersions[result.client][result.target] = {
+          version: result.version_number,
+          build: parseInt(result.build_number, 10),
+          buildDate: new Date().toDateString(),
+        }
+        const json = JSON.stringify(appVersions, null, 2)
+        fs.writeFileSync(process.cwd() + '/app.json', json)
       }
     }
     return result
