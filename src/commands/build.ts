@@ -30,12 +30,14 @@ hello world from ./src/build.ts!
     const questions = []
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients')
-      questions.push({
-        type: 'list',
-        name: 'client',
-        message: 'What is the client?',
-        choices: clients,
-      })
+      if (clients.length > 0) {
+        questions.push({
+          type: 'list',
+          name: 'client',
+          message: 'What is the client?',
+          choices: clients,
+        })
+      }
     }
     if (!flags.target) {
       questions.push({
@@ -88,7 +90,7 @@ hello world from ./src/build.ts!
       })
     } else {
       const appVersions = require(process.cwd() + '/app.json')
-      const appVersion = appVersions[result.client][result.target]
+      const appVersion = result.client ? appVersions[result.client][result.target] : appVersions[result.target]
       postQuestions.push({
         type: 'input',
         name: 'version_number',
@@ -117,10 +119,15 @@ hello world from ./src/build.ts!
 
       if (result.version_number) {
         const appVersions = require(process.cwd() + '/app.json')
-        appVersions[result.client][result.target] = {
+        const newVersion = {
           version: result.version_number,
           build: parseInt(result.build_number, 10),
           buildDate: new Date().toDateString(),
+        }
+        if (result.client) {
+          appVersions[result.client][result.target] = newVersion
+        } else {
+          appVersions[result.target] = newVersion
         }
         const json = JSON.stringify(appVersions, null, 2)
         fs.writeFileSync(process.cwd() + '/app.json', json)
@@ -134,9 +141,12 @@ hello world from ./src/build.ts!
     const params = await this.askForMissingFields(flags)
     const {client, target, env, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
+    shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
-    shell.cd(`fastlane/clients/${client}`)
+    if (client) {
+      shell.cd(`clients/${client}`)
+    }
     shell.exec(`bundle exec fastlane ${target} ${env} ${parameters.join(' ')}`)
   }
 }

@@ -3,7 +3,7 @@ fastlane_require 'dotenv'
 before_all do
   Dotenv.overload '.env'
 
-  bundle_install
+  # bundle_install
 end
 
 desc "Update project dependencies"
