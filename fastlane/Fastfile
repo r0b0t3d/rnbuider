@@ -16,18 +16,48 @@ private_lane :update_dependencies do |options|
   )
 end
 
+def inviteTesters(appId, token, testers)
+  require 'net/http'
+  require 'uri'
+
+  puts "appId: #{appId}, token: #{token}, testers: #{testers}"
+  uri = URI.parse("https://www.installrapp.com/apps/#{appId}/builds/latest/team.json")
+  res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+    req = Net::HTTP::Post.new(uri)
+    req['X-InstallrAppToken'] = token
+    req.set_form_data({
+      'notify' => testers,
+      'add' => testers
+    }, ';')
+    http.request(req)
+  end
+  puts res.body
+  case res
+  when Net::HTTPSuccess, Net::HTTPRedirection
+    UI.success("Invite testers successfully")
+  else
+    res.error!
+  end
+end
+
 desc "Upload build to installr"
-private_lane :upload_installr do |options|
-  puts options[:file]
-  puts options[:testers]
+lane :upload_installr do |options|
   notes = options[:notes] || "Build from Fastlane"
   installr(
-      api_token: ENV['INSTALLR_TOKEN'],
-      ipa: options[:file],
-      notes: notes,
-      notify: "true",
-      add: options[:testers]
-    )
+    api_token: ENV['INSTALLR_TOKEN'],
+    ipa: options[:file],
+    notes: notes,
+    notify: "true",
+  )
+  buildInfo = Actions.lane_context[SharedValues::INSTALLR_BUILD_INFORMATION]
+  # buildInfo = {"message"=>"App is updated and new Build is created", "result"=>"success", "appData"=>{"appTeams"=>[], "title"=>"ANU Staging", "appId"=>"com.edular.anu", "id"=>36399, "autoSync"=>false, "latestBuild"=>{"versionNumber"=>"1.5", "buildNumber"=>"9 [8]", "deviceLimit"=>0, "id"=>323544, "dateCreated"=>"2021-07-21T13:57:03Z", "buildFile"=>{"id"=>973460, "url"=>"https://s3.amazonaws.com/installr-prod/appBuilds/8aEc1zmoP2MC.apk", "buildSize"=>"54.74 MB"}, "icon"=>{"id"=>973459, "url"=>"https://s3.amazonaws.com/installr-prod/icons/0ZlX4zLaEZ4V.png", "buildSize"=>".00 MB"}, "provisioningProfiles"=>[], "releaseNotes"=>"Build from Fastlane", "releaseNotesHtml"=>"<p>Build from Fastlane</p>", "numberInstalled"=>0}, "planInfo"=>{"name"=>"Hobbyist", "price"=>0.0, "buildLimit"=>3, "deviceLimit"=>3, "id"=>1}, "adpEmail"=>nil, "adpPassword"=>"", "devicesRemaining"=>nil, "lastSync"=>nil, "appEvents"=>[{"eventDescription"=>"sergio@klassapp.com notified of  build 9 [8] of ANU Staging", "createdOn"=>"2021-07-21T13:57:04Z"}, {"eventDescription"=>"luis@klassapp.com notified of  build 9 [8] of ANU Staging", "createdOn"=>"2021-07-21T13:57:04Z"}, {"eventDescription"=>"franklin@klassapp.com notified of  build 9 [8] of ANU Staging", "createdOn"=>"2021-07-21T13:57:05Z"}, {"eventDescription"=>"sergio@klassapp.com notified of  build 9 [8] of ANU Staging", "createdOn"=>"2021-07-21T13:57:03Z"}, {"eventDescription"=>"jorge@klassapp.com notified of  build 9 [8] of ANU Staging", "createdOn"=>"2021-07-21T13:57:04Z"}, {"eventDescription"=>"KlassApp Developer uploaded build 9 [8] of ANU Staging", "createdOn"=>"2021-07-21T13:57:03Z"}, {"eventDescription"=>"luis@klassapp.com notified of  build 9 [7] of ANU Staging", "createdOn"=>"2021-07-21T13:53:10Z"}, {"eventDescription"=>"franklin@klassapp.com notified of  build 9 [7] of ANU Staging", "createdOn"=>"2021-07-21T13:53:10Z"}, {"eventDescription"=>"jorge@klassapp.com notified of  build 9 [7] of ANU Staging", "createdOn"=>"2021-07-21T13:53:08Z"}, {"eventDescription"=>"KlassApp Developer uploaded build 9 [7] of ANU Staging", "createdOn"=>"2021-07-21T13:53:07Z"}, {"eventDescription"=>"sergio@klassapp.com notified of  build 9 [7] of ANU Staging", "createdOn"=>"2021-07-21T13:53:07Z"}, {"eventDescription"=>"jorge@klassapp.com notified of  build 9 [6] of ANU Staging", "createdOn"=>"2021-07-21T13:50:12Z"}, {"eventDescription"=>"luis@klassapp.com notified of  build 9 [6] of ANU Staging", "createdOn"=>"2021-07-21T13:50:12Z"}, {"eventDescription"=>"franklin@klassapp.com notified of  build 9 [6] of ANU Staging", "createdOn"=>"2021-07-21T13:50:12Z"}, {"eventDescription"=>"KlassApp Developer uploaded build 9 [6] of ANU Staging", "createdOn"=>"2021-07-21T13:50:11Z"}, {"eventDescription"=>"sergio@klassapp.com notified of  build 9 [6] of ANU Staging", "createdOn"=>"2021-07-21T13:50:11Z"}, {"eventDescription"=>"jorge@klassapp.com notified of  build 9 [5] of ANU Staging", "createdOn"=>"2021-07-21T13:47:08Z"}, {"eventDescription"=>"luis@klassapp.com notified of  build 9 [5] of ANU Staging", "createdOn"=>"2021-07-21T13:47:08Z"}, {"eventDescription"=>"franklin@klassapp.com notified of  build 9 [5] of ANU Staging", "createdOn"=>"2021-07-21T13:47:08Z"}, {"eventDescription"=>"sergio@klassapp.com notified of  build 9 [5] of ANU Staging", "createdOn"=>"2021-07-21T13:47:07Z"}], "paymentInfo"=>[], "type"=>"ANDROID", "token"=>"TW5xHD9123iU8syfd6IFQ4JOImqj", "builds"=>[{"versionNumber"=>"1.5", "buildNumber"=>"9 [8]", "deviceLimit"=>0, "id"=>323544, "dateCreated"=>"2021-07-21T13:57:03Z", "buildFile"=>{"id"=>973460, "url"=>"https://s3.amazonaws.com/installr-prod/appBuilds/8aEc1zmoP2MC.apk", "buildSize"=>"54.74 MB"}, "icon"=>{"id"=>973459, "url"=>"https://s3.amazonaws.com/installr-prod/icons/0ZlX4zLaEZ4V.png", "buildSize"=>".00 MB"}, "numberInstalled"=>0}, {"versionNumber"=>"1.5", "buildNumber"=>"9 [7]", "deviceLimit"=>0, "id"=>323543, "dateCreated"=>"2021-07-21T13:53:07Z", "buildFile"=>{"id"=>973458, "url"=>"https://s3.amazonaws.com/installr-prod/appBuilds/mQZEPZpqzOtq.apk", "buildSize"=>"54.74 MB"}, "icon"=>{"id"=>973457, "url"=>"https://s3.amazonaws.com/installr-prod/icons/agq370NQepRL.png", "buildSize"=>".00 MB"}, "numberInstalled"=>0}, {"versionNumber"=>"1.5", "buildNumber"=>"9 [6]", "deviceLimit"=>0, "id"=>323542, "dateCreated"=>"2021-07-21T13:50:11Z", "buildFile"=>{"id"=>973456, "url"=>"https://s3.amazonaws.com/installr-prod/appBuilds/HEIif9SNkw2g.apk", "buildSize"=>"54.74 MB"}, "icon"=>{"id"=>973455, "url"=>"https://s3.amazonaws.com/installr-prod/icons/LblSRSQWh4KM.png", "buildSize"=>".00 MB"}, "numberInstalled"=>0}], "appMembershipEmailOption"=>"everytime"}, "action"=>"update", "previousInvites"=>4}
+  id = buildInfo["appData"]["id"]
+  UI.success("Invite testers for app #{id}")
+  inviteTesters(
+    id,
+    ENV['INSTALLR_TOKEN'],
+    options[:testers]
+  )
 end
 
 desc "Commit changes to repo"
@@ -310,6 +340,7 @@ platform :android do
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
+      testers: options[:testers],
       flavor: flavor,
       build_type: build_type
     )
@@ -320,6 +351,7 @@ platform :android do
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
+      testers: options[:testers],
       flavor: ENV["FLAVOR"],
       build_type: ENV["BUILD_TYPE"],
     )
@@ -330,6 +362,7 @@ platform :android do
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
+      testers: options[:testers],
       task: 'bundle',
       flavor: ENV["FLAVOR"],
       build_type: ENV["BUILD_TYPE"]
