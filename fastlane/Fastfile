@@ -19,6 +19,7 @@ end
 desc "Upload build to installr"
 private_lane :upload_installr do |options|
   puts options[:file]
+  puts options[:testers]
   notes = options[:notes] || "Build from Fastlane"
   installr(
       api_token: ENV['INSTALLR_TOKEN'],

@@ -1,0 +1,7 @@
+# Ignore fastlane files
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/builds
+!fastlane/.env
