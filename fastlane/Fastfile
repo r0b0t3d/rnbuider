@@ -158,6 +158,7 @@ platform :ios do
     process_build(
       branch: options[:branch],
       installr: options[:installr],
+      testers: options[:testers],
       scheme: "#{ENV['CLIENT']} staging",
       output_name: app_name,
       export_method: "ad-hoc",
@@ -190,6 +191,7 @@ platform :ios do
     process_build(
       branch: options[:branch],
       installr: options[:installr],
+      testers: options[:testers],
       scheme: "#{ENV['CLIENT']} prod",
       output_name: ENV['APP_NAME'],
       export_method: "ad-hoc",
@@ -254,6 +256,7 @@ platform :ios do
     process_build(
       branch: options[:branch],
       installr: options[:installr],
+      testers: options[:testers],
       scheme: "#{ENV['CLIENT']} prod",
       output_name: ENV['APP_NAME'],
       export_method: "app-store",
