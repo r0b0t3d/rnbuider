@@ -44,7 +44,7 @@ USAGE
 OPTIONS
   -b, --branch=branch           Set the source branch used to build the app
   -c, --client=client           Set client that you want to build app
-  -e, --env=staging|adhoc|prod  Set the enviroment: prod, adhoc, staging
+  -e, --env=staging|adhoc|prod  Set the environment: prod, adhoc, staging
   -h, --help                    show CLI help
   -i, --installr=installr       If enabled, the build will be uploaded to installR
   -t, --target=android|ios      Set the build target: android, ios or both

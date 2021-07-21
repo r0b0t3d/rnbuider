@@ -24,7 +24,8 @@ private_lane :upload_installr do |options|
       api_token: ENV['INSTALLR_TOKEN'],
       ipa: options[:file],
       notes: notes,
-      notify: "true"
+      notify: "true",
+      add: options[:testers]
     )
 end
 
@@ -62,12 +63,12 @@ platform :ios do
   ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
   xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
 
-  def ensure_temp_keychain(name)
+  def ensure_temp_keychain
     delete_keychain(
-      name: name
+      name: 'rnbuilder'
     ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
     create_keychain(
-      name: name,
+      name: 'rnbuilder',
       password: 'rnbuilder',
       unlock: true,
       timeout: 3600
@@ -128,7 +129,8 @@ platform :ios do
       file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
       upload_installr(
         file: file,
-        notes: options[:scheme]
+        notes: options[:scheme],
+        testers: options[:testers]
       )
     end
   end
@@ -150,6 +152,8 @@ platform :ios do
       git_branch: ENV['CLIENT'],
       force_for_new_devices: true,
       readonly: is_ci,
+      keychain_name: 'rnbuilder',
+      keychain_password: 'rnbuilder',
     )
     process_build(
       branch: options[:branch],
@@ -180,6 +184,8 @@ platform :ios do
       git_branch: ENV['CLIENT'],
       force_for_new_devices: true,
       readonly: is_ci,
+      keychain_name: 'rnbuilder',
+      keychain_password: 'rnbuilder',
     )
     process_build(
       branch: options[:branch],
@@ -242,6 +248,8 @@ platform :ios do
       git_url: ENV['MATCH_GIT_URL'],
       git_branch: ENV['CLIENT'],
       readonly: is_ci,
+      keychain_name: 'rnbuilder',
+      keychain_password: 'rnbuilder',
     )
     process_build(
       branch: options[:branch],

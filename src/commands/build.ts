@@ -18,7 +18,7 @@ hello world from ./src/build.ts!
     help: flags.help({char: 'h'}),
     client: flags.string({char: 'c', description: 'Set client that you want to build app'}),
     target: flags.string({char: 't', description: 'Set the build target: android, ios or both', options: ['android', 'ios']}),
-    env: flags.string({char: 'e', description: 'Set the enviroment: prod, adhoc, staging', options: ['staging', 'adhoc', 'prod']}),
+    env: flags.string({char: 'e', description: 'Set the environment: prod, adhoc, staging', options: ['staging', 'adhoc', 'prod']}),
     branch: flags.string({char: 'b', description: 'Set the source branch used to build the app'}),
     version: flags.string({char: 'v', description: 'Set the version number for this build'}),
     installr: flags.string({char: 'i', description: 'If enabled, the build will be uploaded to installR'}),
@@ -52,7 +52,7 @@ hello world from ./src/build.ts!
       questions.push({
         type: 'list',
         name: 'env',
-        message: 'What is the enviroment?',
+        message: 'What is the environment?',
         default: 'staging',
         choices: ['staging', 'adhoc', 'prod'],
         filter(val: string) {
@@ -87,6 +87,12 @@ hello world from ./src/build.ts!
         name: 'installr',
         message: 'Would you like to upload to installr?',
         default: true,
+      })
+      postQuestions.push({
+        type: 'input',
+        name: 'testers',
+        message: 'Add tester(s)to download the app',
+        suffix: ' (emails separated by commas)',
       })
     } else {
       const appVersions = require(process.cwd() + '/app.json')
