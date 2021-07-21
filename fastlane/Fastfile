@@ -297,7 +297,8 @@ platform :android do
       file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
       upload_installr(
         file: file,
-        notes: options[:notes] || "Fastlane build"
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers]
       )
     end
   end
