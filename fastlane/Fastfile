@@ -107,7 +107,7 @@ platform :ios do
   end
 
   before_all do
-    ensure_temp_keychain "rnbuilder"
+    ensure_temp_keychain
   end
 
   desc 'Process build'
