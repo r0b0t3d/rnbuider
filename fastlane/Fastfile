@@ -94,12 +94,12 @@ platform :ios do
   ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
   xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
 
-  def ensure_temp_keychain
+  def ensure_temp_keychain(name)
     delete_keychain(
-      name: 'rnbuilder'
+      name: name
     ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
     create_keychain(
-      name: 'rnbuilder',
+      name: name,
       password: 'rnbuilder',
       unlock: true,
       timeout: 3600
@@ -107,7 +107,7 @@ platform :ios do
   end
 
   before_all do
-    ensure_temp_keychain
+    ensure_temp_keychain "rnbuilder"
   end
 
   desc 'Process build'
