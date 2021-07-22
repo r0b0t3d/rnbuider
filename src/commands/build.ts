@@ -88,12 +88,6 @@ hello world from ./src/build.ts!
         message: 'Would you like to upload to installr?',
         default: true,
       })
-      postQuestions.push({
-        type: 'input',
-        name: 'testers',
-        message: 'Add tester(s)to download the app',
-        suffix: ' (emails separated by commas)',
-      })
     } else {
       const appVersions = require(process.cwd() + '/app.json')
       const appVersion = result.client ? appVersions[result.client][result.target] : appVersions[result.target]
@@ -121,6 +115,19 @@ hello world from ./src/build.ts!
       result = {
         ...result,
         ...answers,
+      }
+
+      if (result.installr) {
+        const testersAnswers = await inquirer.prompt([{
+          type: 'input',
+          name: 'testers',
+          message: 'Add tester(s)to download the app',
+          suffix: ' (emails separated by commas)',
+        }])
+        result = {
+          ...result,
+          testers: testersAnswers.testers.replace(/\s+/g, ''),
+        }
       }
 
       if (result.version_number) {

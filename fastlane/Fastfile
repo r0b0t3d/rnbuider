@@ -26,8 +26,7 @@ def inviteTesters(appId, token, testers)
     req = Net::HTTP::Post.new(uri)
     req['X-InstallrAppToken'] = token
     req.set_form_data({
-      'notify' => testers,
-      'add' => testers
+      'notify' => testers
     }, ';')
     http.request(req)
   end
