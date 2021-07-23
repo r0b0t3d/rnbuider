@@ -157,6 +157,7 @@ hello world from ./src/build.ts!
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
+    shell.exec('bundle update fastlane')
     if (client) {
       shell.cd(`clients/${client}`)
     }
