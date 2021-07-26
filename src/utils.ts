@@ -11,3 +11,11 @@ export const getDirectories = (path: string) => {
   }
   return []
 }
+
+export const getAppVersion = (client?: string, target = 'ios') => {
+  const appVersions = require(process.cwd() + '/app.json')
+  return (client ? appVersions[client][target] : appVersions[target]) || {
+    version: '0.0.1',
+    build: 1,
+  }
+}

@@ -2,7 +2,7 @@
 import {Command, flags} from '@oclif/command'
 import * as inquirer from 'inquirer'
 import * as shell from 'shelljs'
-import {buildKeyValuePairs, getDirectories} from '../utils'
+import {buildKeyValuePairs, getAppVersion, getDirectories} from '../utils'
 import * as fs from 'fs'
 
 export default class Build extends Command {
@@ -89,8 +89,7 @@ hello world from ./src/build.ts!
         default: true,
       })
     } else {
-      const appVersions = require(process.cwd() + '/app.json')
-      const appVersion = result.client ? appVersions[result.client][result.target] : appVersions[result.target]
+      const appVersion = getAppVersion(result.client, result.target)
       postQuestions.push({
         type: 'input',
         name: 'version_number',
@@ -102,12 +101,6 @@ hello world from ./src/build.ts!
           }
           return true
         },
-      })
-      postQuestions.push({
-        type: 'input',
-        name: 'build_number',
-        message: 'What is the build number?',
-        suffix: appVersion ? ` (latest: ${appVersion.build})` : ' (e.g: 1)',
       })
     }
     if (postQuestions.length > 0) {
@@ -130,21 +123,23 @@ hello world from ./src/build.ts!
         }
       }
 
-      if (result.version_number) {
-        const appVersions = require(process.cwd() + '/app.json')
-        const newVersion = {
-          version: result.version_number,
-          build: parseInt(result.build_number, 10),
-          buildDate: new Date().toDateString(),
-        }
-        if (result.client) {
-          appVersions[result.client][result.target] = newVersion
-        } else {
-          appVersions[result.target] = newVersion
-        }
-        const json = JSON.stringify(appVersions, null, 2)
-        fs.writeFileSync(process.cwd() + '/app.json', json)
+      const appVersion = getAppVersion(result.client, result.target)
+      const newVersion = {
+        ...appVersion,
+        build: appVersion.build + 1,
+        buildDate: new Date().toDateString(),
       }
+      if (result.version_number) {
+        newVersion.version = result.version_number
+      }
+      const appVersions = require(process.cwd() + '/app.json')
+      if (result.client) {
+        appVersions[result.client][result.target] = newVersion
+      } else {
+        appVersions[result.target] = newVersion
+      }
+      const json = JSON.stringify(appVersions, null, 2)
+      fs.writeFileSync(process.cwd() + '/app.json', json)
     }
     return result
   };
