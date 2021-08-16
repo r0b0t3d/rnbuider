@@ -20,7 +20,7 @@ $ npm install -g rnbuilder
 $ rnbuilder COMMAND
 running command...
 $ rnbuilder (-v|--version|version)
-rnbuilder/0.2.3 darwin-x64 node-v12.19.1
+rnbuilder/0.2.3 darwin-x64 node-v12.22.4
 $ rnbuilder --help [COMMAND]
 USAGE
   $ rnbuilder COMMAND
