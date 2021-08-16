@@ -53,8 +53,8 @@ hello world from ./src/build.ts!
         type: 'list',
         name: 'env',
         message: 'What is the environment?',
-        default: 'staging',
-        choices: ['staging', 'adhoc', 'prod'],
+        default: 'internal',
+        choices: ['internal', 'staging', 'prod'],
         filter(val: string) {
           return val.toLowerCase()
         },
@@ -147,7 +147,7 @@ hello world from ./src/build.ts!
   async run() {
     const {flags} = this.parse(Build)
     const params = await this.askForMissingFields(flags)
-    const {client, target, env, ...otherParams} = params
+    const {client, target, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
@@ -156,6 +156,6 @@ hello world from ./src/build.ts!
     if (client) {
       shell.cd(`clients/${client}`)
     }
-    shell.exec(`bundle exec fastlane ${target} ${env} ${parameters.join(' ')}`)
+    shell.exec(`bundle exec fastlane ${target} build ${parameters.join(' ')} --env ${otherParams.env}`)
   }
 }

@@ -1,11 +1,3 @@
-fastlane_require 'dotenv'
-
-before_all do
-  Dotenv.overload '.env'
-
-  # bundle_install
-end
-
 desc "Update project dependencies"
 private_lane :update_dependencies do |options|
   sh("git checkout " + options[:git_branch])
@@ -165,120 +157,46 @@ platform :ios do
     end
   end
 
-  desc "Prepare staging build"
-  lane :staging do |options|
-    app_id = ENV['APP_IDENTIFIER_STAGING'] || ENV['APP_IDENTIFIER'] + ".staging"
-    app_name = ENV['APP_NAME_STAGING'] || ENV['APP_NAME']
-    app_identifier = [app_id]
-    if ENV['SERVICE_EXTENSION_NAME'] 
-      app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
-    end
-    match(
-      app_identifier: app_identifier,
-      type: 'adhoc',
-      username: ENV['APPLE_ID'],
-      team_id: ENV['APPLE_TEAM_ID'],
-      git_url: ENV['MATCH_GIT_URL'],
-      git_branch: ENV['CLIENT'],
-      force_for_new_devices: true,
-      readonly: is_ci,
-      keychain_name: 'rnbuilder',
-      keychain_password: 'rnbuilder',
-    )
-    process_build(
-      branch: options[:branch],
-      installr: options[:installr],
-      testers: options[:testers],
-      scheme: "#{ENV['CLIENT']} staging",
-      output_name: app_name,
-      export_method: "ad-hoc",
-      profile: ENV["sigh_#{app_id}_adhoc_profile-path"],
-      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_adhoc_profile-path"]
-    )
-    sync_git(
-      message: "chore: staging build"
-    )
-  end
-
-  desc "Prepare adhoc build"
-  lane :adhoc do |options|
-    app_identifier = [ENV['APP_IDENTIFIER']]
-    if ENV['SERVICE_EXTENSION_NAME']
-      app_identifier = app_identifier.push("#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}")
-    end
-    match(
-      app_identifier: app_identifier,
-      type: 'adhoc',
-      username: ENV['APPLE_ID'],
-      team_id: ENV['APPLE_TEAM_ID'],
-      git_url: ENV['MATCH_GIT_URL'],
-      git_branch: ENV['CLIENT'],
-      force_for_new_devices: true,
-      readonly: is_ci,
-      keychain_name: 'rnbuilder',
-      keychain_password: 'rnbuilder',
-    )
-    process_build(
-      branch: options[:branch],
-      installr: options[:installr],
-      testers: options[:testers],
-      scheme: "#{ENV['CLIENT']} prod",
-      output_name: ENV['APP_NAME'],
-      export_method: "ad-hoc",
-      profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_adhoc_profile-path"],
-      profile_service_extension: ENV["sigh_#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}_adhoc_profile-path"]
-    )
-    sync_git(
-      message: "chore: adhoc build"
-    )
-  end
-
-  desc "Push a new beta build to TestFlight"
-  lane :prod do |options|
+  desc "Sync build number"
+  lane :sync_build_number do |options|
     build_number = options[:build_number]
-    puts options
-    if build_number.nil?
-      UI.message "Don't specify build number. Getting latest build number from testflight"
-      latest_build = 0
-      begin
-        latest_build = latest_testflight_build_number(
-          username: ENV['APPLE_ID'],
-          # team_id: "119976767", #ENV['APPLE_TEAM_ID'],
-          app_identifier: ENV['APP_IDENTIFIER']
-        )
-      rescue => ex
-        UI.error "latest_testflight_build_number got error #{ex}. Trying to get build number from plist"
-        latest_build = get_build_number_from_plist(
-          xcodeproj: xcodeproj,
-          target: ENV['CLIENT'],
-        ).to_i
-        UI.message "Build number in plist: #{latest_build}"
-      end
-      build_number = latest_build + 1
-    end
     if ENV['SERVICE_EXTENSION_NAME']
-      increment_version_number_in_plist(
-        xcodeproj: xcodeproj,
-        version_number: options[:version_number], # Set a specific version number
-        target: ENV['SERVICE_EXTENSION_NAME']
-      )
+      if options[:version_number]
+        increment_version_number_in_plist(
+          xcodeproj: xcodeproj,
+          version_number: options[:version_number], # Set a specific version number
+          target: ENV['SERVICE_EXTENSION_NAME']
+        )
+      end
       increment_build_number_in_plist(
         xcodeproj: xcodeproj,
         build_number: build_number.to_s,
         target: ENV['SERVICE_EXTENSION_NAME']
       )
     end
-    app_identifier = [ENV['APP_IDENTIFIER']]
+  end
+
+  desc "Process build"
+  lane :build do |options|
+    puts "Start building app for env #{options[:env]}"
+    app_id = ENV['APP_IDENTIFIER']
+    app_name = ENV['APP_NAME']
+    app_identifier = [app_id]
     if ENV['SERVICE_EXTENSION_NAME']
-      app_identifier = app_identifier.push("#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}")
+      app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
     end
+    sync_build_number(
+      build_number: options[:build_number],
+      version_number: options[:version_number],
+    )
     match(
       app_identifier: app_identifier,
-      type: 'appstore',
+      type: ENV['MATCH_TYPE'],
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
       git_url: ENV['MATCH_GIT_URL'],
       git_branch: ENV['CLIENT'],
+      force_for_new_devices: true,
       readonly: is_ci,
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
@@ -287,20 +205,22 @@ platform :ios do
       branch: options[:branch],
       installr: options[:installr],
       testers: options[:testers],
-      scheme: "#{ENV['CLIENT']} prod",
-      output_name: ENV['APP_NAME'],
-      export_method: "app-store",
-      profile: ENV["sigh_#{ENV['APP_IDENTIFIER']}_appstore_profile-path"],
-      profile_service_extension: ENV["sigh_#{ENV['APP_IDENTIFIER']}.#{ENV['SERVICE_EXTENSION_NAME']}_appstore_profile-path"]
+      scheme: ENV['XCODEPROJ_SCHEME'],
+      output_name: app_name,
+      export_method: ENV['EXPORT_METHOD'],
+      profile: ENV["sigh_#{app_id}_#{ENV['MATCH_TYPE']}_profile-path"],
+      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{ENV['MATCH_TYPE']}_profile-path"]
     )
-    upload_to_testflight(
-      username: ENV['APPLE_ID'],
-      app_identifier: ENV['APP_IDENTIFIER'],
-      skip_waiting_for_build_processing: true,
-      team_id: ENV['ITC_TEAM_ID']
-    )
+    if options[:env] == 'prod'
+      upload_to_testflight(
+        username: ENV['APPLE_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
+        skip_waiting_for_build_processing: true,
+        team_id: ENV['ITC_TEAM_ID']
+      )
+    end
     sync_git(
-      message: "chore: production build"
+      message: "chore: bump version"
     )
   end
 end
@@ -316,7 +236,7 @@ platform :android do
       project_dir: "#{ENV['PROJECT_DIR']}/android",
     )
     gradle(
-      task: options[:task] || 'assemble',
+      task: options[:task],
       flavor: options[:flavor],
       build_type: options[:build_type],
       project_dir: "#{ENV['PROJECT_DIR']}/android",
@@ -332,50 +252,30 @@ platform :android do
     end
   end
 
-  desc "Process Staging build"
-  lane :staging do |options|
-    flavor = ENV["FLAVOR_STAGING"] || ENV["FLAVOR"]
-    build_type = ENV["BUILD_TYPE_STAGING"] || ENV["BUILD_TYPE"]
+  desc "Process build"
+  lane :build do |options|
+    flavor = ENV["FLAVOR"]
+    build_type = ENV["BUILD_TYPE"]
     process_android_build(
       branch: options[:branch],
       installr: options[:installr],
       testers: options[:testers],
       flavor: flavor,
-      build_type: build_type
+      build_type: build_type,
+      task: options[:env] == 'prod' ? 'bundle' : 'assemble',
     )
-  end
-
-  desc "Process Adhoc build"
-  lane :adhoc do
-    process_android_build(
-      branch: options[:branch],
-      installr: options[:installr],
-      testers: options[:testers],
-      flavor: ENV["FLAVOR"],
-      build_type: ENV["BUILD_TYPE"],
-    )
-  end
-
-  desc "Process Prod build"
-  lane :prod do |options|
-    process_android_build(
-      branch: options[:branch],
-      installr: options[:installr],
-      testers: options[:testers],
-      task: 'bundle',
-      flavor: ENV["FLAVOR"],
-      build_type: ENV["BUILD_TYPE"]
-    )
-    upload_to_play_store(
-      track: 'internal',
-      skip_upload_apk: true,
-      skip_upload_metadata: true,
-      skip_upload_changelogs: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true,
-      package_name: ENV["APP_IDENTIFIER"],
-      json_key: ENV["JSON_KEY_FILE"]
-    )
+    if options[:env] == 'prod'
+      upload_to_play_store(
+        track: 'internal',
+        skip_upload_apk: true,
+        skip_upload_metadata: true,
+        skip_upload_changelogs: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        package_name: ENV["APP_IDENTIFIER"],
+        json_key: ENV["JSON_KEY_FILE"]
+      )
+    end
   end
 
   desc "Update Store Listing"
