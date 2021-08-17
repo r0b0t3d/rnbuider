@@ -124,7 +124,7 @@ platform :ios do
     update_project_provisioning(
       xcodeproj: xcodeproj,
       profile: options[:profile],
-      target_filter: ENV['CLIENT'], # matches name or type of a target
+      # target_filter: ENV['CLIENT'], # matches name or type of a target
       build_configuration: "Release",
     )
     if ENV['SERVICE_EXTENSION_NAME']
