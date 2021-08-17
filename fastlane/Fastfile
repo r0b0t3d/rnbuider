@@ -111,15 +111,9 @@ platform :ios do
       use_bundle_exec: true,
       try_repo_update_on_error: true,
     )
-    targets = [ENV['CLIENT']]
-    if ENV['SERVICE_EXTENSION_NAME']
-      targets = targets.push(ENV['SERVICE_EXTENSION_NAME'])
-    end
-    
     update_project_team( # Set the right team on your project
       path: xcodeproj,
       teamid: ENV['APPLE_TEAM_ID'],
-      targets: targets
     )
     update_project_provisioning(
       xcodeproj: xcodeproj,
