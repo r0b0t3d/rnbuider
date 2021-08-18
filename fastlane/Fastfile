@@ -102,7 +102,9 @@ platform :ios do
   end
 
   desc 'Process build'
-  private_lane :process_build do |options| 
+  private_lane :process_build do |options|
+    puts "Process build with options: #{options}"
+
     update_dependencies(
       git_branch: options[:branch],
     )
@@ -141,14 +143,6 @@ platform :ios do
       build_path: "#{ENV['PROJECT_DIR']}/fastlane/builds",
       output_directory: "#{ENV['PROJECT_DIR']}/fastlane/builds"
     )
-    if options[:installr]
-      file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-      upload_installr(
-        file: file,
-        notes: options[:scheme],
-        testers: options[:testers]
-      )
-    end
   end
 
   desc "Sync build number"
@@ -197,7 +191,6 @@ platform :ios do
     )
     process_build(
       branch: options[:branch],
-      installr: options[:installr],
       testers: options[:testers],
       scheme: ENV['XCODEPROJ_SCHEME'],
       output_name: app_name,
@@ -205,6 +198,14 @@ platform :ios do
       profile: ENV["sigh_#{app_id}_#{ENV['MATCH_TYPE']}_profile-path"],
       profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{ENV['MATCH_TYPE']}_profile-path"]
     )
+    if options[:installr]
+      file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+      upload_installr(
+        file: file,
+        notes: options[:scheme],
+        testers: options[:testers]
+      )
+    end
     if options[:env] == 'prod'
       upload_to_testflight(
         username: ENV['APPLE_ID'],
