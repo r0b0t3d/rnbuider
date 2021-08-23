@@ -145,25 +145,6 @@ platform :ios do
     )
   end
 
-  desc "Sync build number"
-  lane :sync_build_number do |options|
-    build_number = options[:build_number]
-    if ENV['SERVICE_EXTENSION_NAME']
-      if options[:version_number]
-        increment_version_number_in_plist(
-          xcodeproj: xcodeproj,
-          version_number: options[:version_number], # Set a specific version number
-          target: ENV['SERVICE_EXTENSION_NAME']
-        )
-      end
-      increment_build_number_in_plist(
-        xcodeproj: xcodeproj,
-        build_number: build_number.to_s,
-        target: ENV['SERVICE_EXTENSION_NAME']
-      )
-    end
-  end
-
   desc "Process build"
   lane :build do |options|
     puts "Start building app for env #{options[:env]}"
@@ -173,10 +154,6 @@ platform :ios do
     if ENV['SERVICE_EXTENSION_NAME']
       app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
     end
-    sync_build_number(
-      build_number: options[:build_number],
-      version_number: options[:version_number],
-    )
     match(
       app_identifier: app_identifier,
       type: ENV['MATCH_TYPE'],
