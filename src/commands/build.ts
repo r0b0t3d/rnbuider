@@ -134,7 +134,10 @@ hello world from ./src/build.ts!
       }
       const appVersions = require(process.cwd() + '/app.json')
       if (result.client) {
-        appVersions[result.client][result.target] = newVersion
+        appVersions[result.client] = {
+          ...appVersions[result.client],
+          [result.target]: newVersion,
+        }
       } else {
         appVersions[result.target] = newVersion
       }

@@ -12,10 +12,21 @@ export const getDirectories = (path: string) => {
   return []
 }
 
+const defaultVersion = {
+  version: '0.0.1',
+  build: 1,
+}
+
 export const getAppVersion = (client?: string, target = 'ios') => {
   const appVersions = require(process.cwd() + '/app.json')
-  return (client ? appVersions[client][target] : appVersions[target]) || {
-    version: '0.0.1',
-    build: 1,
+  let version = defaultVersion
+  if (client) {
+    const clientVersion = appVersions[client]
+    if (clientVersion && clientVersion[target]) {
+      version = clientVersion[target]
+    }
+  } else if (appVersions[target]) {
+    version = appVersions[target]
   }
+  return version
 }
