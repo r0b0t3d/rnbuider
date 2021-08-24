@@ -1,7 +1,5 @@
 desc "Update project dependencies"
 private_lane :update_dependencies do |options|
-  sh("git checkout " + options[:git_branch])
-  git_pull
   yarn(
     command: "install",
     package_path: "#{ENV['PROJECT_DIR']}/package.json"
@@ -105,9 +103,7 @@ platform :ios do
   private_lane :process_build do |options|
     puts "Process build with options: #{options}"
 
-    update_dependencies(
-      git_branch: options[:branch],
-    )
+    update_dependencies()
     cocoapods(
       podfile: "#{ios_project_path}/Podfile", 
       use_bundle_exec: true,
@@ -167,7 +163,6 @@ platform :ios do
       keychain_password: 'rnbuilder',
     )
     process_build(
-      branch: options[:branch],
       testers: options[:testers],
       scheme: ENV['XCODEPROJ_SCHEME'],
       output_name: app_name,

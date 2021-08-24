@@ -147,8 +147,9 @@ hello world from ./src/build.ts!
   async run() {
     const {flags} = this.parse(Build)
     const params = await this.askForMissingFields(flags)
-    const {client, target, ...otherParams} = params
+    const {client, target, branch, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
+    shell.exec(`git checkout ${branch} && git pull`)
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
