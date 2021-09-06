@@ -243,6 +243,9 @@ platform :android do
         json_key: ENV["JSON_KEY_FILE"]
       )
     end
+    sync_git(
+      message: "chore: bump version"
+    )
   end
 
   desc "Update Store Listing"
