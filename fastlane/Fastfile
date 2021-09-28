@@ -49,6 +49,22 @@ lane :upload_installr do |options|
   )
 end
 
+desc "Upload build to firebase"
+lane :upload_firebase do |options|
+  puts options
+  notes = options[:notes] || "Build from Fastlane"
+  firebase_app_distribution(
+    app: options[:app],
+    ipa_path: options[:file],
+    android_artifact_type: "APK",
+    android_artifact_path: options[:file],
+    service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
+    testers: options[:testers],
+    release_notes: notes,
+    debug: true,
+  )
+end
+
 desc "Commit changes to repo"
 private_lane :sync_git do |options|
   git_add(path: "#{ENV['PROJECT_DIR']}/*")
@@ -170,11 +186,19 @@ platform :ios do
       profile: ENV["sigh_#{app_id}_#{ENV['MATCH_TYPE']}_profile-path"],
       profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{ENV['MATCH_TYPE']}_profile-path"]
     )
+    file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     if options[:installr]
-      file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
       upload_installr(
         file: file,
         notes: options[:scheme],
+        testers: options[:testers]
+      )
+    end
+    if options[:firebase]
+      upload_firebase(
+        app: ENV['FIREBASE_IOS_APP'],
+        file: file,
+        notes: options[:notes] || "Fastlane build",
         testers: options[:testers]
       )
     end
@@ -209,14 +233,6 @@ platform :android do
       project_dir: "#{ENV['PROJECT_DIR']}/android",
       properties: options[:properties]
     )
-    if options[:installr]
-      file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
-      upload_installr(
-        file: file,
-        notes: options[:notes] || "Fastlane build",
-        testers: options[:testers]
-      )
-    end
   end
 
   desc "Process build"
@@ -225,12 +241,27 @@ platform :android do
     build_type = ENV["BUILD_TYPE"]
     process_android_build(
       branch: options[:branch],
-      installr: options[:installr],
       testers: options[:testers],
       flavor: flavor,
       build_type: build_type,
       task: options[:env] == 'prod' ? 'bundle' : 'assemble',
     )
+    file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    if options[:installr]
+      upload_installr(
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers]
+      )
+    end
+    if options[:firebase]
+      upload_firebase(
+        app: ENV['FIREBASE_ANDROID_APP'],
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers]
+      )
+    end
     if options[:env] == 'prod'
       upload_to_play_store(
         track: 'internal',

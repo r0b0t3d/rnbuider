@@ -82,12 +82,29 @@ hello world from ./src/build.ts!
     }
     const postQuestions = []
     if (result.env !== 'prod') {
-      postQuestions.push({
-        type: 'confirm',
-        name: 'installr',
-        message: 'Would you like to upload to installr?',
-        default: true,
-      })
+      let envPath = 'fastlane'
+      if (result.client) {
+        envPath += `/clients/${result.client}/fastlane`
+      }
+
+      require('dotenv').config({path: process.cwd() + '/' + envPath + '/.env'})
+
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_FILE) {
+        postQuestions.push({
+          type: 'confirm',
+          name: 'firebase',
+          message: 'Would you like to upload to firebase?',
+          default: true,
+        })
+      }
+      if (process.env.INSTALLR_TOKEN) {
+        postQuestions.push({
+          type: 'confirm',
+          name: 'installr',
+          message: 'Would you like to upload to installr?',
+          default: true,
+        })
+      }
     } else {
       const appVersion = getAppVersion(result.client, result.target)
       postQuestions.push({
@@ -110,7 +127,7 @@ hello world from ./src/build.ts!
         ...answers,
       }
 
-      if (result.installr) {
+      if (result.installr || result.firebase) {
         const testersAnswers = await inquirer.prompt([{
           type: 'input',
           name: 'testers',
@@ -157,6 +174,7 @@ hello world from ./src/build.ts!
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
     shell.exec('bundle update fastlane')
+    shell.exec('bundle update cocoapods')
     if (client) {
       shell.cd(`clients/${client}`)
     }

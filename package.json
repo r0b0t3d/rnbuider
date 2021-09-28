@@ -11,6 +11,7 @@
     "@oclif/command": "^1",
     "@oclif/config": "^1",
     "@oclif/plugin-help": "^3",
+    "dotenv": "^10.0.0",
     "inquirer": "^8.0.0",
     "shelljs": "^0.8.4",
     "tslib": "^1"
