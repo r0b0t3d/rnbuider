@@ -1,3 +1,35 @@
+tester_udids_file = "tester_udids.txt"
+
+desc "Upload build to installr"
+lane :sync_udids do
+  firebase_app_distribution_get_udids(
+    app: ENV['FIREBASE_IOS_APP'],
+    output_file: tester_udids_file,
+    service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
+  )
+  register_devices(
+    devices_file: tester_udids_file,
+    username: ENV['APPLE_ID'],
+    team_id: ENV['APPLE_TEAM_ID'],
+  )
+end
+
+desc "Upload build to firebase"
+lane :upload_firebase do |options|
+  puts options
+  notes = options[:notes] || "Build from Fastlane"
+  firebase_app_distribution(
+    app: options[:app],
+    ipa_path: options[:file],
+    android_artifact_type: "APK",
+    android_artifact_path: options[:file],
+    service_credentials_file: options[:service_credentials_file],
+    testers: options[:testers],
+    release_notes: notes,
+    debug: true,
+  )
+end
+
 desc "Update project dependencies"
 private_lane :update_dependencies do |options|
   yarn(
@@ -46,22 +78,6 @@ lane :upload_installr do |options|
     id,
     ENV['INSTALLR_TOKEN'],
     options[:testers]
-  )
-end
-
-desc "Upload build to firebase"
-lane :upload_firebase do |options|
-  puts options
-  notes = options[:notes] || "Build from Fastlane"
-  firebase_app_distribution(
-    app: options[:app],
-    ipa_path: options[:file],
-    android_artifact_type: "APK",
-    android_artifact_path: options[:file],
-    service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
-    testers: options[:testers],
-    release_notes: notes,
-    debug: true,
   )
 end
 
@@ -198,6 +214,7 @@ platform :ios do
     if options[:firebase]
       upload_firebase(
         app: ENV['FIREBASE_IOS_APP'],
+        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
         file: file,
         notes: options[:notes] || "Fastlane build",
         testers: options[:testers]
@@ -258,6 +275,7 @@ platform :android do
     if options[:firebase]
       upload_firebase(
         app: ENV['FIREBASE_ANDROID_APP'],
+        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
         file: file,
         notes: options[:notes] || "Fastlane build",
         testers: options[:testers]
