@@ -16,6 +16,7 @@ end
 
 desc "Upload build to firebase"
 lane :upload_firebase do |options|
+  puts Dir.pwd
   puts options
   notes = options[:notes] || "Build from Fastlane"
   firebase_app_distribution(
@@ -25,6 +26,7 @@ lane :upload_firebase do |options|
     android_artifact_path: options[:file],
     service_credentials_file: options[:service_credentials_file],
     testers: options[:testers],
+    groups: options[:groups],
     release_notes: notes,
     debug: true,
   )
@@ -217,7 +219,8 @@ platform :ios do
         service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
         file: file,
         notes: options[:notes] || "Fastlane build",
-        testers: options[:testers]
+        testers: options[:testers],
+        groups: options[:groups],
       )
     end
     if options[:env] == 'prod'
@@ -278,7 +281,8 @@ platform :android do
         service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
         file: file,
         notes: options[:notes] || "Fastlane build",
-        testers: options[:testers]
+        testers: options[:testers],
+        groups: options[:groups],
       )
     end
     if options[:env] == 'prod'

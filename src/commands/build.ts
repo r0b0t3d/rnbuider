@@ -128,15 +128,38 @@ hello world from ./src/build.ts!
       }
 
       if (result.installr || result.firebase) {
-        const testersAnswers = await inquirer.prompt([{
-          type: 'input',
+        const testersAnswer = await inquirer.prompt([{
+          type: 'expand',
           name: 'testers',
-          message: 'Add tester(s)to download the app',
-          suffix: ' (emails separated by commas)',
+          message: 'Add testers to download the app?',
+          choices: [{
+            key: 'g',
+            name: 'Test groups',
+            value: 'groups',
+          }, {
+            key: 't',
+            name: 'Tester emails',
+            value: 'testers',
+          }, {
+            key: 'n',
+            name: 'No',
+            value: 'no-tester',
+          }],
+          default: 'no-tester',
         }])
-        result = {
-          ...result,
-          testers: testersAnswers.testers.replace(/\s+/g, ''),
+        if (testersAnswer.testers) {
+          if (testersAnswer.testers !== 'no-tester') {
+            const answers = await inquirer.prompt([{
+              type: 'input',
+              name: 'testers',
+              message: 'Please enter tester ' + (testersAnswer.testers === 'groups' ? 'group(s)' : 'email(s)'),
+              suffix: ' (separated by commas)',
+            }])
+            result = {
+              ...result,
+              [testersAnswer.testers]: answers.testers,
+            }
+          }
         }
       }
 
