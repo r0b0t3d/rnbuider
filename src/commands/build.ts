@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /* eslint-disable no-negated-condition */
 import {Command, flags} from '@oclif/command'
 import * as inquirer from 'inquirer'
@@ -79,6 +80,9 @@ hello world from ./src/build.ts!
         ...flags,
         ...answers,
       }
+    }
+    if (result.branch) {
+      shell.exec(`git checkout ${result.branch} && git pull`)
     }
     const postQuestions = []
     if (result.env !== 'prod') {
@@ -183,6 +187,7 @@ hello world from ./src/build.ts!
       }
       const json = JSON.stringify(appVersions, null, 2)
       fs.writeFileSync(process.cwd() + '/app.json', json)
+      shell.exec('git add . && git commit -m "bump version"')
     }
     return result
   };
@@ -190,9 +195,8 @@ hello world from ./src/build.ts!
   async run() {
     const {flags} = this.parse(Build)
     const params = await this.askForMissingFields(flags)
-    const {client, target, branch, ...otherParams} = params
+    const {client, target, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
-    shell.exec(`git checkout ${branch} && git pull`)
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
