@@ -20,7 +20,7 @@ $ npm install -g rnbuilder
 $ rnbuilder COMMAND
 running command...
 $ rnbuilder (-v|--version|version)
-rnbuilder/0.4.4 darwin-x64 node-v12.22.4
+rnbuilder/0.4.5 darwin-x64 node-v12.22.4
 $ rnbuilder --help [COMMAND]
 USAGE
   $ rnbuilder COMMAND
@@ -56,7 +56,7 @@ EXAMPLE
   hello world from ./src/build.ts!
 ```
 
-_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.4/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.5/src/commands/build.ts)_
 
 ## `rnbuilder help [COMMAND]`
 
@@ -88,7 +88,7 @@ EXAMPLE
   initialize environment for first run from ./src/initialize.ts!
 ```
 
-_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.4/src/commands/initialize.ts)_
+_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.5/src/commands/initialize.ts)_
 
 ## `rnbuilder sync-udids [BUILD]`
 
@@ -107,5 +107,5 @@ EXAMPLE
        Sync device UDIDs from firebase from ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.4/src/commands/sync-udids.ts)_
+_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.5/src/commands/sync-udids.ts)_
 <!-- commandsstop -->
