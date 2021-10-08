@@ -82,7 +82,7 @@ hello world from ./src/build.ts!
       }
     }
     if (result.branch) {
-      shell.exec(`git checkout ${result.branch} && git pull`)
+      shell.exec(`git checkout ${result.branch} && git pull --rebase`)
     }
     const postQuestions = []
     if (result.env !== 'prod') {
