@@ -187,7 +187,7 @@ hello world from ./src/build.ts!
       }
       const json = JSON.stringify(appVersions, null, 2)
       fs.writeFileSync(process.cwd() + '/app.json', json)
-      shell.exec('git add . && git commit -m "bump version"')
+      shell.exec('git add . && git commit -m "bump version" && git push')
     }
     return result
   };
