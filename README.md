@@ -20,7 +20,7 @@ $ npm install -g rnbuilder
 $ rnbuilder COMMAND
 running command...
 $ rnbuilder (-v|--version|version)
-rnbuilder/0.4.6 darwin-x64 node-v12.22.4
+rnbuilder/0.4.7 darwin-x64 node-v12.22.4
 $ rnbuilder --help [COMMAND]
 USAGE
   $ rnbuilder COMMAND
@@ -30,6 +30,7 @@ USAGE
 # Commands
 <!-- commands -->
 * [`rnbuilder build [BUILD]`](#rnbuilder-build-build)
+* [`rnbuilder codepush [BUILD]`](#rnbuilder-codepush-build)
 * [`rnbuilder help [COMMAND]`](#rnbuilder-help-command)
 * [`rnbuilder initialize`](#rnbuilder-initialize)
 * [`rnbuilder sync-udids [BUILD]`](#rnbuilder-sync-udids-build)
@@ -56,7 +57,26 @@ EXAMPLE
   hello world from ./src/build.ts!
 ```
 
-_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.6/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.7/src/commands/build.ts)_
+
+## `rnbuilder codepush [BUILD]`
+
+Push changes to existing apps
+
+```
+USAGE
+  $ rnbuilder codepush [BUILD]
+
+OPTIONS
+  -c, --client=client  Select client that you want to push update
+  -h, --help           show CLI help
+
+EXAMPLE
+  $ rnbuilder codepush
+       Push changes to existing apps ./src/firebase-sync-udids.ts!
+```
+
+_See code: [src/commands/codepush.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.7/src/commands/codepush.ts)_
 
 ## `rnbuilder help [COMMAND]`
 
@@ -88,7 +108,7 @@ EXAMPLE
   initialize environment for first run from ./src/initialize.ts!
 ```
 
-_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.6/src/commands/initialize.ts)_
+_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.7/src/commands/initialize.ts)_
 
 ## `rnbuilder sync-udids [BUILD]`
 
@@ -107,5 +127,5 @@ EXAMPLE
        Sync device UDIDs from firebase from ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.6/src/commands/sync-udids.ts)_
+_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.4.7/src/commands/sync-udids.ts)_
 <!-- commandsstop -->
