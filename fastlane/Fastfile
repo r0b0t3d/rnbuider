@@ -40,6 +40,12 @@ private_lane :update_dependencies do |options|
   )
 end
 
+private_lane :clean_up() do |options|
+  reset_git_repo(
+    skip_clean: true
+  )
+end
+
 def inviteTesters(appId, token, testers)
   require 'net/http'
   require 'uri'
@@ -81,18 +87,6 @@ lane :upload_installr do |options|
     ENV['INSTALLR_TOKEN'],
     options[:testers]
   )
-end
-
-desc "Commit changes to repo"
-private_lane :sync_git do |options|
-  git_add(path: "#{ENV['PROJECT_DIR']}/*")
-  git_commit(
-    path: "#{ENV['PROJECT_DIR']}/*",
-    message: options[:message],
-    allow_nothing_to_commit: true
-  )
-  git_pull(rebase: true)
-  push_to_git_remote
 end
 
 lane :get_team_names do |options|
@@ -231,9 +225,7 @@ platform :ios do
         team_id: ENV['ITC_TEAM_ID']
       )
     end
-    sync_git(
-      message: "chore: bump version"
-    )
+    clean_up
   end
 end
 
@@ -297,9 +289,7 @@ platform :android do
         json_key: ENV["JSON_KEY_FILE"]
       )
     end
-    sync_git(
-      message: "chore: bump version"
-    )
+    clean_up
   end
 
   desc "Update Store Listing"
@@ -320,4 +310,8 @@ platform :android do
       json_key: ENV["JSON_KEY_FILE"]
     )
   end
+end
+
+error do |lane, exception|
+  clean_up
 end
