@@ -40,7 +40,7 @@ private_lane :update_dependencies do |options|
   )
 end
 
-private_lane :clean_up() do |options|
+private_lane :clean_up do |options|
   reset_git_repo(
     skip_clean: true
   )
