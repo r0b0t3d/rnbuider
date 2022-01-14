@@ -42,6 +42,7 @@ end
 
 private_lane :clean_up do |options|
   reset_git_repo(
+    force: true,
     skip_clean: true
   )
 end
