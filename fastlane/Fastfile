@@ -1,6 +1,19 @@
 tester_udids_file = "tester_udids.txt"
 
-desc "Upload build to installr"
+
+desc "Commit changes to repo"
+private_lane :sync_git do |options|
+  git_add(path: "#{ENV['PROJECT_DIR']}/*")
+  git_commit(
+    path: "#{ENV['PROJECT_DIR']}/*",
+    message: options[:message],
+    allow_nothing_to_commit: true
+  )
+  git_pull(rebase: true)
+  push_to_git_remote
+end
+
+desc "Sync devices"
 lane :sync_udids do
   firebase_app_distribution_get_udids(
     app: ENV['FIREBASE_IOS_APP'],
@@ -11,6 +24,9 @@ lane :sync_udids do
     devices_file: tester_udids_file,
     username: ENV['APPLE_ID'],
     team_id: ENV['APPLE_TEAM_ID'],
+  )
+  sync_git(
+    message: 'registered tester devices'
   )
 end
 
