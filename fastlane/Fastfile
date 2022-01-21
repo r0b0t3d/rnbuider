@@ -152,6 +152,7 @@ platform :ios do
     update_dependencies()
     cocoapods(
       podfile: "#{ios_project_path}/Podfile", 
+      clean_install: true,
       use_bundle_exec: true,
       try_repo_update_on_error: true,
     )
