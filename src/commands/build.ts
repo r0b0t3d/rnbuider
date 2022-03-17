@@ -33,7 +33,7 @@ hello world from ./src/build.ts!
       const clients = getDirectories('./fastlane/clients')
       if (clients.length > 0) {
         questions.push({
-          type: 'list',
+          type: 'checkbox',
           name: 'client',
           message: 'What is the client?',
           choices: clients,
@@ -42,10 +42,10 @@ hello world from ./src/build.ts!
     }
     if (!flags.target) {
       questions.push({
-        type: 'list',
+        type: 'checkbox',
         name: 'target',
         message: 'What is the build target?',
-        // default: 'both',
+        default: ['android', 'ios'],
         choices: ['android', 'ios'],
       })
     }
@@ -192,6 +192,12 @@ hello world from ./src/build.ts!
     return result
   };
 
+  runPlatforms(target: string[], parameters: any, otherParams: any) {
+    target.forEach((t: string) => {
+      shell.exec(`bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`)
+    })
+  }
+
   async run() {
     const {flags} = this.parse(Build)
     const params = await this.askForMissingFields(flags)
@@ -203,8 +209,12 @@ hello world from ./src/build.ts!
     shell.exec('bundle update fastlane')
     shell.exec('bundle update cocoapods')
     if (client) {
-      shell.cd(`clients/${client}`)
+      client.forEach((c: string) => {
+        shell.cd(`clients/${c}`)
+        this.runPlatforms(target, parameters, otherParams)
+      })
+    } else {
+      this.runPlatforms(target, parameters, otherParams)
     }
-    shell.exec(`bundle exec fastlane ${target} build ${parameters.join(' ')} --env ${otherParams.env}`)
   }
 }

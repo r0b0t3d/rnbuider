@@ -156,14 +156,9 @@ platform :ios do
       use_bundle_exec: true,
       try_repo_update_on_error: true,
     )
-    # update_project_team( # Set the right team on your project
-    #   path: xcodeproj,
-    #   teamid: ENV['APPLE_TEAM_ID'],
-    # )
     update_project_provisioning(
       xcodeproj: xcodeproj,
       profile: options[:profile],
-      # target_filter: ENV['CLIENT'], # matches name or type of a target
       build_configuration: "Release",
     )
     if ENV['SERVICE_EXTENSION_NAME']
