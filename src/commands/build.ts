@@ -86,21 +86,12 @@ hello world from ./src/build.ts!
     }
     const postQuestions = []
     if (result.env !== 'prod') {
-      let envPath = 'fastlane'
-      if (result.client) {
-        envPath += `/clients/${result.client}/fastlane`
-      }
-
-      require('dotenv').config({path: process.cwd() + '/' + envPath + '/.env'})
-
-      if (process.env.FIREBASE_SERVICE_ACCOUNT_FILE) {
-        postQuestions.push({
-          type: 'confirm',
-          name: 'firebase',
-          message: 'Would you like to upload to firebase?',
-          default: true,
-        })
-      }
+      postQuestions.push({
+        type: 'confirm',
+        name: 'firebase',
+        message: 'Would you like to upload to firebase?',
+        default: true,
+      })
       if (process.env.INSTALLR_TOKEN) {
         postQuestions.push({
           type: 'confirm',
