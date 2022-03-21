@@ -157,34 +157,36 @@ hello world from ./src/build.ts!
           }
         }
       }
+    }
+    return result
+  };
 
-      const appVersion = getAppVersion(result.client, result.target)
+  runPlatforms(target: string[], parameters: any, otherParams: any, client?: string) {
+    if (client) {
+      shell.cd(`clients/${client}`)
+    }
+    target.forEach((t: string) => {
+      const appVersion = getAppVersion(client, t)
       const newVersion = {
         ...appVersion,
         build: appVersion.build + 1,
         buildDate: new Date().toDateString(),
       }
-      if (result.version_number) {
-        newVersion.version = result.version_number
+      if (otherParams.version_number) {
+        newVersion.version = otherParams.version_number
       }
       const appVersions = require(process.cwd() + '/app.json')
-      if (result.client) {
-        appVersions[result.client] = {
-          ...appVersions[result.client],
-          [result.target]: newVersion,
+      if (client) {
+        appVersions[client] = {
+          ...appVersions[client],
+          [t]: newVersion,
         }
       } else {
-        appVersions[result.target] = newVersion
+        appVersions[t] = newVersion
       }
       const json = JSON.stringify(appVersions, null, 2)
       fs.writeFileSync(process.cwd() + '/app.json', json)
-      shell.exec('git add . && git commit -m "bump version" && git push')
-    }
-    return result
-  };
-
-  runPlatforms(target: string[], parameters: any, otherParams: any) {
-    target.forEach((t: string) => {
+      shell.exec(`git add . && git commit -m "bump version ${t}" && git push`)
       shell.exec(`bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`)
     })
   }
@@ -201,9 +203,7 @@ hello world from ./src/build.ts!
     shell.exec('bundle update cocoapods')
     if (client) {
       client.forEach((c: string) => {
-        shell.cd(`clients/${c}`)
-        this.runPlatforms(target, parameters, otherParams)
-        shell.cd('../../')
+        this.runPlatforms(target, parameters, otherParams, c)
       })
     } else {
       this.runPlatforms(target, parameters, otherParams)
