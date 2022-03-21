@@ -1,7 +1,7 @@
 {
   "name": "rnbuilder",
   "description": "React Native builder tool",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "author": "Tuan Luong @r0b0t3d",
   "bin": {
     "rnbuilder": "./bin/run"
