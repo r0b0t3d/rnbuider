@@ -203,6 +203,7 @@ hello world from ./src/build.ts!
       client.forEach((c: string) => {
         shell.cd(`clients/${c}`)
         this.runPlatforms(target, parameters, otherParams)
+        shell.cd('../../')
       })
     } else {
       this.runPlatforms(target, parameters, otherParams)
