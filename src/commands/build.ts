@@ -184,7 +184,6 @@ hello world from ./src/build.ts!
     })
     const json = JSON.stringify(appVersions, null, 2)
     fs.writeFileSync(process.cwd() + '/app.json', json)
-    shell.exec('git add . && git commit -m "bump version" && git push')
   }
 
   runPlatforms(target: string[], parameters: any, otherParams: any) {
@@ -198,12 +197,19 @@ hello world from ./src/build.ts!
     const params = await this.askForMissingFields(flags)
     const {client, target, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
+    if (client) {
+      client.forEach((c: string) => {
+        this.updateAppVersion(target, c, otherParams.version_number)
+      })
+    } else {
+      this.updateAppVersion(target, undefined, otherParams.version_number)
+    }
+    shell.exec('git add . && git commit -m "bump version" && git push')
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
     shell.exec('bundle update fastlane')
     shell.exec('bundle update cocoapods')
-    this.updateAppVersion(target, client, otherParams.version_number)
     if (client) {
       client.forEach((c: string) => {
         shell.cd(`clients/${c}`)
