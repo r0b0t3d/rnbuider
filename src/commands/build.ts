@@ -161,21 +161,18 @@ hello world from ./src/build.ts!
     return result
   };
 
-  runPlatforms(target: string[], parameters: any, otherParams: any, client?: string) {
-    if (client) {
-      shell.cd(`clients/${client}`)
-    }
-    target.forEach((t: string) => {
+  updateAppVersion(targets: string[], client?: string, versionNumber?: string) {
+    const appVersions = require(process.cwd() + '/app.json')
+    targets.forEach((t: string) => {
       const appVersion = getAppVersion(client, t)
       const newVersion = {
         ...appVersion,
         build: appVersion.build + 1,
         buildDate: new Date().toDateString(),
       }
-      if (otherParams.version_number) {
-        newVersion.version = otherParams.version_number
+      if (versionNumber) {
+        newVersion.version = versionNumber
       }
-      const appVersions = require(process.cwd() + '/app.json')
       if (client) {
         appVersions[client] = {
           ...appVersions[client],
@@ -184,9 +181,14 @@ hello world from ./src/build.ts!
       } else {
         appVersions[t] = newVersion
       }
-      const json = JSON.stringify(appVersions, null, 2)
-      fs.writeFileSync(process.cwd() + '/app.json', json)
-      shell.exec(`git add . && git commit -m "bump version ${t}" && git push`)
+    })
+    const json = JSON.stringify(appVersions, null, 2)
+    fs.writeFileSync(process.cwd() + '/app.json', json)
+    shell.exec('git add . && git commit -m "bump version" && git push')
+  }
+
+  runPlatforms(target: string[], parameters: any, otherParams: any) {
+    target.forEach((t: string) => {
       shell.exec(`bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`)
     })
   }
@@ -201,9 +203,12 @@ hello world from ./src/build.ts!
     shell.exec('bundle install')
     shell.exec('bundle update fastlane')
     shell.exec('bundle update cocoapods')
+    this.updateAppVersion(target, client, otherParams.version_number)
     if (client) {
       client.forEach((c: string) => {
+        shell.cd(`clients/${client}`)
         this.runPlatforms(target, parameters, otherParams, c)
+        shell.cd('../..')
       })
     } else {
       this.runPlatforms(target, parameters, otherParams)
