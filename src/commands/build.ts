@@ -206,8 +206,8 @@ hello world from ./src/build.ts!
     this.updateAppVersion(target, client, otherParams.version_number)
     if (client) {
       client.forEach((c: string) => {
-        shell.cd(`clients/${client}`)
-        this.runPlatforms(target, parameters, otherParams, c)
+        shell.cd(`clients/${c}`)
+        this.runPlatforms(target, parameters, otherParams)
         shell.cd('../..')
       })
     } else {
