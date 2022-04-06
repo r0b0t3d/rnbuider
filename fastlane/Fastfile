@@ -176,7 +176,7 @@ platform :ios do
       export_method: options[:export_method],
       output_name: options[:output_name],
       include_symbols: true,
-      include_bitcode: true,
+      include_bitcode: ENV['INCLUDE_BITCODE'] == 'true',
       skip_profile_detection: true,
       build_path: "#{ENV['PROJECT_DIR']}/fastlane/builds",
       output_directory: "#{ENV['PROJECT_DIR']}/fastlane/builds"
