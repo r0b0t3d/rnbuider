@@ -298,7 +298,7 @@ platform :android do
         skip_upload_changelogs: true,
         skip_upload_images: true,
         skip_upload_screenshots: true,
-        package_name: ENV["APP_IDENTIFIER"],
+        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
         json_key: ENV["JSON_KEY_FILE"]
       )
     end
