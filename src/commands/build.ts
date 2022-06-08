@@ -161,8 +161,12 @@ hello world from ./src/build.ts!
     return result
   };
 
-  updateAppVersion(targets: string[], client?: string, versionNumber?: string) {
-    const appVersions = require(process.cwd() + '/app.json')
+  updateAppVersion(targets: string[], env: string, client?: string, versionNumber?: string) {
+    let fileName = 'app'
+    if (env !== 'prod') {
+      fileName = `${fileName}.${env}`
+    }
+    const appVersions = require(process.cwd() + `/${fileName}.json`)
     targets.forEach((t: string) => {
       const appVersion = getAppVersion(client, t)
       const newVersion = {
@@ -199,10 +203,10 @@ hello world from ./src/build.ts!
     const parameters = buildKeyValuePairs(otherParams)
     if (client) {
       client.forEach((c: string) => {
-        this.updateAppVersion(target, c, otherParams.version_number)
+        this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
       })
     } else {
-      this.updateAppVersion(target, undefined, otherParams.version_number)
+      this.updateAppVersion(target, otherParams.env, undefined, otherParams.version_number)
     }
     shell.exec('git add . && git commit -m "bump version" && git push')
     shell.cd('fastlane')
