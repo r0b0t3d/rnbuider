@@ -101,7 +101,7 @@ hello world from ./src/build.ts!
         })
       }
     } else {
-      const appVersion = getAppVersion(result.client, result.target)
+      const appVersion = getAppVersion(result.env, result.client, result.target)
       postQuestions.push({
         type: 'input',
         name: 'version_number',
@@ -168,7 +168,7 @@ hello world from ./src/build.ts!
     }
     const appVersions = require(process.cwd() + `/${fileName}.json`)
     targets.forEach((t: string) => {
-      const appVersion = getAppVersion(client, t)
+      const appVersion = getAppVersion(env, client, t)
       const newVersion = {
         ...appVersion,
         build: appVersion.build + 1,
@@ -187,7 +187,7 @@ hello world from ./src/build.ts!
       }
     })
     const json = JSON.stringify(appVersions, null, 2)
-    fs.writeFileSync(process.cwd() + '/app.json', json)
+    fs.writeFileSync(process.cwd() + `/${fileName}.json`, json)
   }
 
   runPlatforms(target: string[], parameters: any, otherParams: any) {

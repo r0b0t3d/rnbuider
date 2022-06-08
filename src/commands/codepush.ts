@@ -73,7 +73,7 @@ export default class CodePush extends Command {
     if (client) {
       envPath += `/clients/${client}/fastlane`
     }
-    const appVersion = getAppVersion(client, target)
+    const appVersion = getAppVersion(env, client, target)
     require('dotenv').config({path: process.cwd() + '/' + envPath + '/.env'})
 
     const project = target === 'ios' ? process.env.CODE_PUSH_IOS_PROJECT : process.env.CODE_PUSH_ANDROID_PROJECT

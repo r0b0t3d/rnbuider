@@ -17,8 +17,12 @@ const defaultVersion = {
   build: 1,
 }
 
-export const getAppVersion = (client?: string, target = 'ios') => {
-  const appVersions = require(process.cwd() + '/app.json')
+export const getAppVersion = (env: string, client?: string, target = 'ios') => {
+  let fileName = 'app'
+  if (env !== 'prod') {
+    fileName = `${fileName}.${env}`
+  }
+  const appVersions = require(process.cwd() + `/${fileName}.json`)
   let version = defaultVersion
   if (client) {
     const clientVersion = appVersions[client]
