@@ -28,7 +28,7 @@ hello world from ./src/build.ts!
   static args = [{name: 'build'}]
 
   askForMissingFields = async (flags: any) => {
-    const questions = []
+    let questions = []
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients')
       if (clients.length > 0) {
@@ -84,8 +84,26 @@ hello world from ./src/build.ts!
     if (result.branch) {
       shell.exec(`git checkout ${result.branch} && git pull --rebase`)
     }
+    questions = []
+    if (result.env === 'prod') {
+      questions.push({
+        type: 'list',
+        name: 'distribute',
+        message: 'What would you like to distribute to?',
+        default: 'store',
+        choices: ['store', 'firebase'],
+        filter(val: string) {
+          return val.toLowerCase()
+        },
+      })
+      const answers = await inquirer.prompt(questions)
+      result = {
+        ...result,
+        ...answers,
+      }
+    }
     const postQuestions = []
-    if (result.env !== 'prod') {
+    if (result.env !== 'prod' || result.distribute === 'firebase') {
       postQuestions.push({
         type: 'confirm',
         name: 'firebase',
