@@ -230,7 +230,7 @@ platform :ios do
         groups: options[:groups],
       )
     end
-    if options[:distribution] == 'store'
+    if options[:distribute] == 'store'
       upload_to_testflight(
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
@@ -270,7 +270,7 @@ platform :android do
       testers: options[:testers],
       flavor: flavor,
       build_type: build_type,
-      task: options[:distribution] == 'store' ? 'bundle' : 'assemble',
+      task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
     )
     file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
     if options[:installr]
@@ -290,7 +290,7 @@ platform :android do
         groups: options[:groups],
       )
     end
-    if options[:distribution] == 'store'
+    if options[:distribute] == 'store'
       upload_to_play_store(
         track: 'internal',
         skip_upload_apk: true,
