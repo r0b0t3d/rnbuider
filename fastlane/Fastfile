@@ -293,7 +293,7 @@ platform :android do
     if options[:distribute] == 'store'
       upload_to_play_store(
         track: 'internal',
-        release_status: 'draft',
+        release_status: ENV['RELEASE_STATUS'] || 'completed',
         skip_upload_apk: true,
         skip_upload_metadata: true,
         skip_upload_changelogs: true,
