@@ -204,11 +204,12 @@ platform :ios do
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
+    export_method = options[:firebase] ? 'ad-hoc' : 'app-store'
     process_build(
       testers: options[:testers],
       scheme: ENV['XCODEPROJ_SCHEME'],
       output_name: app_name,
-      export_method: ENV['EXPORT_METHOD'],
+      export_method: export_method,
       profile: ENV["sigh_#{app_id}_#{ENV['MATCH_TYPE']}_profile-path"],
       profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{ENV['MATCH_TYPE']}_profile-path"]
     )
