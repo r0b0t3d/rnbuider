@@ -189,12 +189,14 @@ platform :ios do
     app_id = ENV['APP_IDENTIFIER']
     app_name = ENV['APP_NAME']
     app_identifier = [app_id]
+    export_method = options[:distribute] == 'store' ? 'app-store' : 'ad-hoc'
+    match_type = options[:distribute] == 'store' ? 'appstore' : 'adhoc'
     if ENV['SERVICE_EXTENSION_NAME']
       app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
     end
     match(
       app_identifier: app_identifier,
-      type: ENV['MATCH_TYPE'],
+      type: match_type,
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
       git_url: ENV['MATCH_GIT_URL'],
@@ -204,14 +206,13 @@ platform :ios do
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
-    export_method = options[:firebase] ? 'ad-hoc' : 'app-store'
     process_build(
       testers: options[:testers],
       scheme: ENV['XCODEPROJ_SCHEME'],
       output_name: app_name,
       export_method: export_method,
-      profile: ENV["sigh_#{app_id}_#{ENV['MATCH_TYPE']}_profile-path"],
-      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{ENV['MATCH_TYPE']}_profile-path"]
+      profile: ENV["sigh_#{app_id}_#{match_type}_profile-path"],
+      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{match_type}_profile-path"]
     )
     file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     if options[:installr]
