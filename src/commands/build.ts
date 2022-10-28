@@ -81,9 +81,6 @@ hello world from ./src/build.ts!
         ...answers,
       }
     }
-    if (result.branch) {
-      shell.exec(`git checkout ${result.branch} && git pull --rebase`)
-    }
     questions = []
     if (result.env === 'prod') {
       questions.push({
@@ -219,14 +216,7 @@ hello world from ./src/build.ts!
     const params = await this.askForMissingFields(flags)
     const {client, target, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
-    if (client) {
-      client.forEach((c: string) => {
-        this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
-      })
-    } else {
-      this.updateAppVersion(target, otherParams.env, undefined, otherParams.version_number)
-    }
-    shell.exec('git add . && git commit -m "bump version" && git push')
+    shell.exec(`git checkout ${params.branch}`)
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
@@ -234,11 +224,15 @@ hello world from ./src/build.ts!
     shell.exec('bundle update cocoapods')
     if (client) {
       client.forEach((c: string) => {
+        this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
+        shell.exec(`git add . && git commit -m "bump version ${process.env.CLIENT} - ${params.env}"`)
+        shell.exec('git pull && git push')
         shell.cd(`clients/${c}`)
         this.runPlatforms(target, parameters, otherParams)
         shell.cd('../..')
       })
     } else {
+      this.updateAppVersion(target, otherParams.env, undefined, otherParams.version_number)
       this.runPlatforms(target, parameters, otherParams)
     }
   }
