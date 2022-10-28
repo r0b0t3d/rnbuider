@@ -206,6 +206,7 @@ hello world from ./src/build.ts!
   }
 
   runPlatforms(target: string[], parameters: any, otherParams: any) {
+    shell.cd('fastlane')
     target.forEach((t: string) => {
       shell.exec(`bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`)
     })
@@ -222,6 +223,7 @@ hello world from ./src/build.ts!
     shell.exec('bundle install')
     shell.exec('bundle update fastlane')
     shell.exec('bundle update cocoapods')
+    shell.cd('..')
     if (client) {
       client.forEach((c: string) => {
         this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
