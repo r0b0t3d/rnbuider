@@ -97,10 +97,11 @@ hello world from ./src/build.ts!
       result = {
         ...result,
         ...answers,
+        firebase: answers.distribute === 'firebase',
       }
     }
     const postQuestions = []
-    if (result.env !== 'prod' || result.distribute === 'firebase') {
+    if (result.env !== 'prod') {
       postQuestions.push({
         type: 'confirm',
         name: 'firebase',
@@ -206,7 +207,6 @@ hello world from ./src/build.ts!
   }
 
   runPlatforms(target: string[], parameters: any, otherParams: any) {
-    shell.cd('fastlane')
     target.forEach((t: string) => {
       shell.exec(`bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`)
     })
@@ -223,18 +223,21 @@ hello world from ./src/build.ts!
     shell.exec('bundle install')
     shell.exec('bundle update fastlane')
     shell.exec('bundle update cocoapods')
-    shell.cd('..')
+    shell.cd('../')
     if (client) {
       client.forEach((c: string) => {
         this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
-        shell.exec(`git add . && git commit -m "bump version ${process.env.CLIENT} - ${params.env}"`)
+        shell.exec(`git add . && git commit -m "bump version ${c} - ${otherParams.env}"`)
         shell.exec('git pull && git push')
-        shell.cd(`clients/${c}`)
+        shell.cd(`fastlane/clients/${c}`)
         this.runPlatforms(target, parameters, otherParams)
         shell.cd('../..')
       })
     } else {
       this.updateAppVersion(target, otherParams.env, undefined, otherParams.version_number)
+      shell.exec(`git add . && git commit -m "bump version - ${otherParams.env}"`)
+      shell.exec('git pull && git push')
+      shell.cd('fastlane')
       this.runPlatforms(target, parameters, otherParams)
     }
   }
