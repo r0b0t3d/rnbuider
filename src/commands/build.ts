@@ -217,7 +217,7 @@ hello world from ./src/build.ts!
     const params = await this.askForMissingFields(flags)
     const {client, target, ...otherParams} = params
     const parameters = buildKeyValuePairs(otherParams)
-    shell.exec(`git checkout ${params.branch}`)
+    shell.exec(`git reset --hard && git checkout ${params.branch} && git pull`)
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
     shell.exec('bundle install')
@@ -228,7 +228,7 @@ hello world from ./src/build.ts!
       client.forEach((c: string) => {
         this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
         shell.exec(`git add . && git commit -m "bump version ${c} - ${otherParams.env}"`)
-        shell.exec('git pull && git push')
+        shell.exec('git pull --rebase && git push')
         shell.cd(`fastlane/clients/${c}`)
         this.runPlatforms(target, parameters, otherParams)
         shell.cd('../..')
@@ -236,7 +236,7 @@ hello world from ./src/build.ts!
     } else {
       this.updateAppVersion(target, otherParams.env, undefined, otherParams.version_number)
       shell.exec(`git add . && git commit -m "bump version - ${otherParams.env}"`)
-      shell.exec('git pull && git push')
+      shell.exec('git pull --rebase && git push')
       shell.cd('fastlane')
       this.runPlatforms(target, parameters, otherParams)
     }
