@@ -116,7 +116,7 @@ hello world from ./src/build.ts!
           default: true,
         })
       }
-    } else {
+    } else if (result.distribute === 'store') {
       const appVersion = getAppVersion(result.env, result.client, result.target)
       postQuestions.push({
         type: 'input',
