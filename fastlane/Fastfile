@@ -154,6 +154,7 @@ platform :ios do
         next_v = tf_version
         end
     end
+    return next_v
   end
 
   def ensure_temp_keychain(name)
