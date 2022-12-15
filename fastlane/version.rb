@@ -44,7 +44,6 @@ def write_json_version(json_file, client, platform, version)
     File.write(json_file, JSON.pretty_generate(data_hash))
 end
 
-desc "Get android version"
 def get_android_version(increment = "patch")
     prod_version = google_play_track_release_names(
         json_key: ENV["JSON_KEY_FILE"],
@@ -63,7 +62,6 @@ def get_android_version(increment = "patch")
     return new_version
 end
 
-desc "Get ios version"
 def get_ios_version(increment = "patch")
     latest_testflight_build_number(
         username: ENV['APPLE_ID'],
