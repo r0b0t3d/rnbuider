@@ -198,7 +198,6 @@ hello world from ./src/build.ts!
     const parameters: any = buildKeyValuePairs({
       ...otherParams,
       json_file: jsonFile,
-      client,
     })
     shell.exec(`git reset --hard && git checkout ${params.branch} && git pull`)
     shell.cd('fastlane')
@@ -210,7 +209,10 @@ hello world from ./src/build.ts!
     if (client) {
       client.forEach((c: string) => {
         shell.cd(`fastlane/clients/${c}`)
-        this.runPlatforms(target, parameters, otherParams)
+        this.runPlatforms(target, {
+          ...parameters,
+          client: c,
+        }, otherParams)
         shell.cd('../..')
       })
     } else {
