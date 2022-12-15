@@ -61,28 +61,3 @@ def get_android_version(increment = "patch")
     end
     return new_version
 end
-
-def get_ios_version(increment = "patch")
-    latest_testflight_build_number(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-    )
-    app_store_build_number(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-    )
-    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION]
-    store_version = Actions.lane_context[SharedValues::LATEST_VERSION]
-    next_v = next_version(store_version, increment)
-    if Gem::Version.new(tf_version) > Gem::Version.new(next_v)
-        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER]
-        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER]
-        if tf_build_number == store_build_number 
-        next_v = next_version(tf_version, 'patch')
-        else
-        next_v = tf_version
-        end
-    end
-end

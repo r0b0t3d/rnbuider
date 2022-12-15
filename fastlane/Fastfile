@@ -59,10 +59,10 @@ private_lane :update_dependencies do |options|
 end
 
 private_lane :clean_up do |options|
-  # reset_git_repo(
-  #   force: true,
-  #   skip_clean: true
-  # )
+  reset_git_repo(
+    force: true,
+    skip_clean: true
+  )
 end
 
 def inviteTesters(appId, token, testers)
@@ -130,6 +130,31 @@ end
 platform :ios do
   ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
   xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
+
+  def get_ios_version(increment = "patch")
+    latest_testflight_build_number(
+        username: ENV['APPLE_ID'],
+        team_id: ENV['ITC_TEAM_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
+    )
+    app_store_build_number(
+        username: ENV['APPLE_ID'],
+        team_id: ENV['ITC_TEAM_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
+    )
+    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION]
+    store_version = Actions.lane_context[SharedValues::LATEST_VERSION]
+    next_v = next_version(store_version, increment)
+    if Gem::Version.new(tf_version) > Gem::Version.new(next_v)
+        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER]
+        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER]
+        if tf_build_number == store_build_number 
+        next_v = next_version(tf_version, 'patch')
+        else
+        next_v = tf_version
+        end
+    end
+  end
 
   def ensure_temp_keychain(name)
     delete_keychain(
