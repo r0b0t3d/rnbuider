@@ -3,8 +3,7 @@
 import {Command, flags} from '@oclif/command'
 import * as inquirer from 'inquirer'
 import * as shell from 'shelljs'
-import {buildKeyValuePairs, getAppVersion, getDirectories} from '../utils'
-import * as fs from 'fs'
+import {buildKeyValuePairs, getDirectories} from '../utils'
 
 export default class Build extends Command {
   static description = 'Build react native apps'
@@ -117,12 +116,11 @@ hello world from ./src/build.ts!
         })
       }
     } else if (result.distribute === 'store') {
-      const appVersion = getAppVersion(result.env, result.client, result.target)
       postQuestions.push({
-        type: 'input',
-        name: 'version_number',
-        message: 'What is the version number?',
-        suffix: appVersion ? ` (latest: ${appVersion.version})` : ' (e.g: 1.0.0)',
+        type: 'list',
+        name: 'version',
+        message: 'What is the version bump?',
+        choices: ['patch', 'minor', 'major'],
         validate: (input: string) => {
           if (!input) {
             return 'You need to specify the version'
@@ -176,38 +174,19 @@ hello world from ./src/build.ts!
     return result
   };
 
-  updateAppVersion(targets: string[], env: string, client?: string, versionNumber?: string) {
+  getJsonFile(env: string) {
     let fileName = 'app'
     if (env !== 'prod') {
       fileName = `${fileName}.${env}`
     }
-    const appVersions = require(process.cwd() + `/${fileName}.json`)
-    targets.forEach((t: string) => {
-      const appVersion = getAppVersion(env, client, t)
-      const newVersion = {
-        ...appVersion,
-        build: appVersion.build + 1,
-        buildDate: new Date().toDateString(),
-      }
-      if (versionNumber) {
-        newVersion.version = versionNumber
-      }
-      if (client) {
-        appVersions[client] = {
-          ...appVersions[client],
-          [t]: newVersion,
-        }
-      } else {
-        appVersions[t] = newVersion
-      }
-    })
-    const json = JSON.stringify(appVersions, null, 2)
-    fs.writeFileSync(process.cwd() + `/${fileName}.json`, json)
+    const file = process.cwd() + `/${fileName}.json`
+    return file
   }
 
   runPlatforms(target: string[], parameters: any, otherParams: any) {
     target.forEach((t: string) => {
-      shell.exec(`bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`)
+      const cmd = `bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`
+      shell.exec(cmd)
     })
   }
 
@@ -215,7 +194,12 @@ hello world from ./src/build.ts!
     const {flags} = this.parse(Build)
     const params = await this.askForMissingFields(flags)
     const {client, target, ...otherParams} = params
-    const parameters = buildKeyValuePairs(otherParams)
+    const jsonFile = this.getJsonFile(otherParams.env)
+    const parameters: any = buildKeyValuePairs({
+      ...otherParams,
+      json_file: jsonFile,
+      client,
+    })
     shell.exec(`git reset --hard && git checkout ${params.branch} && git pull`)
     shell.cd('fastlane')
     shell.exec('bundle update --bundler')
@@ -225,17 +209,11 @@ hello world from ./src/build.ts!
     shell.cd('../')
     if (client) {
       client.forEach((c: string) => {
-        this.updateAppVersion(target, otherParams.env, c, otherParams.version_number)
-        shell.exec(`git add . && git commit -m "bump version ${c} - ${otherParams.env}"`)
-        shell.exec('git pull --rebase && git push')
         shell.cd(`fastlane/clients/${c}`)
         this.runPlatforms(target, parameters, otherParams)
         shell.cd('../..')
       })
     } else {
-      this.updateAppVersion(target, otherParams.env, undefined, otherParams.version_number)
-      shell.exec(`git add . && git commit -m "bump version - ${otherParams.env}"`)
-      shell.exec('git pull --rebase && git push')
       shell.cd('fastlane')
       this.runPlatforms(target, parameters, otherParams)
     }

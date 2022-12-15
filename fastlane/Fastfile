@@ -1,5 +1,7 @@
-tester_udids_file = "tester_udids.txt"
+require_relative "./version.rb"
+require 'json'
 
+tester_udids_file = "tester_udids.txt"
 
 desc "Commit changes to repo"
 private_lane :sync_git do |options|
@@ -57,10 +59,10 @@ private_lane :update_dependencies do |options|
 end
 
 private_lane :clean_up do |options|
-  reset_git_repo(
-    force: true,
-    skip_clean: true
-  )
+  # reset_git_repo(
+  #   force: true,
+  #   skip_clean: true
+  # )
 end
 
 def inviteTesters(appId, token, testers)
@@ -206,6 +208,11 @@ platform :ios do
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
+    version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
+    write_json_version(options[:json_file], options[:client], 'ios', version)
+    sync_git(
+      message: "bump version #{options[:client]} - ios"
+    )
     process_build(
       testers: options[:testers],
       scheme: ENV['XCODEPROJ_SCHEME'],
@@ -267,6 +274,11 @@ platform :android do
   lane :build do |options|
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
+    version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
+    write_json_version(options[:json_file], options[:client], 'android', version)
+    sync_git(
+      message: "bump version #{options[:client]} - android"
+    )
     process_android_build(
       branch: options[:branch],
       testers: options[:testers],
