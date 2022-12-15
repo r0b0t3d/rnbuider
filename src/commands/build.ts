@@ -209,10 +209,10 @@ hello world from ./src/build.ts!
     if (client) {
       client.forEach((c: string) => {
         shell.cd(`fastlane/clients/${c}`)
-        this.runPlatforms(target, {
+        this.runPlatforms(target, [
           ...parameters,
-          client: c,
-        }, otherParams)
+          `client:${c}`,
+        ], otherParams)
         shell.cd('../..')
       })
     } else {
