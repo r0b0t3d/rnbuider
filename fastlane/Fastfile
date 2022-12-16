@@ -125,24 +125,28 @@ platform :ios do
   xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
 
   def get_ios_version(increment = "patch")
-    latest_testflight_build_number(
+    begin 
+      latest_testflight_build_number(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['ITC_TEAM_ID'],
+          app_identifier: ENV['APP_IDENTIFIER'],
+      )
+      app_store_build_number(
         username: ENV['APPLE_ID'],
         team_id: ENV['ITC_TEAM_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
-    )
-    app_store_build_number(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-    )
-    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION]
-    store_version = Actions.lane_context[SharedValues::LATEST_VERSION]
-    next_v = next_version(store_version, increment)
+      )
+    rescue => exception
+      puts exception
+    end
+    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || "0.0.0"
+    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || "0.0.0"
     puts "TF Version #{tf_version}"
     puts "Store Version #{store_version}"
+    next_v = next_version(store_version, increment)
     if Gem::Version.new(tf_version) > Gem::Version.new(next_v)
-        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER]
-        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER]
+        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] || 1
+        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
         puts "TF build number #{tf_build_number}"
         puts "Store build number #{store_build_number}"
         if tf_build_number == store_build_number 
