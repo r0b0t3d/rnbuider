@@ -186,6 +186,7 @@ hello world from ./src/build.ts!
   runPlatforms(target: string[], parameters: any, otherParams: any) {
     target.forEach((t: string) => {
       const cmd = `bundle exec fastlane ${t} build ${parameters.join(' ')} --env ${otherParams.env}`
+      console.log({ cmd })
       shell.exec(cmd)
     })
   }
@@ -209,11 +210,13 @@ hello world from ./src/build.ts!
     if (client) {
       client.forEach((c: string) => {
         shell.cd(`fastlane/clients/${c}`)
+        shell.exec('pwd')
         this.runPlatforms(target, [
           ...parameters,
           `client:${c}`,
         ], otherParams)
-        shell.cd('../..')
+        shell.cd('../../..')
+        shell.exec('pwd')
       })
     } else {
       shell.cd('fastlane')
