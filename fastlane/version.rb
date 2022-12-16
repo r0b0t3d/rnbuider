@@ -45,6 +45,7 @@ def write_json_version(json_file, client, platform, version)
 end
 
 def get_android_version(increment = "patch")
+  begin
     prod_version = google_play_track_release_names(
         json_key: ENV["JSON_KEY_FILE"],
         package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
@@ -60,4 +61,7 @@ def get_android_version(increment = "patch")
         new_version = internal_version.first
     end
     return new_version
+  rescue => exception
+    puts exception
+  end
 end
