@@ -58,13 +58,6 @@ private_lane :update_dependencies do |options|
   )
 end
 
-private_lane :clean_up do |options|
-  reset_git_repo(
-    force: true,
-    skip_clean: true
-  )
-end
-
 def inviteTesters(appId, token, testers)
   require 'net/http'
   require 'uri'
@@ -145,15 +138,20 @@ platform :ios do
     tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION]
     store_version = Actions.lane_context[SharedValues::LATEST_VERSION]
     next_v = next_version(store_version, increment)
+    puts "TF Version #{tf_version}"
+    puts "Store Version #{store_version}"
     if Gem::Version.new(tf_version) > Gem::Version.new(next_v)
         tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER]
         store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER]
+        puts "TF build number #{tf_build_number}"
+        puts "Store build number #{store_build_number}"
         if tf_build_number == store_build_number 
-        next_v = next_version(tf_version, 'patch')
+          next_v = next_version(tf_version, 'patch')
         else
-        next_v = tf_version
+          next_v = tf_version
         end
     end
+    puts "Next Version #{next_v}"
     return next_v
   end
 
@@ -273,7 +271,9 @@ platform :ios do
         team_id: ENV['ITC_TEAM_ID']
       )
     end
-    clean_up
+    sync_git(
+      message: "Build #{ENV['CLIENT']} - success ✅"
+    )
   end
 end
 
@@ -343,7 +343,9 @@ platform :android do
         json_key: ENV["JSON_KEY_FILE"]
       )
     end
-    clean_up
+    sync_git(
+      message: "Build #{ENV['CLIENT']} - success ✅"
+    )
   end
 
   desc "Update Store Listing"
@@ -367,5 +369,7 @@ platform :android do
 end
 
 error do |lane, exception|
-  clean_up
+  sync_git(
+    message: "Build #{ENV['CLIENT']} - failed ❌"
+  )
 end
