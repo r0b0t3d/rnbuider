@@ -287,10 +287,10 @@ platform :android do
     update_dependencies(
       git_branch: options[:branch]
     )
-    gradle(
-      task: "clean",
-      project_dir: "#{ENV['PROJECT_DIR']}/android",
-    )
+    # gradle(
+    #   task: "clean",
+    #   project_dir: "#{ENV['PROJECT_DIR']}/android",
+    # )
     gradle(
       task: options[:task],
       flavor: options[:flavor],

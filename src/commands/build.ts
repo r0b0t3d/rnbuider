@@ -207,6 +207,14 @@ hello world from ./src/build.ts!
     shell.exec('bundle update fastlane')
     shell.exec('bundle update cocoapods')
     shell.cd('../')
+
+    // Clean android if any
+    if (target.includes('android')) {
+      shell.cd('./android')
+      shell.exec('./gradlew clean')
+      shell.cd('../')
+    }
+
     if (client) {
       client.forEach((c: string) => {
         shell.cd(`fastlane/clients/${c}`)
