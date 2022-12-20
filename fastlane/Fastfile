@@ -144,7 +144,7 @@ platform :ios do
     puts "TF Version #{tf_version}"
     puts "Store Version #{store_version}"
     next_v = next_version(store_version, increment)
-    if Gem::Version.new(tf_version) > Gem::Version.new(next_v)
+    if Gem::Version.new(tf_version) >= Gem::Version.new(next_v)
         tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] || 1
         store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
         puts "TF build number #{tf_build_number}"
