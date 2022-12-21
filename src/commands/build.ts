@@ -5,6 +5,11 @@ import * as inquirer from 'inquirer'
 import * as shell from 'shelljs'
 import {buildKeyValuePairs, getDirectories} from '../utils'
 
+inquirer.registerPrompt(
+  'checkbox-plus',
+  require('inquirer-checkbox-plus-prompt')
+)
+
 export default class Build extends Command {
   static description = 'Build react native apps'
 
@@ -32,10 +37,20 @@ hello world from ./src/build.ts!
       const clients = getDirectories('./fastlane/clients')
       if (clients.length > 0) {
         questions.push({
-          type: 'checkbox',
+          type: 'checkbox-plus',
           name: 'client',
           message: 'What is the client?',
-          choices: clients,
+          pageSize: 100,
+          highlight: true,
+          searchable: true,
+          default: ['yellow', 'red'],
+          source: (answersSoFar: string, input: string) => {
+            input = input || ''
+            return new Promise(resolve => {
+              const result = clients.filter(client => client.includes(input.toLowerCase()))
+              resolve(result)
+            })
+          },
         })
       }
     }

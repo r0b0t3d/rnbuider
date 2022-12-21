@@ -276,7 +276,13 @@ platform :ios do
       )
     end
     sync_git(
-      message: "Build #{ENV['CLIENT']} - success ✅"
+      message: "build #{ENV['CLIENT']} ios - success ✅"
+    )
+  end
+
+  error do |lane, exception|
+    sync_git(
+      message: "build #{ENV['CLIENT']} ios - failed ❌"
     )
   end
 end
@@ -370,10 +376,11 @@ platform :android do
       json_key: ENV["JSON_KEY_FILE"]
     )
   end
+
+  error do |lane, exception|
+    sync_git(
+      message: "build #{ENV['CLIENT']} android - failed ❌"
+    )
+  end
 end
 
-error do |lane, exception|
-  sync_git(
-    message: "Build #{ENV['CLIENT']} - failed ❌"
-  )
-end

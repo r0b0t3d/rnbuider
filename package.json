@@ -13,6 +13,7 @@
     "@oclif/plugin-help": "^3",
     "dotenv": "^10.0.0",
     "inquirer": "^8.0.0",
+    "inquirer-checkbox-plus-prompt": "^1.4.1",
     "shelljs": "^0.8.4",
     "tslib": "^1"
   },
