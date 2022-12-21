@@ -43,12 +43,21 @@ hello world from ./src/build.ts!
           pageSize: 100,
           highlight: true,
           searchable: true,
-          default: ['yellow', 'red'],
+          default: [],
           source: (answersSoFar: string, input: string) => {
             input = input || ''
             return new Promise(resolve => {
               const result = clients.filter(client => client.includes(input.toLowerCase()))
               resolve(result)
+            })
+          },
+          validate: (input: string[]) => {
+            return new Promise(resolve => {
+              if (input.length === 0) {
+                resolve('You need to select at least 1 client')
+              } else {
+                resolve(true)
+              }
             })
           },
         })
