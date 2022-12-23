@@ -79,6 +79,8 @@ def get_android_version(increment = "patch")
     return new_version
   rescue => exception
     puts exception
+    new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
+    return new_version
   end
   return nil
 end
