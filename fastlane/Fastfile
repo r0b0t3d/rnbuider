@@ -288,6 +288,32 @@ platform :ios do
 end
 
 platform :android do
+  def get_android_version(increment = "patch")
+    begin
+      prod_version = google_play_track_release_names(
+          json_key: ENV["JSON_KEY_FILE"],
+          package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+          track: 'production'
+      )
+      internal_version = google_play_track_release_names(
+          json_key: ENV["JSON_KEY_FILE"],
+          package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+          track: 'internal'
+      )
+      puts prod_version
+      puts internal_version
+      new_version = next_version(prod_version.first, increment)
+      if Gem::Version.new(internal_version.first.to_s) > Gem::Version.new(new_version.to_s)
+          new_version = internal_version.first
+      end
+      return new_version
+    rescue => exception
+      puts exception
+    end
+    new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
+    return new_version
+  end
+
   desc "Process android build"
   private_lane :process_android_build do |options|
     update_dependencies(

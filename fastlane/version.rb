@@ -40,7 +40,8 @@ def write_json_version(json_file, client, platform, version)
     }
   end
 
-  if version 
+  if !version.nil? && !version.empty?
+    puts "Set version #{version} #{version.blank?}"
     platform_version['version'] = version
   end
   platform_version['build'] = platform_version['build'] + 1
@@ -50,6 +51,7 @@ def write_json_version(json_file, client, platform, version)
     platform_version['version'] = '1.0.0'
   end
 
+  puts "Platform version #{platform_version}"
   if client
     data_hash[client][platform] = platform_version
   else
@@ -58,28 +60,4 @@ def write_json_version(json_file, client, platform, version)
   File.write(json_file, JSON.pretty_generate(data_hash))
 end
 
-def get_android_version(increment = "patch")
-  begin
-    prod_version = google_play_track_release_names(
-        json_key: ENV["JSON_KEY_FILE"],
-        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-        track: 'production'
-    )
-    internal_version = google_play_track_release_names(
-        json_key: ENV["JSON_KEY_FILE"],
-        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-        track: 'internal'
-    )
-    puts prod_version
-    puts internal_version
-    new_version = next_version(prod_version.first, increment)
-    if Gem::Version.new(internal_version.first.to_s) > Gem::Version.new(new_version.to_s)
-        new_version = internal_version.first
-    end
-    return new_version
-  rescue => exception
-    puts exception
-  end
-  new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
-  return new_version
-end
+
