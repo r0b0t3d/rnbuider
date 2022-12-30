@@ -41,7 +41,7 @@ def write_json_version(json_file, client, platform, version)
   end
 
   if !version.nil? && !version.empty?
-    puts "Set version #{version} #{version.blank?}"
+    puts "Set version #{version}"
     platform_version['version'] = version
   end
   platform_version['build'] = platform_version['build'] + 1
