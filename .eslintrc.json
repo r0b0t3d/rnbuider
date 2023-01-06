@@ -1,0 +1,12 @@
+{
+  "extends": ["oclif", "oclif-typescript"],
+  "rules": {
+    "object-curly-newline": "off",
+    "semi": "off",
+    "object-curly-spacing": ["error", "always"],
+    "quotes": ["error"],
+    "no-console": "off",
+    "indent": "off",
+    "@typescript-eslint/ban-ts-ignore": "off"
+  }
+}

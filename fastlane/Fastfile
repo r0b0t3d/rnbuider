@@ -50,14 +50,6 @@ lane :upload_firebase do |options|
   )
 end
 
-desc "Update project dependencies"
-private_lane :update_dependencies do |options|
-  yarn(
-    command: "install",
-    package_path: "#{ENV['PROJECT_DIR']}/package.json"
-  )
-end
-
 def inviteTesters(appId, token, testers)
   require 'net/http'
   require 'uri'
@@ -179,13 +171,6 @@ platform :ios do
   private_lane :process_build do |options|
     puts "Process build with options: #{options}"
 
-    update_dependencies()
-    cocoapods(
-      podfile: "#{ios_project_path}/Podfile", 
-      clean_install: true,
-      use_bundle_exec: true,
-      try_repo_update_on_error: true,
-    )
     update_project_provisioning(
       xcodeproj: xcodeproj,
       profile: options[:profile],
@@ -316,13 +301,6 @@ platform :android do
 
   desc "Process android build"
   private_lane :process_android_build do |options|
-    update_dependencies(
-      git_branch: options[:branch]
-    )
-    # gradle(
-    #   task: "clean",
-    #   project_dir: "#{ENV['PROJECT_DIR']}/android",
-    # )
     gradle(
       task: options[:task],
       flavor: options[:flavor],
