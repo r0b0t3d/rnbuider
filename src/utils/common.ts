@@ -48,3 +48,7 @@ export const copyDir = (src: string, dest: string) =>
   });
 
 export const normalise = (input: string) => input.replace(/'/g, '').trim();
+
+export const capitalize = (string: string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};

@@ -14,6 +14,8 @@ import {
 } from '../utils/env';
 import { getAppleTeam } from '../utils/setup/apple';
 import { prepareOneSignal } from '../utils/setup/onesignal';
+import { capitalize, copyDir } from '../utils/common';
+import { setupFastlane } from '../utils/setup/fastlane';
 
 export default class Setup extends Command {
   static description = 'Setup new client';
@@ -129,5 +131,23 @@ hello world from ./src/setup.ts!
       prodEnvVars,
       path.join(process.cwd(), `/configs/${client}/.env.prod`),
     );
+
+    // Setup fastlane
+    const { firebaseIosApp, firebaseAndroidApp } = await setupFastlane({
+      client,
+    });
+    const fastlaneDir = path.join(process.cwd(), `fastlane/${client}/fastlane`);
+    const fastlaneEnvVars = readEnvVars(path.join(fastlaneDir, '/.env'));
+    setEnvValue('CLIENT', client, fastlaneEnvVars);
+    setEnvValue('APP_IDENTIFIER', bundleId, fastlaneEnvVars);
+    setEnvValue('APP_NAME', appName, fastlaneEnvVars);
+    setEnvValue('XCODEPROJ_SCHEME', `${client} prod`, fastlaneEnvVars);
+    setEnvValue('APPLE_TEAM_ID', appleTeamId, fastlaneEnvVars);
+    setEnvValue('ITC_TEAM_ID', itcTeamId, fastlaneEnvVars);
+    setEnvValue('FLAVOR', capitalize(client), fastlaneEnvVars);
+    setEnvValue('FIREBASE_IOS_APP', firebaseIosApp, fastlaneEnvVars);
+    setEnvValue('FIREBASE_ANDROID_APP', firebaseAndroidApp, fastlaneEnvVars);
+
+    saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
   }
 }
