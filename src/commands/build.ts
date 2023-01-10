@@ -267,7 +267,8 @@ hello world from ./src/build.ts!
     shell.cd('../');
 
     shell.exec('yarn install && npx pod-install');
-
+    // Clean fastlane builds
+    shell.exec('rm -rf fastlane/builds');
     // Clean android if any
     if (target.includes('android')) {
       shell.cd('./android');

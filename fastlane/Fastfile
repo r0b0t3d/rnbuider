@@ -222,7 +222,7 @@ platform :ios do
       keychain_password: 'rnbuilder',
     )
     version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
-    write_json_version(options[:json_file], options[:client], 'ios', version)
+    version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
       message: "bump version #{options[:client]} - ios"
     )
@@ -253,11 +253,28 @@ platform :ios do
       )
     end
     if options[:distribute] == 'store'
-      upload_to_testflight(
+      upload_to_app_store(
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
-        skip_waiting_for_build_processing: true,
-        team_id: ENV['ITC_TEAM_ID']
+        team_id: ENV['ITC_TEAM_ID'],
+        app_version: version,
+        release_notes: {
+          'default' => 'Bug fixes and performance improvement',
+          'en-US' => 'Bug fixes and performance improvement'
+        },
+        force: true,
+        submit_for_review: true,
+        automatic_release: true,
+        skip_screenshots: true,
+        skip_metadata: false,
+        run_precheck_before_submit: false,
+        submission_information: {
+          add_id_info_uses_idfa: false,
+          add_id_info_serves_ads: false,
+          add_id_info_tracks_install: false,
+          add_id_info_tracks_action: false,
+          add_id_info_limits_tracking: false,
+        }
       )
     end
     sync_git(
@@ -346,11 +363,11 @@ platform :android do
     end
     if options[:distribute] == 'store'
       upload_to_play_store(
-        track: 'internal',
+        track: 'production',
         release_status: ENV['RELEASE_STATUS'] || 'completed',
+        skip_upload_changelogs: false,
         skip_upload_apk: true,
         skip_upload_metadata: true,
-        skip_upload_changelogs: true,
         skip_upload_images: true,
         skip_upload_screenshots: true,
         package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
