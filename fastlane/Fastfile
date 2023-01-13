@@ -131,8 +131,8 @@ platform :ios do
     rescue => exception
       puts exception
     end
-    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || "0.0.0"
-    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || "0.0.0"
+    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || "1.0.0"
+    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || "1.0.0"
     puts "TF Version #{tf_version}"
     puts "Store Version #{store_version}"
     next_v = next_version(store_version, increment)

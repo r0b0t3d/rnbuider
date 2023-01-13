@@ -28,7 +28,7 @@ def write_json_version(json_file, client, platform, version)
   file = File.read(json_file)
   data_hash = JSON.parse(file)
   platform_version = data_hash[platform]
-  if client != nil 
+  if client != nil && data_hash[client] != nil
     platform_version = data_hash[client][platform]
   end
   # Default value for version
@@ -53,6 +53,9 @@ def write_json_version(json_file, client, platform, version)
 
   puts "Platform version #{platform_version}"
   if client
+    if data_hash[client] == nil
+      data_hash[client] = {}
+    end
     data_hash[client][platform] = platform_version
   else
     data_hash[platform] = platform_version
