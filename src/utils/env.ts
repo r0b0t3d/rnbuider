@@ -55,14 +55,16 @@ export const setEnvValue = (key: string, value: string, envVars: any) => {
 };
 
 export const updateServiceDomain = (envVars: any, domain: string) => {
-  return Object.keys(envVars).map(key => {
-    const data = envVars[key];
+  const result: any = {};
+  Object.keys(envVars).forEach(key => {
+    let data = envVars[key];
     if (data.value?.includes('[domain]')) {
-      return {
+      data = {
         ...data,
         value: data.value.replace('[domain]', domain),
       };
     }
-    return data;
+    result[key] = data;
   });
+  return result;
 };

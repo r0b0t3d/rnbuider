@@ -47,6 +47,21 @@ export const copyDir = (src: string, dest: string) =>
     });
   });
 
+export const copyFile = (srcFile: string, destFile: string) =>
+  new Promise((resolve, reject) => {
+    console.log('Copy file', srcFile, destFile);
+
+    fs.cp(srcFile, destFile, (err: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
+  });
+
+export const checkFileExists = (path: string) => fs.existsSync(path);
+
 export const normalise = (input: string) => input.replace(/'/g, '').trim();
 
 export const capitalize = (string: string) => {

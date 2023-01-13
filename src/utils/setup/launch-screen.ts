@@ -41,11 +41,11 @@ export const prepareLaunchScreen = async ({
   const inputFile = normalise(launchScreenFile);
   // Copy template files
   if (launchScreen === 'icon') {
-    await copyDir(
-      './template/BootSplashLogo.imageset',
-      path.join(iosAssetFolder, 'BootSplashLogo.imageset'),
-    );
     if (inputFile) {
+      await copyDir(
+        './template/BootSplashLogo.imageset',
+        path.join(iosAssetFolder, 'BootSplashLogo.imageset'),
+      );
       await sharp(inputFile)
         .resize(512, 512)
         .png()
@@ -112,11 +112,11 @@ export const prepareLaunchScreen = async ({
       ]);
     }
   } else if (launchScreen === 'fullscreen') {
-    await copyDir(
-      './template/BootSplashImage.imageset',
-      path.join(iosAssetFolder, 'BootSplashImage.imageset'),
-    );
     if (inputFile) {
+      await copyDir(
+        './template/BootSplashImage.imageset',
+        path.join(iosAssetFolder, 'BootSplashImage.imageset'),
+      );
       await sharp(inputFile)
         .resize(512, 512)
         .png()

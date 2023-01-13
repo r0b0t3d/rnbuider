@@ -10,7 +10,7 @@ export const createClientConfig = (client: string) => {
     {
       type: 'confirm',
       name: 'ios-client',
-      message: `Please add **${client} prod** scheme and config`,
+      message: `Please add **${client} prod** scheme and config Pre actions`,
     },
     {
       type: 'input',

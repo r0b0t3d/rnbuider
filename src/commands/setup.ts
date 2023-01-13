@@ -14,7 +14,7 @@ import {
 } from '../utils/env';
 import { getAppleTeam } from '../utils/setup/apple';
 import { prepareOneSignal } from '../utils/setup/onesignal';
-import { capitalize, copyDir } from '../utils/common';
+import { capitalize, checkFileExists } from '../utils/common';
 import { setupFastlane } from '../utils/setup/fastlane';
 
 export default class Setup extends Command {
@@ -33,10 +33,6 @@ hello world from ./src/setup.ts!
   static args = [{ name: 'setup' }];
 
   async run() {
-    const envVars = readEnvVars(
-      path.join(process.cwd(), 'template/env.template'),
-    );
-
     const questions = [
       {
         type: 'input',
@@ -54,12 +50,17 @@ hello world from ./src/setup.ts!
       },
     ];
     const { client } = await inquirer.prompt(questions);
+
+    let envPath = path.join(process.cwd(), `configs/${client}/.env.prod`);
+    if (!checkFileExists(envPath)) {
+      envPath = path.join(process.cwd(), 'template/env.template');
+    }
+    const envVars = readEnvVars(envPath);
+
     const { bundleId, applicationId, appName } = await createClientConfig(
       client,
     );
     setEnvValue('CLIENT', client, envVars);
-    setEnvValue('BUNDLE_ID', bundleId, envVars);
-    setEnvValue('APPLICATION_ID', applicationId, envVars);
     const deeplinkHost = envVars.DEEP_LINK_HOST.value.replace(
       '[client]',
       client,
@@ -108,7 +109,11 @@ hello world from ./src/setup.ts!
     // Store dev env
     setEnvValue('ENV', 'dev', envVars);
     const devEnvVars = updateServiceDomain(envVars, 'app');
-    setEnvValue('APP_NAME', `${appName} Dev`, devEnvVars);
+    if (appName) {
+      setEnvValue('APP_NAME', `${appName} Dev`, devEnvVars);
+    }
+    setEnvValue('BUNDLE_ID', `${bundleId}.dev`, devEnvVars);
+    setEnvValue('APPLICATION_ID', `${applicationId}.dev`, devEnvVars);
     saveEnvValues(
       devEnvVars,
       path.join(process.cwd(), `/configs/${client}/.env.dev`),
@@ -117,7 +122,11 @@ hello world from ./src/setup.ts!
     // Store staging env
     setEnvValue('ENV', 'staging', envVars);
     const stagingEnvVars = updateServiceDomain(envVars, 'app');
-    setEnvValue('APP_NAME', `${appName} Staging`, stagingEnvVars);
+    if (appName) {
+      setEnvValue('APP_NAME', `${appName} Staging`, stagingEnvVars);
+    }
+    setEnvValue('BUNDLE_ID', `${bundleId}.staging`, stagingEnvVars);
+    setEnvValue('APPLICATION_ID', `${applicationId}.staging`, stagingEnvVars);
     saveEnvValues(
       stagingEnvVars,
       path.join(process.cwd(), `/configs/${client}/.env.staging`),
@@ -125,8 +134,12 @@ hello world from ./src/setup.ts!
 
     // Store prod env
     setEnvValue('ENV', 'prod', envVars);
-    const prodEnvVars = updateServiceDomain(envVars, 'app');
-    setEnvValue('APP_NAME', appName, prodEnvVars);
+    const prodEnvVars = updateServiceDomain(envVars, 'com');
+    if (appName) {
+      setEnvValue('APP_NAME', appName, prodEnvVars);
+    }
+    setEnvValue('BUNDLE_ID', bundleId, prodEnvVars);
+    setEnvValue('APPLICATION_ID', applicationId, prodEnvVars);
     saveEnvValues(
       prodEnvVars,
       path.join(process.cwd(), `/configs/${client}/.env.prod`),
@@ -136,17 +149,35 @@ hello world from ./src/setup.ts!
     const { firebaseIosApp, firebaseAndroidApp } = await setupFastlane({
       client,
     });
-    const fastlaneDir = path.join(process.cwd(), `fastlane/${client}/fastlane`);
+    const fastlaneDir = path.join(
+      process.cwd(),
+      `fastlane/clients/${client}/fastlane`,
+    );
     const fastlaneEnvVars = readEnvVars(path.join(fastlaneDir, '/.env'));
     setEnvValue('CLIENT', client, fastlaneEnvVars);
-    setEnvValue('APP_IDENTIFIER', bundleId, fastlaneEnvVars);
-    setEnvValue('APP_NAME', appName, fastlaneEnvVars);
+    if (bundleId) {
+      setEnvValue('APP_IDENTIFIER', bundleId, fastlaneEnvVars);
+    }
+    if (applicationId) {
+      setEnvValue('APP_IDENTIFIER_ANDROID', bundleId, fastlaneEnvVars);
+    }
+    if (appName) {
+      setEnvValue('APP_NAME', appName, fastlaneEnvVars);
+    }
     setEnvValue('XCODEPROJ_SCHEME', `${client} prod`, fastlaneEnvVars);
-    setEnvValue('APPLE_TEAM_ID', appleTeamId, fastlaneEnvVars);
-    setEnvValue('ITC_TEAM_ID', itcTeamId, fastlaneEnvVars);
+    if (appleTeamId) {
+      setEnvValue('APPLE_TEAM_ID', appleTeamId, fastlaneEnvVars);
+    }
+    if (itcTeamId) {
+      setEnvValue('ITC_TEAM_ID', itcTeamId, fastlaneEnvVars);
+    }
     setEnvValue('FLAVOR', capitalize(client), fastlaneEnvVars);
-    setEnvValue('FIREBASE_IOS_APP', firebaseIosApp, fastlaneEnvVars);
-    setEnvValue('FIREBASE_ANDROID_APP', firebaseAndroidApp, fastlaneEnvVars);
+    if (firebaseIosApp) {
+      setEnvValue('FIREBASE_IOS_APP', firebaseIosApp, fastlaneEnvVars);
+    }
+    if (firebaseAndroidApp) {
+      setEnvValue('FIREBASE_ANDROID_APP', firebaseAndroidApp, fastlaneEnvVars);
+    }
 
     saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
   }

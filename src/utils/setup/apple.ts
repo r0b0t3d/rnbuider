@@ -16,7 +16,7 @@ export const getAppleTeam = async () => {
     {
       type: 'input',
       name: 'team',
-      message: 'What is Apple team name?',
+      message: 'What is Apple team name (using for searching)?',
     },
   ]);
   shell.exec(`fastlane get_team_names search:${team} id:${account}`);

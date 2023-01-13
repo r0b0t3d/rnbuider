@@ -1,9 +1,10 @@
-import { copyDir, normalise } from '../common';
+import { copyDir, copyFile, normalise } from '../common';
 import * as path from 'path';
 import * as inquirer from 'inquirer';
 
 export const setupFastlane = async ({ client }: any) => {
-  const fastlaneDir = path.join(process.cwd(), `fastlane/${client}/fastlane`);
+  const clientDir = path.join(process.cwd(), `fastlane/clients/${client}`);
+  const fastlaneDir = path.join(clientDir, 'fastlane');
   // Copy template folders
   await copyDir(path.join(process.cwd(), 'template/fastlane'), fastlaneDir);
 
@@ -12,7 +13,7 @@ export const setupFastlane = async ({ client }: any) => {
     firebaseIosApp,
     firebaseAndroidApp,
     jsonKeyFile,
-  }: any = inquirer.prompt([
+  }: any = await inquirer.prompt([
     {
       type: 'input',
       name: 'firebaseServiceAccountFile',
@@ -32,23 +33,20 @@ export const setupFastlane = async ({ client }: any) => {
       type: 'input',
       name: 'jsonKeyFile',
       message:
-        'Path to json file? See https://docs.fastlane.tools/actions/supply/#setup',
+        'Path to Google json file? See https://docs.fastlane.tools/actions/supply/#setup',
     },
   ]);
   if (firebaseServiceAccountFile) {
-    await copyDir(
+    await copyFile(
       normalise(firebaseServiceAccountFile),
       path.join(fastlaneDir, 'firebase.json'),
     );
   }
   if (jsonKeyFile) {
-    await copyDir(
-      normalise(jsonKeyFile),
-      path.join(fastlaneDir, '../key.json'),
-    );
+    await copyFile(normalise(jsonKeyFile), path.join(clientDir, 'key.json'));
   }
   return {
-    firebaseIosApp,
-    firebaseAndroidApp,
+    firebaseIosApp: normalise(firebaseIosApp),
+    firebaseAndroidApp: normalise(firebaseAndroidApp),
   };
 };
