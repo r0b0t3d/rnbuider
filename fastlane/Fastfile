@@ -1,7 +1,20 @@
 require_relative "./version.rb"
+require_relative "./discord.rb"
 require 'json'
 
 tester_udids_file = "tester_udids.txt"
+
+desc "Send discord message"
+lane :send_message do |options| 
+  if ENV['DISCORD_WEBHOOK_URL']
+    discord_notifier(
+      webhook_url: ENV['DISCORD_WEBHOOK_URL'],
+      title: options[:title],
+      description: options[:message],
+      color: options[:color]
+    )
+  end
+end
 
 desc "Commit changes to repo"
 private_lane :sync_git do |options|
@@ -201,6 +214,9 @@ platform :ios do
   desc "Process build"
   lane :build do |options|
     puts "Start building app for env #{options[:env]}"
+    send_message(
+      title: "Start building #{ENV['CLIENT']} ios - #{options[:env]}",
+    )
     app_id = ENV['APP_IDENTIFIER']
     app_name = ENV['APP_NAME']
     app_identifier = [app_id]
@@ -280,11 +296,21 @@ platform :ios do
     sync_git(
       message: "build #{ENV['CLIENT']} ios - success ✅"
     )
+    send_message(
+      title: "Build #{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Success ✅",
+      color: '#00C40F'
+    )
   end
 
   error do |lane, exception|
     sync_git(
       message: "build #{ENV['CLIENT']} ios - failed ❌"
+    )
+    send_message(
+      title: "Building #{ENV['CLIENT']} ios - #{options[:env]}",
+      message: "Failure ❌",
+      color: '#E70000'
     )
   end
 end
@@ -329,6 +355,9 @@ platform :android do
 
   desc "Process build"
   lane :build do |options|
+    send_message(
+      title: "Start building #{ENV['CLIENT']} android - #{options[:env]}",
+    )
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
     version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
@@ -377,6 +406,11 @@ platform :android do
     sync_git(
       message: "Build #{ENV['CLIENT']} - success ✅"
     )
+    send_message(
+      title: "Build #{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Success ✅",
+      color: '#00C40F'
+    )
   end
 
   desc "Update Store Listing"
@@ -401,6 +435,11 @@ platform :android do
   error do |lane, exception|
     sync_git(
       message: "build #{ENV['CLIENT']} android - failed ❌"
+    )
+    send_message(
+      title: "Building #{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Failure ❌",
+      color: '#E70000'
     )
   end
 end

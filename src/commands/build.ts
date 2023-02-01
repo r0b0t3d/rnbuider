@@ -47,6 +47,10 @@ hello world from ./src/build.ts!
       char: 'i',
       description: 'If enabled, the build will be uploaded to installR',
     }),
+    ignore_git_reset: flags.boolean({
+      char: 'g',
+      description: 'Ignore git reset when building',
+    }),
   };
 
   static args = [{ name: 'build' }];
@@ -258,15 +262,20 @@ hello world from ./src/build.ts!
       ...otherParams,
       json_file: jsonFile,
     });
-    shell.exec(`git reset --hard && git checkout ${params.branch} && git pull`);
-    shell.cd('fastlane');
-    shell.exec('bundle update --bundler');
-    shell.exec('bundle install');
-    shell.exec('bundle update fastlane');
-    shell.exec('bundle update cocoapods');
-    shell.cd('../');
+    console.log({ ignore_git_reset: flags.ignore_git_reset });
+    if (!flags.ignore_git_reset) {
+      shell.exec(
+        `git reset --hard && git checkout ${params.branch} && git pull`,
+      );
+      shell.cd('fastlane');
+      shell.exec('bundle update --bundler');
+      shell.exec('bundle install');
+      shell.exec('bundle update fastlane');
+      shell.exec('bundle update cocoapods');
+      shell.cd('../');
+    }
 
-    shell.exec('yarn install && npx pod-install');
+    shell.exec('yarn install');
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
     // Clean android if any
@@ -274,6 +283,9 @@ hello world from ./src/build.ts!
       shell.cd('./android');
       shell.exec('./gradlew clean');
       shell.cd('../');
+    }
+    if (target.includes('ios')) {
+      shell.exec('npx pod-install');
     }
 
     if (client) {
