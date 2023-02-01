@@ -50,6 +50,7 @@ export const saveEnvValues = (newValues: any, destFilePath: string) => {
 export const setEnvValue = (key: string, value: string, envVars: any) => {
   envVars[key] = {
     ...envVars[key],
+    key,
     value,
   };
 };
@@ -61,6 +62,7 @@ export const updateServiceDomain = (envVars: any, domain: string) => {
     if (data.value?.includes('[domain]')) {
       data = {
         ...data,
+        key,
         value: data.value.replace('[domain]', domain),
       };
     }

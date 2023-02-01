@@ -262,7 +262,7 @@ hello world from ./src/build.ts!
       ...otherParams,
       json_file: jsonFile,
     });
-    console.log({ ignore_git_reset: flags.ignore_git_reset });
+
     if (!flags.ignore_git_reset) {
       shell.exec(
         `git reset --hard && git checkout ${params.branch} && git pull`,
