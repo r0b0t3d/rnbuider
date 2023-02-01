@@ -1,5 +1,4 @@
 require_relative "./version.rb"
-require_relative "./discord.rb"
 require 'json'
 
 tester_udids_file = "tester_udids.txt"
