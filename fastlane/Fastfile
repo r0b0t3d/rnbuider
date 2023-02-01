@@ -214,7 +214,8 @@ platform :ios do
   lane :build do |options|
     puts "Start building app for env #{options[:env]}"
     send_message(
-      title: "Start building #{ENV['CLIENT']} ios - #{options[:env]}",
+      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
+      message: "Start building..."
     )
     app_id = ENV['APP_IDENTIFIER']
     app_name = ENV['APP_NAME']
@@ -296,7 +297,7 @@ platform :ios do
       message: "build #{ENV['CLIENT']} ios - success ✅"
     )
     send_message(
-      title: "Build #{ENV['CLIENT']} android - #{options[:env]}",
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
       message: "Success ✅",
       color: '#00C40F'
     )
@@ -307,7 +308,7 @@ platform :ios do
       message: "build #{ENV['CLIENT']} ios - failed ❌"
     )
     send_message(
-      title: "Building #{ENV['CLIENT']} ios - #{options[:env]}",
+      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
       message: "Failure ❌",
       color: '#E70000'
     )
@@ -355,7 +356,8 @@ platform :android do
   desc "Process build"
   lane :build do |options|
     send_message(
-      title: "Start building #{ENV['CLIENT']} android - #{options[:env]}",
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Start building..."
     )
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
@@ -406,7 +408,7 @@ platform :android do
       message: "Build #{ENV['CLIENT']} - success ✅"
     )
     send_message(
-      title: "Build #{ENV['CLIENT']} android - #{options[:env]}",
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
       message: "Success ✅",
       color: '#00C40F'
     )
@@ -436,7 +438,7 @@ platform :android do
       message: "build #{ENV['CLIENT']} android - failed ❌"
     )
     send_message(
-      title: "Building #{ENV['CLIENT']} android - #{options[:env]}",
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
       message: "Failure ❌",
       color: '#E70000'
     )
