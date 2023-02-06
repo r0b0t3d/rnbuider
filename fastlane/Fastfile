@@ -1,6 +1,347 @@
 require_relative "./version.rb"
 require 'json'
 
+platform :ios do
+  ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
+  xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
+
+  def get_ios_version(increment = "patch")
+    begin 
+      latest_testflight_build_number(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['ITC_TEAM_ID'],
+          app_identifier: ENV['APP_IDENTIFIER'],
+      )
+      app_store_build_number(
+        username: ENV['APPLE_ID'],
+        team_id: ENV['ITC_TEAM_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
+      )
+    rescue => exception
+      puts exception
+    end
+    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || "1.0.0"
+    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || "1.0.0"
+    puts "TF Version #{tf_version}"
+    puts "Store Version #{store_version}"
+    next_v = next_version(store_version, increment)
+    if Gem::Version.new(tf_version) >= Gem::Version.new(next_v)
+        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] || 1
+        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
+        puts "TF build number #{tf_build_number}"
+        puts "Store build number #{store_build_number}"
+        if tf_build_number == store_build_number 
+          next_v = next_version(tf_version, 'patch')
+        else
+          next_v = tf_version
+        end
+    end
+    puts "Next Version #{next_v}"
+    return next_v
+  end
+
+  def ensure_temp_keychain(name)
+    delete_keychain(
+      name: name
+    ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
+    create_keychain(
+      name: name,
+      password: 'rnbuilder',
+      unlock: true,
+      timeout: 3600
+    )
+  end
+
+  before_all do
+    ensure_temp_keychain "rnbuilder"
+  end
+
+  desc 'Process build'
+  private_lane :process_build do |options|
+    puts "Process build with options: #{options}"
+
+    update_project_provisioning(
+      xcodeproj: xcodeproj,
+      profile: options[:profile],
+      build_configuration: "Release",
+    )
+    if ENV['SERVICE_EXTENSION_NAME']
+      update_project_provisioning(
+        xcodeproj: xcodeproj,
+        profile: options[:profile_service_extension],
+        target_filter: ENV['SERVICE_EXTENSION_NAME'],
+        build_configuration: "Release",
+      )
+    end
+    build_app(
+      workspace: "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcworkspace",
+      clean: true,
+      scheme: options[:scheme],
+      export_method: options[:export_method],
+      output_name: options[:output_name],
+      include_symbols: true,
+      include_bitcode: ENV['INCLUDE_BITCODE'] == 'true',
+      skip_profile_detection: true,
+      build_path: "#{ENV['PROJECT_DIR']}/fastlane/builds",
+      output_directory: "#{ENV['PROJECT_DIR']}/fastlane/builds"
+    )
+  end
+
+  desc "Process build"
+  lane :build do |options|
+    puts "Start building app for env #{options[:env]}"
+    send_message(
+      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
+      message: "Start building...",
+      color: "#282C34",
+    )
+    app_id = ENV['APP_IDENTIFIER']
+    app_name = ENV['APP_NAME']
+    app_identifier = [app_id]
+    export_method = options[:distribute] == 'store' ? 'app-store' : 'ad-hoc'
+    match_type = options[:distribute] == 'store' ? 'appstore' : 'adhoc'
+    if ENV['SERVICE_EXTENSION_NAME']
+      app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
+    end
+    match(
+      app_identifier: app_identifier,
+      type: match_type,
+      username: ENV['APPLE_ID'],
+      team_id: ENV['APPLE_TEAM_ID'],
+      git_url: ENV['MATCH_GIT_URL'],
+      git_branch: ENV['CLIENT'],
+      force_for_new_devices: true,
+      readonly: ENV['MATCH_READONLY'] || is_ci,
+      keychain_name: 'rnbuilder',
+      keychain_password: 'rnbuilder',
+    )
+    version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
+    version = write_json_version(options[:json_file], options[:client], 'ios', version)
+    sync_git(
+      message: "bump version #{options[:client]} - ios"
+    )
+    process_build(
+      testers: options[:testers],
+      scheme: ENV['XCODEPROJ_SCHEME'],
+      output_name: app_name,
+      export_method: export_method,
+      profile: ENV["sigh_#{app_id}_#{match_type}_profile-path"],
+      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{match_type}_profile-path"]
+    )
+    file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    if options[:installr]
+      upload_installr(
+        file: file,
+        notes: options[:scheme],
+        testers: options[:testers]
+      )
+    end
+    if options[:firebase]
+      upload_firebase(
+        app: ENV['FIREBASE_IOS_APP'],
+        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers],
+        groups: options[:groups],
+      )
+    end
+    if options[:distribute] == 'store'
+      upload_to_app_store(
+        username: ENV['APPLE_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
+        team_id: ENV['ITC_TEAM_ID'],
+        app_version: version,
+        release_notes: {
+          'default' => 'Bug fixes and performance improvement',
+          'en-US' => 'Bug fixes and performance improvement'
+        },
+        force: true,
+        submit_for_review: true,
+        automatic_release: true,
+        skip_screenshots: true,
+        skip_metadata: false,
+        run_precheck_before_submit: false,
+        submission_information: {
+          add_id_info_uses_idfa: false,
+          add_id_info_serves_ads: false,
+          add_id_info_tracks_install: false,
+          add_id_info_tracks_action: false,
+          add_id_info_limits_tracking: false,
+        }
+      )
+    end
+    sync_git(
+      message: "build #{ENV['CLIENT']} ios - success ✅"
+    )
+    send_message(
+      title: "<@527746092930957312>\n#{ENV['CLIENT']} ios - #{options[:env]}",
+      message: "Success ✅",
+      color: '#00C40F'
+    )
+  end
+
+  error do |lane, exception|
+    sync_git(
+      message: "build #{ENV['CLIENT']} ios - failed ❌"
+    )
+    send_message(
+      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
+      message: "Failure ❌",
+      color: '#E70000'
+    )
+  end
+end
+
+platform :android do
+  def get_android_version(increment = "patch")
+    begin
+      prod_version = google_play_track_release_names(
+          json_key: ENV["JSON_KEY_FILE"],
+          package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+          track: 'production'
+      )
+      internal_version = google_play_track_release_names(
+          json_key: ENV["JSON_KEY_FILE"],
+          package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+          track: 'internal'
+      )
+      puts prod_version
+      puts internal_version
+      new_version = next_version(prod_version.first, increment)
+      if Gem::Version.new(internal_version.first.to_s) > Gem::Version.new(new_version.to_s)
+          new_version = internal_version.first
+      end
+      return new_version
+    rescue => exception
+      puts exception
+    end
+    new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
+    return new_version
+  end
+
+  desc "Process android build"
+  private_lane :process_android_build do |options|
+    gradle(
+      task: options[:task],
+      flavor: options[:flavor],
+      build_type: options[:build_type],
+      project_dir: "#{ENV['PROJECT_DIR']}/android",
+      properties: options[:properties]
+    )
+  end
+
+  desc "Process build"
+  lane :build do |options|
+    send_message(
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Start building...",
+      color: "#282C34"
+    )
+    flavor = ENV["FLAVOR"]
+    build_type = ENV["BUILD_TYPE"]
+    version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
+    write_json_version(options[:json_file], options[:client], 'android', version)
+    sync_git(
+      message: "bump version #{options[:client]} - android"
+    )
+    process_android_build(
+      branch: options[:branch],
+      testers: options[:testers],
+      flavor: flavor,
+      build_type: build_type,
+      task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
+    )
+    file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    if options[:installr]
+      upload_installr(
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers]
+      )
+    end
+    if options[:firebase]
+      upload_firebase(
+        app: ENV['FIREBASE_ANDROID_APP'],
+        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers],
+        groups: options[:groups],
+      )
+    end
+    if options[:distribute] == 'store'
+      upload_to_play_store(
+        track: 'production',
+        release_status: ENV['RELEASE_STATUS'] || 'completed',
+        skip_upload_changelogs: false,
+        skip_upload_apk: true,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+        json_key: ENV["JSON_KEY_FILE"]
+      )
+    end
+    sync_git(
+      message: "Build #{ENV['CLIENT']} - success ✅"
+    )
+    send_message(
+      title: "<@527746092930957312>\n#{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Success ✅",
+      color: '#00C40F'
+    )
+  end
+
+  desc "Update Store Listing"
+  lane :store_listing do |options|
+    metadata = options[:metadata] || false
+    changelogs = options[:changelogs] || false
+    images = options[:images] || false
+    screenshots = options[:screenshots] || false
+    UI.message "Update Store Listing with metadata:#{metadata} changelogs:#{changelogs} images:#{images} screenshots:#{screenshots}"
+    upload_to_play_store(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: !metadata,
+      skip_upload_changelogs: !changelogs,
+      skip_upload_images: !images,
+      skip_upload_screenshots: !screenshots,
+      package_name: ENV["APP_IDENTIFIER"],
+      json_key: ENV["JSON_KEY_FILE"]
+    )
+  end
+
+  error do |lane, exception|
+    sync_git(
+      message: "build #{ENV['CLIENT']} android - failed ❌"
+    )
+    send_message(
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
+      message: "Failure ❌",
+      color: '#E70000'
+    )
+  end
+end
+
+desc "Create Onesignal certificate"
+lane :sync_onesignal do |options|
+  puts ENV['APP_IDENTIFIER']
+  cert_path = "#{ENV['PROJECT_DIR']}/fastlane/certs"
+  get_push_certificate(
+    force: true,
+    app_identifier: ENV['APP_IDENTIFIER'],
+    username: ENV['APPLE_ID'],
+    team_id: ENV['APPLE_TEAM_ID'],
+    output_path: cert_path,
+  )
+  onesignal(
+    app_id: ENV['ONE_SIGNAL_APP_ID'],
+    auth_token: ENV['ONE_SIGNAL_AUTH_TOKEN'],
+    apns_p12: "#{cert_path}/production_#{ENV['APP_IDENTIFIER']}_ios.p12",
+  )
+end
+
 tester_udids_file = "tester_udids.txt"
 
 desc "Send discord message"
@@ -123,325 +464,3 @@ lane :get_team_names do |options|
       str_dev_portal << "#{team['name']} (#{team['teamId']})||"
   end
 end
-
-platform :ios do
-  ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
-  xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
-
-  def get_ios_version(increment = "patch")
-    begin 
-      latest_testflight_build_number(
-          username: ENV['APPLE_ID'],
-          team_id: ENV['ITC_TEAM_ID'],
-          app_identifier: ENV['APP_IDENTIFIER'],
-      )
-      app_store_build_number(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-      )
-    rescue => exception
-      puts exception
-    end
-    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || "1.0.0"
-    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || "1.0.0"
-    puts "TF Version #{tf_version}"
-    puts "Store Version #{store_version}"
-    next_v = next_version(store_version, increment)
-    if Gem::Version.new(tf_version) >= Gem::Version.new(next_v)
-        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] || 1
-        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
-        puts "TF build number #{tf_build_number}"
-        puts "Store build number #{store_build_number}"
-        if tf_build_number == store_build_number 
-          next_v = next_version(tf_version, 'patch')
-        else
-          next_v = tf_version
-        end
-    end
-    puts "Next Version #{next_v}"
-    return next_v
-  end
-
-  def ensure_temp_keychain(name)
-    delete_keychain(
-      name: name
-    ) if File.exist? File.expand_path("~/Library/Keychains/#{name}-db")
-    create_keychain(
-      name: name,
-      password: 'rnbuilder',
-      unlock: true,
-      timeout: 3600
-    )
-  end
-
-  before_all do
-    ensure_temp_keychain "rnbuilder"
-  end
-
-  desc 'Process build'
-  private_lane :process_build do |options|
-    puts "Process build with options: #{options}"
-
-    update_project_provisioning(
-      xcodeproj: xcodeproj,
-      profile: options[:profile],
-      build_configuration: "Release",
-    )
-    if ENV['SERVICE_EXTENSION_NAME']
-      update_project_provisioning(
-        xcodeproj: xcodeproj,
-        profile: options[:profile_service_extension],
-        target_filter: ENV['SERVICE_EXTENSION_NAME'],
-        build_configuration: "Release",
-      )
-    end
-    build_app(
-      workspace: "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcworkspace",
-      clean: true,
-      scheme: options[:scheme],
-      export_method: options[:export_method],
-      output_name: options[:output_name],
-      include_symbols: true,
-      include_bitcode: ENV['INCLUDE_BITCODE'] == 'true',
-      skip_profile_detection: true,
-      build_path: "#{ENV['PROJECT_DIR']}/fastlane/builds",
-      output_directory: "#{ENV['PROJECT_DIR']}/fastlane/builds"
-    )
-  end
-
-  desc "Process build"
-  lane :build do |options|
-    puts "Start building app for env #{options[:env]}"
-    send_message(
-      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      message: "Start building..."
-    )
-    app_id = ENV['APP_IDENTIFIER']
-    app_name = ENV['APP_NAME']
-    app_identifier = [app_id]
-    export_method = options[:distribute] == 'store' ? 'app-store' : 'ad-hoc'
-    match_type = options[:distribute] == 'store' ? 'appstore' : 'adhoc'
-    if ENV['SERVICE_EXTENSION_NAME']
-      app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
-    end
-    match(
-      app_identifier: app_identifier,
-      type: match_type,
-      username: ENV['APPLE_ID'],
-      team_id: ENV['APPLE_TEAM_ID'],
-      git_url: ENV['MATCH_GIT_URL'],
-      git_branch: ENV['CLIENT'],
-      force_for_new_devices: true,
-      readonly: ENV['MATCH_READONLY'] || is_ci,
-      keychain_name: 'rnbuilder',
-      keychain_password: 'rnbuilder',
-    )
-    version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
-    version = write_json_version(options[:json_file], options[:client], 'ios', version)
-    sync_git(
-      message: "bump version #{options[:client]} - ios"
-    )
-    process_build(
-      testers: options[:testers],
-      scheme: ENV['XCODEPROJ_SCHEME'],
-      output_name: app_name,
-      export_method: export_method,
-      profile: ENV["sigh_#{app_id}_#{match_type}_profile-path"],
-      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{match_type}_profile-path"]
-    )
-    file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    if options[:installr]
-      upload_installr(
-        file: file,
-        notes: options[:scheme],
-        testers: options[:testers]
-      )
-    end
-    if options[:firebase]
-      upload_firebase(
-        app: ENV['FIREBASE_IOS_APP'],
-        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
-        file: file,
-        notes: options[:notes] || "Fastlane build",
-        testers: options[:testers],
-        groups: options[:groups],
-      )
-    end
-    if options[:distribute] == 'store'
-      upload_to_app_store(
-        username: ENV['APPLE_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_version: version,
-        release_notes: {
-          'default' => 'Bug fixes and performance improvement',
-          'en-US' => 'Bug fixes and performance improvement'
-        },
-        force: true,
-        submit_for_review: true,
-        automatic_release: true,
-        skip_screenshots: true,
-        skip_metadata: false,
-        run_precheck_before_submit: false,
-        submission_information: {
-          add_id_info_uses_idfa: false,
-          add_id_info_serves_ads: false,
-          add_id_info_tracks_install: false,
-          add_id_info_tracks_action: false,
-          add_id_info_limits_tracking: false,
-        }
-      )
-    end
-    sync_git(
-      message: "build #{ENV['CLIENT']} ios - success ✅"
-    )
-    send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Success ✅",
-      color: '#00C40F'
-    )
-  end
-
-  error do |lane, exception|
-    sync_git(
-      message: "build #{ENV['CLIENT']} ios - failed ❌"
-    )
-    send_message(
-      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      message: "Failure ❌",
-      color: '#E70000'
-    )
-  end
-end
-
-platform :android do
-  def get_android_version(increment = "patch")
-    begin
-      prod_version = google_play_track_release_names(
-          json_key: ENV["JSON_KEY_FILE"],
-          package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-          track: 'production'
-      )
-      internal_version = google_play_track_release_names(
-          json_key: ENV["JSON_KEY_FILE"],
-          package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-          track: 'internal'
-      )
-      puts prod_version
-      puts internal_version
-      new_version = next_version(prod_version.first, increment)
-      if Gem::Version.new(internal_version.first.to_s) > Gem::Version.new(new_version.to_s)
-          new_version = internal_version.first
-      end
-      return new_version
-    rescue => exception
-      puts exception
-    end
-    new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
-    return new_version
-  end
-
-  desc "Process android build"
-  private_lane :process_android_build do |options|
-    gradle(
-      task: options[:task],
-      flavor: options[:flavor],
-      build_type: options[:build_type],
-      project_dir: "#{ENV['PROJECT_DIR']}/android",
-      properties: options[:properties]
-    )
-  end
-
-  desc "Process build"
-  lane :build do |options|
-    send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Start building..."
-    )
-    flavor = ENV["FLAVOR"]
-    build_type = ENV["BUILD_TYPE"]
-    version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
-    write_json_version(options[:json_file], options[:client], 'android', version)
-    sync_git(
-      message: "bump version #{options[:client]} - android"
-    )
-    process_android_build(
-      branch: options[:branch],
-      testers: options[:testers],
-      flavor: flavor,
-      build_type: build_type,
-      task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
-    )
-    file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
-    if options[:installr]
-      upload_installr(
-        file: file,
-        notes: options[:notes] || "Fastlane build",
-        testers: options[:testers]
-      )
-    end
-    if options[:firebase]
-      upload_firebase(
-        app: ENV['FIREBASE_ANDROID_APP'],
-        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
-        file: file,
-        notes: options[:notes] || "Fastlane build",
-        testers: options[:testers],
-        groups: options[:groups],
-      )
-    end
-    if options[:distribute] == 'store'
-      upload_to_play_store(
-        track: 'production',
-        release_status: ENV['RELEASE_STATUS'] || 'completed',
-        skip_upload_changelogs: false,
-        skip_upload_apk: true,
-        skip_upload_metadata: true,
-        skip_upload_images: true,
-        skip_upload_screenshots: true,
-        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-        json_key: ENV["JSON_KEY_FILE"]
-      )
-    end
-    sync_git(
-      message: "Build #{ENV['CLIENT']} - success ✅"
-    )
-    send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Success ✅",
-      color: '#00C40F'
-    )
-  end
-
-  desc "Update Store Listing"
-  lane :store_listing do |options|
-    metadata = options[:metadata] || false
-    changelogs = options[:changelogs] || false
-    images = options[:images] || false
-    screenshots = options[:screenshots] || false
-    UI.message "Update Store Listing with metadata:#{metadata} changelogs:#{changelogs} images:#{images} screenshots:#{screenshots}"
-    upload_to_play_store(
-      skip_upload_apk: true,
-      skip_upload_aab: true,
-      skip_upload_metadata: !metadata,
-      skip_upload_changelogs: !changelogs,
-      skip_upload_images: !images,
-      skip_upload_screenshots: !screenshots,
-      package_name: ENV["APP_IDENTIFIER"],
-      json_key: ENV["JSON_KEY_FILE"]
-    )
-  end
-
-  error do |lane, exception|
-    sync_git(
-      message: "build #{ENV['CLIENT']} android - failed ❌"
-    )
-    send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Failure ❌",
-      color: '#E70000'
-    )
-  end
-end
-
