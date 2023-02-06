@@ -1,6 +1,30 @@
 require_relative "./version.rb"
 require 'json'
 
+desc "Send discord message"
+lane :send_message do |options| 
+  if ENV['DISCORD_WEBHOOK_URL']
+    discord_notifier(
+      webhook_url: ENV['DISCORD_WEBHOOK_URL'],
+      title: options[:title],
+      description: options[:message],
+      color: options[:color]
+    )
+  end
+end
+
+desc "Commit changes to repo"
+private_lane :sync_git do |options|
+  git_add(path: "#{ENV['PROJECT_DIR']}/*")
+  git_commit(
+    path: "#{ENV['PROJECT_DIR']}/*",
+    message: options[:message],
+    allow_nothing_to_commit: true
+  )
+  git_pull(rebase: true)
+  push_to_git_remote
+end
+
 platform :ios do
   ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
   xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
@@ -343,30 +367,6 @@ lane :sync_onesignal do |options|
 end
 
 tester_udids_file = "tester_udids.txt"
-
-desc "Send discord message"
-lane :send_message do |options| 
-  if ENV['DISCORD_WEBHOOK_URL']
-    discord_notifier(
-      webhook_url: ENV['DISCORD_WEBHOOK_URL'],
-      title: options[:title],
-      description: options[:message],
-      color: options[:color]
-    )
-  end
-end
-
-desc "Commit changes to repo"
-private_lane :sync_git do |options|
-  git_add(path: "#{ENV['PROJECT_DIR']}/*")
-  git_commit(
-    path: "#{ENV['PROJECT_DIR']}/*",
-    message: options[:message],
-    allow_nothing_to_commit: true
-  )
-  git_pull(rebase: true)
-  push_to_git_remote
-end
 
 desc "Sync devices"
 lane :sync_udids do
