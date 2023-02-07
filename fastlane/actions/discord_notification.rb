@@ -86,6 +86,10 @@ module Fastlane
         # So no one will ever forget your contribution to fastlane :) You are awesome btw!
         ["Tuan Luong"]
       end
+
+      def self.is_supported?(platform)
+        true
+      end
     end
   end
 end
