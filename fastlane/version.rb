@@ -61,7 +61,7 @@ def write_json_version(json_file, client, platform, version)
     data_hash[platform] = platform_version
   end
   File.write(json_file, JSON.pretty_generate(data_hash))
-  return platform_version['version']
+  return platform_version
 end
 
 

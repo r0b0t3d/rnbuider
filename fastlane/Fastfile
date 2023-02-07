@@ -143,7 +143,7 @@ platform :ios do
       keychain_password: 'rnbuilder',
     )
     version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
-    version = write_json_version(options[:json_file], options[:client], 'ios', version)
+    platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
       message: "bump version #{options[:client]} - ios"
     )
@@ -178,7 +178,7 @@ platform :ios do
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
         team_id: ENV['ITC_TEAM_ID'],
-        app_version: version,
+        app_version: platform_version[:version],
         release_notes: {
           'default' => 'Bug fixes and performance improvement',
           'en-US' => 'Bug fixes and performance improvement'
@@ -203,7 +203,7 @@ platform :ios do
     )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      description: "Success ✅",
+      description: "Version: #{platform_version[:version]} (#{platform_version[:build]})\nSuccess ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -270,7 +270,7 @@ platform :android do
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
     version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
-    write_json_version(options[:json_file], options[:client], 'android', version)
+    platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
     sync_git(
       message: "bump version #{options[:client]} - android"
     )
@@ -317,7 +317,7 @@ platform :android do
     )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      description: "Success ✅",
+      description: "Version: #{platform_version[:version]} (#{platform_version[:build]})\nSuccess ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
