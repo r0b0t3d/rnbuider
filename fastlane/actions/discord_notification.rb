@@ -14,7 +14,9 @@ module Fastlane
           content = content + "<@#{item}> "
         } unless params[:mention_users].nil?
 
-        content = content + "\n" + params[:content]
+        if params[:content]
+          content = content + "\n" + params[:content]
+        end
         
         client = Discordrb::Webhooks::Client.new(url: params[:webhook_url])
         client.execute do |builder|
