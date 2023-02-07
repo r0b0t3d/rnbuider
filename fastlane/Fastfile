@@ -178,7 +178,7 @@ platform :ios do
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
         team_id: ENV['ITC_TEAM_ID'],
-        app_version: platform_version[:version],
+        app_version: platform_version["version"],
         release_notes: {
           'default' => 'Bug fixes and performance improvement',
           'en-US' => 'Bug fixes and performance improvement'
@@ -203,7 +203,7 @@ platform :ios do
     )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      description: "Version: #{platform_version[:version]} (#{platform_version[:build]})\nSuccess ✅",
+      description: "Version: #{platform_version["version"]} (#{platform_version["build"]})\nSuccess ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -317,7 +317,7 @@ platform :android do
     )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      description: "Version: #{platform_version[:version]} (#{platform_version[:build]})\nSuccess ✅",
+      description: "Version: #{platform_version["version"]} (#{platform_version["build"]})\nSuccess ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
