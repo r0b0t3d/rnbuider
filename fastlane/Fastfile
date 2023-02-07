@@ -119,7 +119,7 @@ platform :ios do
     puts "Start building app for env #{options[:env]}"
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      message: "Start building...",
+      description: "Start building...",
       color: "#282C34",
     )
     app_id = ENV['APP_IDENTIFIER']
@@ -203,7 +203,7 @@ platform :ios do
     )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      message: "Success ✅",
+      description: "Success ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -215,7 +215,7 @@ platform :ios do
     )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      message: "Failure ❌",
+      description: "Failure ❌",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -264,7 +264,7 @@ platform :android do
   lane :build do |options|
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Start building...",
+      description: "Start building...",
       color: "#282C34"
     )
     flavor = ENV["FLAVOR"]
@@ -317,7 +317,7 @@ platform :android do
     )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Success ✅",
+      description: "Success ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -348,7 +348,7 @@ platform :android do
     )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      message: "Failure ❌",
+      description: "Failure ❌",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
