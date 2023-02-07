@@ -17,7 +17,7 @@ module Fastlane
         if params[:content]
           content = content + "\n" + params[:content]
         end
-        
+
         client = Discordrb::Webhooks::Client.new(url: params[:webhook_url])
         client.execute do |builder|
           builder.content = content
@@ -27,7 +27,7 @@ module Fastlane
             embed.thumbnail = Discordrb::Webhooks::EmbedThumbnail.new(
               url: params[:thumbnail_url]
             )
-            embed.colour = color
+            embed.colour = params[:color]
             embed.timestamp = Time.now
           end
         end
