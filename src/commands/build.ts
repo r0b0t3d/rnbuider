@@ -51,6 +51,10 @@ hello world from ./src/build.ts!
       char: 'g',
       description: 'Ignore git reset when building',
     }),
+    ignore_cleanup: flags.boolean({
+      char: 's',
+      description: 'Ignore cleanup when building',
+    }),
   };
 
   static args = [{ name: 'build' }];
@@ -275,17 +279,19 @@ hello world from ./src/build.ts!
       shell.cd('../');
     }
 
-    shell.exec('yarn install');
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
-    // Clean android if any
-    if (target.includes('android')) {
-      shell.cd('./android');
-      shell.exec('./gradlew clean');
-      shell.cd('../');
-    }
-    if (target.includes('ios')) {
-      shell.exec('npx pod-install');
+    if (!flags.ignore_cleanup) {
+      shell.exec('yarn install');
+      // Clean android if any
+      if (target.includes('android')) {
+        shell.cd('./android');
+        shell.exec('./gradlew clean');
+        shell.cd('../');
+      }
+      if (target.includes('ios')) {
+        shell.exec('npx pod-install');
+      }
     }
 
     if (client) {
