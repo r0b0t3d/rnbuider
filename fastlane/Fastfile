@@ -8,10 +8,13 @@ lane :send_message do |options|
       webhook_url: ENV['DISCORD_WEBHOOK_URL'],
       mention_users: options[:mention_users],
       thumbnail_url: ENV['DISCORD_THUMBNAIL_URL'],
-      content: options[:content],    
-      title: options[:title],
-      description: options[:description],
-      color: options[:color],
+      content: options[:content],
+      embeds: [{
+        title: options[:title],
+        description: options[:description],
+        color: options[:color],
+        fields: options[:fields]
+      }]
     )
   end
 end
@@ -117,10 +120,24 @@ platform :ios do
   desc "Process build"
   lane :build do |options|
     puts "Start building app for env #{options[:env]}"
+    version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
+    platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
+    sync_git(
+      message: "bump version #{options[:client]} - ios"
+    )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
       description: "Start building...",
       color: "#282C34",
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
     )
     app_id = ENV['APP_IDENTIFIER']
     app_name = ENV['APP_NAME']
@@ -141,11 +158,6 @@ platform :ios do
       readonly: ENV['MATCH_READONLY'] || is_ci,
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
-    )
-    version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
-    platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
-    sync_git(
-      message: "bump version #{options[:client]} - ios"
     )
     process_build(
       testers: options[:testers],
@@ -202,8 +214,17 @@ platform :ios do
       message: "build #{ENV['CLIENT']} ios - success ✅"
     )
     send_message(
-      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
-      description: "Version: #{platform_version["version"]} (#{platform_version["build"]})\nSuccess ✅",
+      title: "#{ENV['CLIENT']} ios",
+      description: "Success ✅",
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -214,7 +235,7 @@ platform :ios do
       message: "build #{ENV['CLIENT']} ios - failed ❌"
     )
     send_message(
-      title: "#{ENV['CLIENT']} ios - #{options[:env]}",
+      title: "#{ENV['CLIENT']} ios",
       description: "Failure ❌",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
@@ -262,17 +283,26 @@ platform :android do
 
   desc "Process build"
   lane :build do |options|
-    send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      description: "Start building...",
-      color: "#282C34"
-    )
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
     version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
     sync_git(
       message: "bump version #{options[:client]} - android"
+    )
+    send_message(
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
+      description: "Start building...",
+      color: "#282C34",
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
     )
     process_android_build(
       branch: options[:branch],
@@ -316,10 +346,19 @@ platform :android do
       message: "Build #{ENV['CLIENT']} - success ✅"
     )
     send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      description: "Version: #{platform_version["version"]} (#{platform_version["build"]})\nSuccess ✅",
+      title: "#{ENV['CLIENT']} android",
+      description: "Success ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
     )
   end
 
@@ -347,7 +386,7 @@ platform :android do
       message: "build #{ENV['CLIENT']} android - failed ❌"
     )
     send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
+      title: "#{ENV['CLIENT']} android",
       description: "Failure ❌",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],

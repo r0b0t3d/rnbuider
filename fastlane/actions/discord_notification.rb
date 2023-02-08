@@ -21,15 +21,22 @@ module Fastlane
         client = Discordrb::Webhooks::Client.new(url: params[:webhook_url])
         client.execute do |builder|
           builder.content = content
-          builder.add_embed do |embed|
-            embed.title = params[:title]
-            embed.description = params[:description]
-            embed.thumbnail = Discordrb::Webhooks::EmbedThumbnail.new(
-              url: params[:thumbnail_url]
-            )
-            embed.colour = params[:color]
-            embed.timestamp = Time.now
-          end
+          params[:embeds].each { |item|
+            builder.add_embed do |embed|
+              embed.title = item["title"]
+              embed.description = item["description"]
+              embed.thumbnail = Discordrb::Webhooks::EmbedThumbnail.new(
+                url: item["thumbnail_url"]
+              )
+              embed.colour = item["color"]
+              embed.timestamp = Time.now
+
+              item['fields'].each { |field|
+                embed.add_field(name: field[:name], value: field[:value], inline: field[:inline])
+              } unless item['fields'].nil?
+            end
+          } unless params[:embeds].nil?
+          
         end
       end
 
@@ -69,17 +76,8 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :mention_roles,
                                        description: "Mention roles",
                                        optional: true,),
-          FastlaneCore::ConfigItem.new(key: :title,
-                                       description: "Embbed title",
-                                       optional: true,),
-          FastlaneCore::ConfigItem.new(key: :description,
-                                       description: "Embbed description",
-                                       optional: true,),
-          FastlaneCore::ConfigItem.new(key: :thumbnail_url,
-                                       description: "Embbed thumbnail",
-                                       optional: true,),
-          FastlaneCore::ConfigItem.new(key: :color,
-                                       description: "Embbed color",
+          FastlaneCore::ConfigItem.new(key: :embeds,
+                                       description: "Embbeds",
                                        optional: true,),
         ]
       end
