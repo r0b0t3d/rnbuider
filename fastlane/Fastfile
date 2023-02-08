@@ -7,13 +7,13 @@ lane :send_message do |options|
     discord_notification(
       webhook_url: ENV['DISCORD_WEBHOOK_URL'],
       mention_users: options[:mention_users],
-      thumbnail_url: ENV['DISCORD_THUMBNAIL_URL'],
       content: options[:content],
       embeds: [{
         title: options[:title],
         description: options[:description],
         color: options[:color],
-        fields: options[:fields]
+        fields: options[:fields],
+        thumbnail_url: ENV['DISCORD_THUMBNAIL_URL'],
       }]
     )
   end
