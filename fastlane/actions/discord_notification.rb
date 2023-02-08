@@ -78,6 +78,7 @@ module Fastlane
                                        optional: true,),
           FastlaneCore::ConfigItem.new(key: :embeds,
                                        description: "Embbeds",
+                                       type: Array,
                                        optional: true,),
         ]
       end
