@@ -19,6 +19,23 @@ lane :send_message do |options|
   end
 end
 
+lane :test_message do
+  send_message(
+    content: 'Test',
+    title: 'Test Title',
+    description: 'Test description',
+    fields: [{
+      name: "Version",
+      value: "1.0.0 (1)",
+      inline: true,
+    }, {
+      name: "Environment",
+      value: "Test",
+      inline: true,
+    }],
+  )
+end
+
 desc "Commit changes to repo"
 private_lane :sync_git do |options|
   git_add(path: "#{ENV['PROJECT_DIR']}/*")

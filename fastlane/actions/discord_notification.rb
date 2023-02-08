@@ -23,17 +23,17 @@ module Fastlane
           builder.content = content
           params[:embeds].each { |item|
             builder.add_embed do |embed|
-              embed.title = item["title"]
-              embed.description = item["description"]
+              embed.title = item[:title]
+              embed.description = item[:description]
               embed.thumbnail = Discordrb::Webhooks::EmbedThumbnail.new(
-                url: item["thumbnail_url"]
+                url: item[:thumbnail_url]
               )
-              embed.colour = item["color"]
+              embed.colour = item[:color]
               embed.timestamp = Time.now
 
-              item['fields'].each { |field|
+              item[:fields].each { |field|
                 embed.add_field(name: field[:name], value: field[:value], inline: field[:inline])
-              } unless item['fields'].nil?
+              } unless item[:fields].nil?
             end
           } unless params[:embeds].nil?
           
