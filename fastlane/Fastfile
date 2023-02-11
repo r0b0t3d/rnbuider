@@ -234,31 +234,46 @@ platform :ios do
   desc "Submit for review"
   lane :submit_review do |options|
     upload_to_app_store(
-        username: ENV['APPLE_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-        team_id: ENV['ITC_TEAM_ID'],
-        submit_for_review: true,
-        automatic_release: true,
-        skip_screenshots: true,
-        skip_metadata: false,
-        skip_binary_upload: true,
-        force: true,
-        app_version: options[:app_version],
-        build_number: options[:build_number],
-        release_notes: {
-          'default' => 'Bug fixes and performance improvement',
-          'en-US' => 'Bug fixes and performance improvement'
-        },
-        run_precheck_before_submit: false,
-        reject_if_possible: true,
-        submission_information: {
-          add_id_info_uses_idfa: false,
-          add_id_info_serves_ads: false,
-          add_id_info_tracks_install: false,
-          add_id_info_tracks_action: false,
-          add_id_info_limits_tracking: false,
-        }
-      )
+      username: ENV['APPLE_ID'],
+      app_identifier: ENV['APP_IDENTIFIER'],
+      team_id: ENV['ITC_TEAM_ID'],
+      submit_for_review: true,
+      automatic_release: true,
+      skip_screenshots: true,
+      skip_metadata: false,
+      skip_binary_upload: true,
+      force: true,
+      app_version: options[:app_version],
+      build_number: options[:build_number],
+      release_notes: {
+        'default' => 'Bug fixes and performance improvement',
+        'en-US' => 'Bug fixes and performance improvement'
+      },
+      run_precheck_before_submit: false,
+      reject_if_possible: true,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        add_id_info_serves_ads: false,
+        add_id_info_tracks_install: false,
+        add_id_info_tracks_action: false,
+        add_id_info_limits_tracking: false,
+      }
+    )
+    send_message(
+      title: "#{ENV['CLIENT']} ios",
+      description: "Submitted for review ✅",
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
+      color: '#00C40F',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
   end
 
   error do |lane, exception|
