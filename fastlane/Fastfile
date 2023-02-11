@@ -55,9 +55,9 @@ platform :ios do
   def get_ios_version(increment = "patch")
     begin 
       latest_testflight_build_number(
-          username: ENV['APPLE_ID'],
-          team_id: ENV['ITC_TEAM_ID'],
-          app_identifier: ENV['APP_IDENTIFIER'],
+        username: ENV['APPLE_ID'],
+        team_id: ENV['ITC_TEAM_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
       )
       app_store_build_number(
         username: ENV['APPLE_ID'],
@@ -207,29 +207,13 @@ platform :ios do
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
         team_id: ENV['ITC_TEAM_ID'],
-        app_version: platform_version["version"],
-        release_notes: {
-          'default' => 'Bug fixes and performance improvement',
-          'en-US' => 'Bug fixes and performance improvement'
-        },
-        force: true,
-        submit_for_review: true,
-        automatic_release: true,
+        submit_for_review: false,
         skip_screenshots: true,
-        skip_metadata: false,
+        skip_metadata: true,
+        include_in_app_purchases: false,
         run_precheck_before_submit: false,
-        submission_information: {
-          add_id_info_uses_idfa: false,
-          add_id_info_serves_ads: false,
-          add_id_info_tracks_install: false,
-          add_id_info_tracks_action: false,
-          add_id_info_limits_tracking: false,
-        }
       )
     end
-    sync_git(
-      message: "build #{ENV['CLIENT']} ios - success ✅"
-    )
     send_message(
       title: "#{ENV['CLIENT']} ios",
       description: "Success ✅",
@@ -245,12 +229,41 @@ platform :ios do
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
+    reset_git_repo(force: true)
+  end
+
+  desc "Submit for review"
+  lane :submit_review do |options|
+    upload_to_app_store(
+        username: ENV['APPLE_ID'],
+        app_identifier: ENV['APP_IDENTIFIER'],
+        team_id: ENV['ITC_TEAM_ID'],
+        submit_for_review: true,
+        automatic_release: true,
+        skip_screenshots: true,
+        skip_metadata: false,
+        skip_binary_upload: true,
+        force: true,
+        app_version: options[:app_version],
+        build_number: options[:build_number],
+        release_notes: {
+          'default' => 'Bug fixes and performance improvement',
+          'en-US' => 'Bug fixes and performance improvement'
+        },
+        run_precheck_before_submit: false,
+        reject_if_possible: true,
+        submission_information: {
+          add_id_info_uses_idfa: false,
+          add_id_info_serves_ads: false,
+          add_id_info_tracks_install: false,
+          add_id_info_tracks_action: false,
+          add_id_info_limits_tracking: false,
+        }
+      )
   end
 
   error do |lane, exception|
-    sync_git(
-      message: "build #{ENV['CLIENT']} ios - failed ❌"
-    )
+    reset_git_repo(force: true)
     send_message(
       title: "#{ENV['CLIENT']} ios",
       description: "Failure ❌",
@@ -273,9 +286,10 @@ platform :android do
           package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
           track: 'internal'
       )
+      new_version = next_version(prod_version.first, increment)
       puts prod_version
       puts internal_version
-      new_version = next_version(prod_version.first, increment)
+      puts new_version
       if Gem::Version.new(internal_version.first.to_s) > Gem::Version.new(new_version.to_s)
           new_version = internal_version.first
       end
@@ -283,7 +297,7 @@ platform :android do
     rescue => exception
       puts exception
     end
-    new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
+    # new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
     return new_version
   end
 
@@ -303,80 +317,79 @@ platform :android do
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
     version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
+    puts version
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
-    sync_git(
-      message: "bump version #{options[:client]} - android"
-    )
-    send_message(
-      title: "#{ENV['CLIENT']} android - #{options[:env]}",
-      description: "Start building...",
-      color: "#282C34",
-      fields: [{
-        name: "Version",
-        value: "#{platform_version["version"]} (#{platform_version["build"]})",
-        inline: true,
-      }, {
-        name: "Environment",
-        value: options[:env],
-        inline: true,
-      }],
-    )
-    process_android_build(
-      branch: options[:branch],
-      testers: options[:testers],
-      flavor: flavor,
-      build_type: build_type,
-      task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
-    )
-    file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
-    if options[:installr]
-      upload_installr(
-        file: file,
-        notes: options[:notes] || "Fastlane build",
-        testers: options[:testers]
-      )
-    end
-    if options[:firebase]
-      upload_firebase(
-        app: ENV['FIREBASE_ANDROID_APP'],
-        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
-        file: file,
-        notes: options[:notes] || "Fastlane build",
-        testers: options[:testers],
-        groups: options[:groups],
-      )
-    end
-    if options[:distribute] == 'store'
-      upload_to_play_store(
-        track: 'production',
-        release_status: ENV['RELEASE_STATUS'] || 'completed',
-        skip_upload_changelogs: false,
-        skip_upload_apk: true,
-        skip_upload_metadata: true,
-        skip_upload_images: true,
-        skip_upload_screenshots: true,
-        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-        json_key: ENV["JSON_KEY_FILE"]
-      )
-    end
-    sync_git(
-      message: "Build #{ENV['CLIENT']} - success ✅"
-    )
-    send_message(
-      title: "#{ENV['CLIENT']} android",
-      description: "Success ✅",
-      color: '#00C40F',
-      mention_users: ENV['DISCORD_MENTION_USERS'],
-      fields: [{
-        name: "Version",
-        value: "#{platform_version["version"]} (#{platform_version["build"]})",
-        inline: true,
-      }, {
-        name: "Environment",
-        value: options[:env],
-        inline: true,
-      }],
-    )
+    # sync_git(
+    #   message: "bump version #{options[:client]} - android"
+    # )
+    # send_message(
+    #   title: "#{ENV['CLIENT']} android - #{options[:env]}",
+    #   description: "Start building...",
+    #   color: "#282C34",
+    #   fields: [{
+    #     name: "Version",
+    #     value: "#{platform_version["version"]} (#{platform_version["build"]})",
+    #     inline: true,
+    #   }, {
+    #     name: "Environment",
+    #     value: options[:env],
+    #     inline: true,
+    #   }],
+    # )
+    # process_android_build(
+    #   branch: options[:branch],
+    #   testers: options[:testers],
+    #   flavor: flavor,
+    #   build_type: build_type,
+    #   task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
+    # )
+    # file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    # if options[:installr]
+    #   upload_installr(
+    #     file: file,
+    #     notes: options[:notes] || "Fastlane build",
+    #     testers: options[:testers]
+    #   )
+    # end
+    # if options[:firebase]
+    #   upload_firebase(
+    #     app: ENV['FIREBASE_ANDROID_APP'],
+    #     service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
+    #     file: file,
+    #     notes: options[:notes] || "Fastlane build",
+    #     testers: options[:testers],
+    #     groups: options[:groups],
+    #   )
+    # end
+    # if options[:distribute] == 'store'
+    #   upload_to_play_store(
+    #     track: 'production',
+    #     release_status: ENV['RELEASE_STATUS'] || 'completed',
+    #     skip_upload_changelogs: false,
+    #     skip_upload_apk: true,
+    #     skip_upload_metadata: true,
+    #     skip_upload_images: true,
+    #     skip_upload_screenshots: true,
+    #     package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+    #     json_key: ENV["JSON_KEY_FILE"]
+    #   )
+    # end
+    # send_message(
+    #   title: "#{ENV['CLIENT']} android",
+    #   description: "Success ✅",
+    #   color: '#00C40F',
+    #   mention_users: ENV['DISCORD_MENTION_USERS'],
+    #   fields: [{
+    #     name: "Version",
+    #     value: "#{platform_version["version"]} (#{platform_version["build"]})",
+    #     inline: true,
+    #   }, {
+    #     name: "Environment",
+    #     value: options[:env],
+    #     inline: true,
+    #   }],
+    # )
+    # reset_git_repo(force: true)
   end
 
   desc "Update Store Listing"
@@ -399,9 +412,7 @@ platform :android do
   end
 
   error do |lane, exception|
-    sync_git(
-      message: "build #{ENV['CLIENT']} android - failed ❌"
-    )
+    reset_git_repo(force: true)
     send_message(
       title: "#{ENV['CLIENT']} android",
       description: "Failure ❌",
