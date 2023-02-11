@@ -210,7 +210,6 @@ platform :ios do
         submit_for_review: false,
         skip_screenshots: true,
         skip_metadata: true,
-        include_in_app_purchases: false,
         run_precheck_before_submit: false,
       )
     end
