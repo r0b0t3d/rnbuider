@@ -3,7 +3,11 @@ import { Command, flags } from '@oclif/command';
 import * as shell from 'shelljs';
 import * as inquirer from 'inquirer';
 import { getAppVersion, getDirectories } from '../utils/common';
-
+i;
+nquirer.registerPrompt(
+  'checkbox-plus',
+  require('inquirer-checkbox-plus-prompt'),
+);
 export default class SubmitReview extends Command {
   static description = 'Submit ios for review';
 
@@ -27,7 +31,6 @@ export default class SubmitReview extends Command {
     const questions = [];
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients');
-      console.log({ clients });
       if (clients.length > 0) {
         questions.push({
           type: 'checkbox-plus',
