@@ -36,6 +36,7 @@ USAGE
 * [`rnbuilder match-nuke [BUILD]`](#rnbuilder-match-nuke-build)
 * [`rnbuilder onesignal [BUILD]`](#rnbuilder-onesignal-build)
 * [`rnbuilder setup [SETUP]`](#rnbuilder-setup-setup)
+* [`rnbuilder submit-review [SUBMIT-REVIEW]`](#rnbuilder-submit-review-submit-review)
 * [`rnbuilder sync-udids [BUILD]`](#rnbuilder-sync-udids-build)
 
 ## `rnbuilder build [BUILD]`
@@ -170,6 +171,25 @@ EXAMPLE
 ```
 
 _See code: [src/commands/setup.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.1/src/commands/setup.ts)_
+
+## `rnbuilder submit-review [SUBMIT-REVIEW]`
+
+Submit ios for review
+
+```
+USAGE
+  $ rnbuilder submit-review [SUBMIT-REVIEW]
+
+OPTIONS
+  -c, --client=client  Select client that you want to push update
+  -h, --help           show CLI help
+
+EXAMPLE
+  $ rnbuilder submit-review
+       Push changes to existing apps ./src/firebase-sync-udids.ts!
+```
+
+_See code: [src/commands/submit-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.1/src/commands/submit-review.ts)_
 
 ## `rnbuilder sync-udids [BUILD]`
 

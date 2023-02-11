@@ -78,7 +78,7 @@ export default class SubmitReview extends Command {
     const { client, target } = params;
     if (client) {
       client.forEach((c: string) => {
-        const appVersion = getAppVersion('prod', client, target);
+        const appVersion = getAppVersion('prod', c, target);
         shell.cd(`fastlane/clients/${c}`);
         shell.exec('pwd');
         shell.exec(
