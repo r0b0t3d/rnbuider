@@ -20,7 +20,7 @@ $ npm install -g rnbuilder
 $ rnbuilder COMMAND
 running command...
 $ rnbuilder (-v|--version|version)
-rnbuilder/0.5.31 darwin-arm64 node-v16.19.0
+rnbuilder/0.5.32 darwin-arm64 node-v16.19.0
 $ rnbuilder --help [COMMAND]
 USAGE
   $ rnbuilder COMMAND
@@ -63,7 +63,7 @@ EXAMPLE
   hello world from ./src/build.ts!
 ```
 
-_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/build.ts)_
 
 ## `rnbuilder codepush [BUILD]`
 
@@ -82,7 +82,7 @@ EXAMPLE
        Push changes to existing apps ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/codepush.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/codepush.ts)_
+_See code: [src/commands/codepush.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/codepush.ts)_
 
 ## `rnbuilder help [COMMAND]`
 
@@ -114,7 +114,7 @@ EXAMPLE
   initialize environment for first run from ./src/initialize.ts!
 ```
 
-_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/initialize.ts)_
+_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/initialize.ts)_
 
 ## `rnbuilder match-nuke [BUILD]`
 
@@ -133,7 +133,7 @@ EXAMPLE
        Nuke certificates ./src/match-nuke.ts!
 ```
 
-_See code: [src/commands/match-nuke.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/match-nuke.ts)_
+_See code: [src/commands/match-nuke.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/match-nuke.ts)_
 
 ## `rnbuilder onesignal [BUILD]`
 
@@ -152,7 +152,7 @@ EXAMPLE
        Create and upload push certificate to One Signal from ./src/commands/onesignal.ts!
 ```
 
-_See code: [src/commands/onesignal.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/onesignal.ts)_
+_See code: [src/commands/onesignal.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/onesignal.ts)_
 
 ## `rnbuilder setup [SETUP]`
 
@@ -170,7 +170,7 @@ EXAMPLE
   hello world from ./src/setup.ts!
 ```
 
-_See code: [src/commands/setup.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/setup.ts)_
+_See code: [src/commands/setup.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/setup.ts)_
 
 ## `rnbuilder submit-review [BUILD]`
 
@@ -189,7 +189,7 @@ EXAMPLE
        Push changes to existing apps ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/submit-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/submit-review.ts)_
+_See code: [src/commands/submit-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/submit-review.ts)_
 
 ## `rnbuilder sync-udids [BUILD]`
 
@@ -208,5 +208,5 @@ EXAMPLE
        Sync device UDIDs from firebase from ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.31/src/commands/sync-udids.ts)_
+_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.5.32/src/commands/sync-udids.ts)_
 <!-- commandsstop -->
