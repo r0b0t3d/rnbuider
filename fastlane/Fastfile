@@ -264,11 +264,7 @@ platform :ios do
       description: "Submitted for review ✅",
       fields: [{
         name: "Version",
-        value: "#{platform_version["version"]} (#{platform_version["build"]})",
-        inline: true,
-      }, {
-        name: "Environment",
-        value: options[:env],
+        value: "#{options[:app_version]} (#{options[:build_number]})",
         inline: true,
       }],
       color: '#00C40F',
