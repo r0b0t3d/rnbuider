@@ -4,11 +4,11 @@ import * as shell from 'shelljs';
 import * as inquirer from 'inquirer';
 import { getAppVersion, getDirectories } from '../utils/common';
 
-export default class CodePush extends Command {
-  static description = 'Push changes to existing apps';
+export default class SubmitReview extends Command {
+  static description = 'Submit ios for review';
 
   static examples = [
-    `$ rnbuilder codepush
+    `$ rnbuilder submit-review
     Push changes to existing apps ./src/firebase-sync-udids.ts!
 `,
   ];
@@ -21,12 +21,13 @@ export default class CodePush extends Command {
     }),
   };
 
-  static args = [{ name: 'build' }];
+  static args = [{ name: 'submit-review' }];
 
   askForMissingFields = async (flags: any) => {
     const questions = [];
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients');
+      console.log({ clients });
       if (clients.length > 0) {
         questions.push({
           type: 'checkbox-plus',
@@ -69,7 +70,7 @@ export default class CodePush extends Command {
   };
 
   async run() {
-    const { flags } = this.parse(CodePush);
+    const { flags } = this.parse(SubmitReview);
     const params = await this.askForMissingFields(flags);
     const { client, target } = params;
     if (client) {
