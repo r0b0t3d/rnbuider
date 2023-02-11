@@ -3,8 +3,8 @@ import { Command, flags } from '@oclif/command';
 import * as shell from 'shelljs';
 import * as inquirer from 'inquirer';
 import { getAppVersion, getDirectories } from '../utils/common';
-i;
-nquirer.registerPrompt(
+
+inquirer.registerPrompt(
   'checkbox-plus',
   require('inquirer-checkbox-plus-prompt'),
 );
