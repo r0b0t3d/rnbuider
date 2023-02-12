@@ -329,77 +329,77 @@ platform :android do
     version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
     puts version
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
-    # sync_git(
-    #   message: "bump version #{options[:client]} - android"
-    # )
-    # send_message(
-    #   title: "#{ENV['CLIENT']} android - #{options[:env]}",
-    #   description: "Start building...",
-    #   color: "#282C34",
-    #   fields: [{
-    #     name: "Version",
-    #     value: "#{platform_version["version"]} (#{platform_version["build"]})",
-    #     inline: true,
-    #   }, {
-    #     name: "Environment",
-    #     value: options[:env],
-    #     inline: true,
-    #   }],
-    # )
-    # process_android_build(
-    #   branch: options[:branch],
-    #   testers: options[:testers],
-    #   flavor: flavor,
-    #   build_type: build_type,
-    #   task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
-    # )
-    # file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
-    # if options[:installr]
-    #   upload_installr(
-    #     file: file,
-    #     notes: options[:notes] || "Fastlane build",
-    #     testers: options[:testers]
-    #   )
-    # end
-    # if options[:firebase]
-    #   upload_firebase(
-    #     app: ENV['FIREBASE_ANDROID_APP'],
-    #     service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
-    #     file: file,
-    #     notes: options[:notes] || "Fastlane build",
-    #     testers: options[:testers],
-    #     groups: options[:groups],
-    #   )
-    # end
-    # if options[:distribute] == 'store'
-    #   upload_to_play_store(
-    #     track: 'production',
-    #     release_status: ENV['RELEASE_STATUS'] || 'completed',
-    #     skip_upload_changelogs: false,
-    #     skip_upload_apk: true,
-    #     skip_upload_metadata: true,
-    #     skip_upload_images: true,
-    #     skip_upload_screenshots: true,
-    #     package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-    #     json_key: ENV["JSON_KEY_FILE"]
-    #   )
-    # end
-    # send_message(
-    #   title: "#{ENV['CLIENT']} android",
-    #   description: "Success ✅",
-    #   color: '#00C40F',
-    #   mention_users: ENV['DISCORD_MENTION_USERS'],
-    #   fields: [{
-    #     name: "Version",
-    #     value: "#{platform_version["version"]} (#{platform_version["build"]})",
-    #     inline: true,
-    #   }, {
-    #     name: "Environment",
-    #     value: options[:env],
-    #     inline: true,
-    #   }],
-    # )
-    # reset_git_repo(force: true)
+    sync_git(
+      message: "bump version #{options[:client]} - android"
+    )
+    send_message(
+      title: "#{ENV['CLIENT']} android - #{options[:env]}",
+      description: "Start building...",
+      color: "#282C34",
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
+    )
+    process_android_build(
+      branch: options[:branch],
+      testers: options[:testers],
+      flavor: flavor,
+      build_type: build_type,
+      task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
+    )
+    file = Actions.lane_context[SharedValues::GRADLE_APK_OUTPUT_PATH]
+    if options[:installr]
+      upload_installr(
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers]
+      )
+    end
+    if options[:firebase]
+      upload_firebase(
+        app: ENV['FIREBASE_ANDROID_APP'],
+        service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
+        file: file,
+        notes: options[:notes] || "Fastlane build",
+        testers: options[:testers],
+        groups: options[:groups],
+      )
+    end
+    if options[:distribute] == 'store'
+      upload_to_play_store(
+        track: 'production',
+        release_status: ENV['RELEASE_STATUS'] || 'completed',
+        skip_upload_changelogs: false,
+        skip_upload_apk: true,
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+        json_key: ENV["JSON_KEY_FILE"]
+      )
+    end
+    send_message(
+      title: "#{ENV['CLIENT']} android",
+      description: "Success ✅",
+      color: '#00C40F',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+      fields: [{
+        name: "Version",
+        value: "#{platform_version["version"]} (#{platform_version["build"]})",
+        inline: true,
+      }, {
+        name: "Environment",
+        value: options[:env],
+        inline: true,
+      }],
+    )
+    reset_git_repo(force: true)
   end
 
   desc "Update Store Listing"
