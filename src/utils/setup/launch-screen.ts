@@ -27,7 +27,7 @@ export const prepareLaunchScreen = async ({
     {
       type: 'input',
       name: 'launchScreenFile',
-      message: 'Launch screen file (1400 x1867 for fullscreen)?',
+      message: 'Launch screen file (3:4 ratio for fullscreen)?',
     },
     {
       type: 'input',
@@ -118,7 +118,6 @@ export const prepareLaunchScreen = async ({
         path.join(iosAssetFolder, 'BootSplashImage.imageset'),
       );
       await sharp(inputFile)
-        .resize(512, 512)
         .png()
         .toFile(
           path.join(
