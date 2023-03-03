@@ -1,8 +1,8 @@
 module Fastlane
   module Actions
     module SharedValues
-      ONE_SIGNAL_APP_ID = :ONE_SIGNAL_APP_ID
-      ONE_SIGNAL_APP_AUTH_KEY = :ONE_SIGNAL_APP_AUTH_KEY
+      T_ONE_SIGNAL_APP_ID = :T_ONE_SIGNAL_APP_ID
+      T_ONE_SIGNAL_APP_AUTH_KEY = :T_ONE_SIGNAL_APP_AUTH_KEY
     end
 
     class SetupOnesignalAction < Action
@@ -47,7 +47,7 @@ module Fastlane
         payload["android_gcm_sender_id"] = android_gcm_sender_id unless android_gcm_sender_id.nil?
         payload["organization_id"] = organization_id unless organization_id.nil?
         payload["apns_p8"] = apns_p8 unless apns_p8.nil?
-        
+
         # here's the actual lifting - POST or PUT to OneSignal
 
         json_headers = { 'Content-Type' => 'application/json', 'Authorization' => "Basic #{auth_token}" }
@@ -65,8 +65,8 @@ module Fastlane
 
         response_body = JSON.parse(response.body)
 
-        Actions.lane_context[SharedValues::ONE_SIGNAL_APP_ID] = response_body["id"]
-        Actions.lane_context[SharedValues::ONE_SIGNAL_APP_AUTH_KEY] = response_body["basic_auth_key"]
+        Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_ID] = response_body["id"]
+        Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_AUTH_KEY] = response_body["basic_auth_key"]
 
         check_response_code(response, is_update)
       end
@@ -91,7 +91,7 @@ module Fastlane
       def self.available_options
         [
           FastlaneCore::ConfigItem.new(key: :app_id,
-                                       env_name: "ONE_SIGNAL_APP_ID",
+                                       env_name: "T_ONE_SIGNAL_APP_ID",
                                        sensitive: true,
                                        description: "OneSignal App ID. Setting this updates an existing app",
                                        optional: true),
@@ -151,8 +151,8 @@ module Fastlane
 
       def self.output
         [
-          ['ONE_SIGNAL_APP_ID', 'The app ID of the newly created or updated app'],
-          ['ONE_SIGNAL_APP_AUTH_KEY', 'The auth token for the newly created or updated app']
+          ['T_ONE_SIGNAL_APP_ID', 'The app ID of the newly created or updated app'],
+          ['T_ONE_SIGNAL_APP_AUTH_KEY', 'The auth token for the newly created or updated app']
         ]
       end
 

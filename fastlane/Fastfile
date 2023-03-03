@@ -453,7 +453,7 @@ lane :sync_onesignal do |options|
   end
   setup_onesignal(
     auth_token: options['auth_token']
-    app_name: "#{ENV['CLIENT'].capitalize()} Prod"
+    app_name: "#{ENV['CLIENT']} Prod"
     # Android setup
     android_token: options['android_token']
     android_gcm_sender_id: options['android_gcm_sender_id']
