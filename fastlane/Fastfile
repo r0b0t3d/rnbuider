@@ -1,5 +1,6 @@
 require_relative "./version.rb"
 require 'json'
+require "fileutils"
 
 desc "Send discord message"
 lane :send_message do |options| 
@@ -434,19 +435,30 @@ end
 
 desc "Create Onesignal certificate"
 lane :sync_onesignal do |options|
-  puts ENV['APP_IDENTIFIER']
-  cert_path = "#{ENV['PROJECT_DIR']}/fastlane/certs"
-  get_push_certificate(
-    force: true,
-    app_identifier: ENV['APP_IDENTIFIER'],
-    username: ENV['APPLE_ID'],
-    team_id: ENV['APPLE_TEAM_ID'],
-    output_path: cert_path,
-  )
-  onesignal(
-    app_id: ENV['ONE_SIGNAL_APP_ID'],
-    auth_token: ENV['ONE_SIGNAL_AUTH_TOKEN'],
-    apns_p12: "#{cert_path}/production_#{ENV['APP_IDENTIFIER']}_ios.p12",
+  cert_path = "#{ENV['PROJECT_DIR']}/apnKeys"
+  key_path = "#{cert_path}/#{ENV['CLIENT']}.p8"
+  if !File.exist?(key_path)
+    FileUtils.mkdir_p(cert_path)
+    portal_client = Spaceship::Portal.login(ENV['APPLE_ID'])
+    if portal_client
+      portal_client.select_team(team_id: ENV['APPLE_TEAM_ID']) if portal_client
+      service_config = {}
+      service_config['U27F4V844T'] = []
+      key = portal_client.create_key!(name: 'APNs', service_configs: service_config)
+      file = portal_client.download_key(id: key['keyId'])
+      puts key
+      puts file
+      File.write(key_path, file)
+    end
+  end
+  setup_onesignal(
+    auth_token: options['auth_token']
+    app_name: "#{ENV['CLIENT'].capitalize()} Prod"
+    # Android setup
+    android_token: options['android_token']
+    android_gcm_sender_id: options['android_gcm_sender_id']
+    # iOS setup
+    apns_p8:  File.read(key_path)
   )
 end
 

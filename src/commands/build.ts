@@ -271,12 +271,8 @@ hello world from ./src/build.ts!
       shell.exec(
         `git reset --hard && git checkout ${params.branch} && git pull`,
       );
-      shell.cd('fastlane');
       shell.exec('bundle update --bundler');
       shell.exec('bundle install');
-      shell.exec('bundle update fastlane');
-      shell.exec('bundle update cocoapods');
-      shell.cd('../');
     }
 
     // Clean fastlane builds
