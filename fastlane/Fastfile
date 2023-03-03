@@ -452,13 +452,13 @@ lane :sync_onesignal do |options|
     end
   end
   setup_onesignal(
-    auth_token: options['auth_token']
-    app_name: "#{ENV['CLIENT']} Prod"
+    auth_token: options['auth_token'],
+    app_name: "#{ENV['CLIENT']} Prod",
     # Android setup
-    android_token: options['android_token']
-    android_gcm_sender_id: options['android_gcm_sender_id']
+    android_token: options['android_token'],
+    android_gcm_sender_id: options['android_gcm_sender_id'],
     # iOS setup
-    apns_p8:  File.read(key_path)
+    apns_p8:  File.read(key_path),
   )
 end
 
