@@ -1,7 +1,7 @@
 import * as sharp from 'sharp';
 import * as path from 'path';
 import * as inquirer from 'inquirer';
-import { copyDir, normalise } from '../common';
+import { copyDir, copyFile, normalise } from '../common';
 
 export const prepareLaunchScreen = async ({
   iosAssetFolder,
@@ -113,6 +113,7 @@ export const prepareLaunchScreen = async ({
     }
   } else if (launchScreen === 'fullscreen') {
     if (inputFile) {
+      // ios
       await copyDir(
         './template/BootSplashImage.imageset',
         path.join(iosAssetFolder, 'BootSplashImage.imageset'),
@@ -125,6 +126,15 @@ export const prepareLaunchScreen = async ({
             'BootSplashImage.imageset/splashTablet.png',
           ),
         );
+
+      // Android
+      await copyFile(
+        './template/splash.xml',
+        path.join(androidAssetFolder, 'layout/splash.xml'),
+      );
+      await sharp(inputFile)
+        .png()
+        .toFile(path.join(androidAssetFolder, 'drawable/splash.png'));
     }
   }
 
