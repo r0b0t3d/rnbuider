@@ -47,10 +47,16 @@ export const copyDir = (src: string, dest: string) =>
     });
   });
 
+export const ensureDir = (path: string) => {
+  if (!fs.existsSync(path)) {
+    fs.mkdirSync(path, { recursive: true });
+  }
+};
+
+export const exists = (path: string) => fs.existsSync(path);
+
 export const copyFile = (srcFile: string, destFile: string) =>
   new Promise((resolve, reject) => {
-    console.log('Copy file', srcFile, destFile);
-
     fs.cp(srcFile, destFile, (err: any) => {
       if (err) {
         reject(err);

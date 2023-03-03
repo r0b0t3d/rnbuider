@@ -1,7 +1,7 @@
 import * as sharp from 'sharp';
 import * as path from 'path';
 import * as inquirer from 'inquirer';
-import { copyDir, copyFile, normalise } from '../common';
+import { copyDir, copyFile, ensureDir, normalise } from '../common';
 
 export const prepareLaunchScreen = async ({
   iosAssetFolder,
@@ -128,6 +128,8 @@ export const prepareLaunchScreen = async ({
         );
 
       // Android
+      ensureDir(path.join(androidAssetFolder, 'layout'));
+      ensureDir(path.join(androidAssetFolder, 'drawable'));
       await copyFile(
         './template/splash.xml',
         path.join(androidAssetFolder, 'layout/splash.xml'),

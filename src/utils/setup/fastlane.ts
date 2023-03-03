@@ -1,12 +1,14 @@
-import { copyDir, copyFile, normalise } from '../common';
+import { copyDir, copyFile, exists, normalise } from '../common';
 import * as path from 'path';
 import * as inquirer from 'inquirer';
 
 export const setupFastlane = async ({ client }: any) => {
   const clientDir = path.join(process.cwd(), `fastlane/clients/${client}`);
   const fastlaneDir = path.join(clientDir, 'fastlane');
-  // Copy template folders
-  await copyDir(path.join(process.cwd(), 'template/fastlane'), fastlaneDir);
+  if (!exists(fastlaneDir)) {
+    // Copy template folders
+    await copyDir(path.join(process.cwd(), 'template/fastlane'), fastlaneDir);
+  }
 
   const {
     firebaseServiceAccountFile,
