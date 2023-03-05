@@ -258,6 +258,7 @@ platform :ios do
         add_id_info_tracks_install: false,
         add_id_info_tracks_action: false,
         add_id_info_limits_tracking: false,
+        export_compliance_uses_encryption: false
       }
     )
     send_message(
@@ -437,11 +438,11 @@ desc "Create Onesignal certificate"
 lane :sync_onesignal do |options|
   cert_path = "#{ENV['PROJECT_DIR']}/apnKeys"
   key_path = "#{cert_path}/#{ENV['CLIENT']}.p8"
+  portal_client = Spaceship::Portal.login(ENV['APPLE_ID'])
+  portal_client.select_team(team_id: ENV['APPLE_TEAM_ID']) if portal_client
   if !File.exist?(key_path)
     FileUtils.mkdir_p(cert_path)
-    portal_client = Spaceship::Portal.login(ENV['APPLE_ID'])
     if portal_client
-      portal_client.select_team(team_id: ENV['APPLE_TEAM_ID']) if portal_client
       service_config = {}
       service_config['U27F4V844T'] = []
       key = portal_client.create_key!(name: 'APNs', service_configs: service_config)
@@ -451,15 +452,22 @@ lane :sync_onesignal do |options|
       File.write(key_path, file)
     end
   end
-  setup_onesignal(
-    auth_token: options['auth_token'],
-    app_name: "#{ENV['CLIENT']} Prod",
-    # Android setup
-    android_token: options['android_token'],
-    android_gcm_sender_id: options['android_gcm_sender_id'],
-    # iOS setup
-    apns_p8:  File.read(key_path),
-  )
+  keys = portal_client.list_keys
+  apnsKey = keys.select { |key| key["keyName"] == "APNs" }
+  puts apnsKey[0]  
+  # setup_onesignal(
+  #   auth_token: options[:auth_token],
+  #   app_name: "#{ENV['CLIENT'].capitalize()} Prod",
+  #   # Android setup
+  #   android_token: options[:android_token],
+  #   android_gcm_sender_id: options[:android_gcm_sender_id],
+  #   # iOS setup
+  #   apns_key_id: apnsKey[0]["keyId"].to_s,
+  #   apns_team_id: ENV["APPLE_TEAM_ID"],
+  #   apns_bundle_id: ENV["APP_IDENTIFIER"],
+  #   # apns_p8: "TUlHVEFnRUFNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQkhrd2R3SUJBUVFnTEJMUnMrQXhwVmUxejducQo2T1VYQjVKd1lGVEN6U25UcjhmbnM2WTRPMzJnQ2dZSUtvWkl6ajBEQVFlaFJBTkNBQVJjL2MwODUrZGh5eXk2CnVEc0JOOXQ4YW41M2xlV2VWOUNrUzdWSFlMcmk4Q0l4ZUd3c0oyZTRhWUxKWjFMMGZySEZVamsrTGlOVnBxOHcKaFcva2JyNXI="
+  #   apns_p8: Base64.encode64(File.read(key_path).to_s),    
+  # )
 end
 
 tester_udids_file = "tester_udids.txt"

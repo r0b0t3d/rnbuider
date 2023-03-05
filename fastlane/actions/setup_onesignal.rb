@@ -19,6 +19,9 @@ module Fastlane
         android_gcm_sender_id = params[:android_gcm_sender_id]
         organization_id = params[:organization_id]
         apns_p8 = params[:apns_p8]
+        apns_team_id = params[:apns_team_id]
+        apns_bundle_id = params[:apns_bundle_id]
+        apns_p8 = params[:apns_p8]
 
         has_app_id = !app_id.empty?
         has_app_name = !app_name.empty?
@@ -47,12 +50,20 @@ module Fastlane
         payload["android_gcm_sender_id"] = android_gcm_sender_id unless android_gcm_sender_id.nil?
         payload["organization_id"] = organization_id unless organization_id.nil?
         payload["apns_p8"] = apns_p8 unless apns_p8.nil?
+        payload["apns_team_id"] = apns_team_id unless apns_team_id.nil?
+        payload["apns_bundle_id"] = apns_bundle_id unless apns_bundle_id.nil?
+        payload["apns_p8"] = apns_p8 unless apns_p8.nil?
 
         # here's the actual lifting - POST or PUT to OneSignal
 
         json_headers = { 'Content-Type' => 'application/json', 'Authorization' => "Basic #{auth_token}" }
         url = +'https://onesignal.com/api/v1/apps'
         url << '/' + app_id if is_update
+
+        puts url
+        puts json_headers
+        puts payload
+
         uri = URI.parse(url)
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
@@ -122,6 +133,26 @@ module Fastlane
                                        env_name: "ANDROID_GCM_SENDER_ID",
                                        description: "GCM SENDER ID",
                                        sensitive: true,
+                                       optional: true),
+
+          FastlaneCore::ConfigItem.new(key: :apns_p8,
+                                       env_name: "APNS_P8",
+                                       description: "APNS P8 string",
+                                       optional: true),
+
+          FastlaneCore::ConfigItem.new(key: :apns_key_id,
+                                       env_name: "APNS_KEY_ID",
+                                       description: "APNS KEY ID",
+                                       optional: true),
+
+          FastlaneCore::ConfigItem.new(key: :apns_team_id,
+                                       env_name: "APNS_TEAM_ID",
+                                       description: "APNS Team ID",
+                                       optional: true),
+
+          FastlaneCore::ConfigItem.new(key: :apns_bundle_id,
+                                       env_name: "APNS_BUNDLE_ID",
+                                       description: "APNS Bundle ID",
                                        optional: true),
 
           FastlaneCore::ConfigItem.new(key: :apns_p12,

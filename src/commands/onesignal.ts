@@ -2,7 +2,7 @@
 import { Command, flags } from '@oclif/command';
 import * as shell from 'shelljs';
 import * as inquirer from 'inquirer';
-import { getDirectories } from '../utils/common';
+import { buildKeyValuePairs, getDirectories } from '../utils/common';
 
 inquirer.registerPrompt(
   'checkbox-plus',
@@ -24,6 +24,11 @@ export default class OneSignalCertificate extends Command {
       char: 'c',
       description: 'Select client that you want to sync udids',
     }),
+    auth_token: flags.string({
+      description: 'Auth token for OneSignal',
+    }),
+    android_token: flags.string(),
+    android_gcm_sender_id: flags.string(),
   };
 
   static args = [{ name: 'build' }];
@@ -76,11 +81,12 @@ export default class OneSignalCertificate extends Command {
   async run() {
     const { flags } = this.parse(OneSignalCertificate);
     const params = await this.askForMissingFields(flags);
-    const { client } = params;
+    const { client, ...otherParams } = params;
+    const parameters: any = buildKeyValuePairs(otherParams);
     shell.exec('bundle install');
     if (client) {
       shell.cd(`fastlane/clients/${client}`);
     }
-    shell.exec('bundle exec fastlane sync_onesignal');
+    shell.exec(`bundle exec fastlane sync_onesignal ${parameters.join(' ')}`);
   }
 }
