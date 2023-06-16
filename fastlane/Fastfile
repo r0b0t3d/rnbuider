@@ -552,19 +552,30 @@ end
 
 lane :get_team_names do |options|
   require "spaceship"
-  puts options
   client_tunes = Spaceship::Tunes.login(options[:id], options[:password])
   client = Spaceship::Portal.login(options[:id], options[:password])
 
-  str_client_tunes = "" 
-  client_tunes.teams.each do |team|
-      UI.message "#{team['contentProvider']['name']} (#{team['contentProvider']['contentProviderId']})"
-      str_client_tunes << "#{team['contentProvider']['name']} (#{team['contentProvider']['contentProviderId']})||"
-  end
+  search = options[:search].downcase
 
   str_dev_portal = "" 
+  UI.message "---- Developer teams for #{search} ----"
   client.teams.each do |team|
+    teamName = team['name'].downcase
+    if teamName.include? search
       UI.message "#{team['name']} (#{team['teamId']})"
       str_dev_portal << "#{team['name']} (#{team['teamId']})||"
+    end
   end
+
+  str_client_tunes = "" 
+  UI.message "---- Appstore Connect teams for #{search} ----"
+  client_tunes.teams.each do |team|
+    contentProvider = team["contentProvider"]
+    teamName = contentProvider['name'].downcase
+    # puts teamName
+    if teamName.include? search
+      UI.message "#{contentProvider['name']} (#{contentProvider['contentProviderId']})"
+      str_client_tunes << "#{contentProvider['name']} (#{contentProvider['contentProviderId']})||"
+    end
+  end  
 end

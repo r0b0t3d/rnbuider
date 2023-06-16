@@ -301,6 +301,8 @@ hello world from ./src/build.ts!
     } else {
       shell.cd('fastlane');
       this.runPlatforms(target, parameters, otherParams);
+      shell.cd('..');
+      shell.exec('pwd');
     }
   }
 }
