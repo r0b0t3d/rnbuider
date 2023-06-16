@@ -229,7 +229,7 @@ platform :ios do
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
-    reset_git_repo(force: true)
+    reset_git_repo(force: true, skip_clean: true)
   end
 
   desc "Submit for review"
@@ -275,7 +275,7 @@ platform :ios do
   end
 
   error do |lane, exception|
-    reset_git_repo(force: true)
+    reset_git_repo(force: true, skip_clean: true)
     send_message(
       title: "#{ENV['CLIENT']} ios",
       description: "Failure ❌",
@@ -401,7 +401,7 @@ platform :android do
         inline: true,
       }],
     )
-    reset_git_repo(force: true)
+    reset_git_repo(force: true, skip_clean: true)
   end
 
   desc "Update Store Listing"
@@ -424,7 +424,7 @@ platform :android do
   end
 
   error do |lane, exception|
-    reset_git_repo(force: true)
+    reset_git_repo(force: true, skip_clean: true)
     send_message(
       title: "#{ENV['CLIENT']} android",
       description: "Failure ❌",
