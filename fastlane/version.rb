@@ -23,6 +23,16 @@ def next_version(current, increment)
   return [version, prerelease].compact.join('-')
 end
 
+def get_local_version(json_file, client, platform)
+  file = File.read(json_file)
+  data_hash = JSON.parse(file)
+  platform_version = data_hash[platform]
+  if client != nil && data_hash[client] != nil
+    platform_version = data_hash[client][platform]
+  end
+  return platform_version
+end
+
 def write_json_version(json_file, client, platform, version)
   puts "Write to json #{client} #{platform} #{version}"
   file = File.read(json_file)

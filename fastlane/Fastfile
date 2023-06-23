@@ -141,7 +141,7 @@ platform :ios do
     version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
     platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
-      message: "bump version #{options[:client]} - ios"
+      message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios"
     )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
@@ -286,7 +286,7 @@ platform :ios do
 end
 
 platform :android do
-  def get_android_version(increment = "patch")
+  def get_android_version(increment = "patch", local_version)
     begin
       prod_version = google_play_track_release_names(
           json_key: ENV["JSON_KEY_FILE"],
@@ -298,7 +298,11 @@ platform :android do
           package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
           track: 'internal'
       )
-      new_version = next_version(prod_version.first, increment)
+      version = prod_version.first
+      if version?.include? "("
+        version = local_version
+      end
+      new_version = next_version(version, increment)
       puts prod_version
       puts internal_version
       puts new_version
@@ -328,11 +332,11 @@ platform :android do
   lane :build do |options|
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
-    version = options[:distribute] == 'store' ? get_android_version(options[:version]) : nil
-    puts version
+    local_version = get_local_version(options[:json_file], options[:client], 'android')
+    version = options[:distribute] == 'store' ? get_android_version(options[:version], local_version.version) : local_version
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
     sync_git(
-      message: "bump version #{options[:client]} - android"
+      message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android"
     )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
