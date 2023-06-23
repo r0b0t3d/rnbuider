@@ -570,12 +570,14 @@ lane :get_team_names do |options|
   str_client_tunes = "" 
   UI.message "---- Appstore Connect teams for #{search} ----"
   client_tunes.teams.each do |team|
-    contentProvider = team["contentProvider"]
-    teamName = contentProvider['name'].downcase
-    # puts teamName
-    if teamName.include? search
-      UI.message "#{contentProvider['name']} (#{contentProvider['contentProviderId']})"
-      str_client_tunes << "#{contentProvider['name']} (#{contentProvider['contentProviderId']})||"
+    if team.has_key?(:contentProvider)
+      contentProvider = team["contentProvider"]
+      teamName = contentProvider['name'].downcase?
+      # puts teamName
+      if teamName.include? search
+        UI.message "#{contentProvider['name']} (#{contentProvider['contentProviderId']})"
+        str_client_tunes << "#{contentProvider['name']} (#{contentProvider['contentProviderId']})||"
+      end
     end
   end  
 end
