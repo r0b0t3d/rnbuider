@@ -616,3 +616,28 @@ lane :match_check do |options|
     )
   end
 end
+
+lane :google_key do |options|
+  begin
+    puts "Running google key check for #{ENV['CLIENT']}"
+    prod_version = google_play_track_release_names(
+      json_key: ENV["JSON_KEY_FILE"],
+      package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+      track: 'production'
+    )
+    puts "Prod version #{prod_version}"
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: "Google key is ready",
+      color: '#00C40F',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
+  rescue => ex
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: ex.message,
+      color: '#E70000',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
+  end
+end

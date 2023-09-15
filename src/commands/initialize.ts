@@ -1,5 +1,5 @@
 /* eslint-disable no-negated-condition */
-import {Command} from '@oclif/command'
+import { Command } from '@oclif/command';
 import * as shell from 'shelljs'
 
 export default class Initialize extends Command {
