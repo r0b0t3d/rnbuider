@@ -601,6 +601,12 @@ lane :match_check do |options|
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: "Apple account is ready",
+      color: '#00C40F',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
   rescue => ex
     send_message(
       title: "#{ENV['CLIENT']}",

@@ -26,12 +26,10 @@ export default class MatchNuke extends Command {
     const clients = getDirectories('./fastlane/clients');
     clients.forEach(client => {
       const envPath = `fastlane/clients/${client}/fastlane`;
-      require('dotenv').config({
-        path: process.cwd() + '/' + envPath + '/.env',
-      });
       shell.cd(envPath);
       shell.exec('bundle exec fastlane match_check');
       shell.cd('../../../../');
+      shell.exec('pwd');
     });
   }
 }
