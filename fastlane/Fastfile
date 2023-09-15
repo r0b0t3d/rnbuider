@@ -585,3 +585,28 @@ lane :get_team_names do |options|
     end
   end
 end
+
+lane :match_check do |options|
+  begin
+    puts "Running match check for #{ENV['CLIENT']}"
+    match(
+      app_identifier: ENV['APP_IDENTIFIER'],
+      type: 'appstore',
+      username: ENV['APPLE_ID'],
+      team_id: ENV['APPLE_TEAM_ID'],
+      git_url: ENV['MATCH_GIT_URL'],
+      git_branch: ENV['CLIENT'],
+      force_for_new_devices: true,
+      readonly: ENV['MATCH_READONLY'] || is_ci,
+      keychain_name: 'rnbuilder',
+      keychain_password: 'rnbuilder',
+    )
+  rescue => ex
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: ex.message,
+      color: '#E70000',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
+  end
+end
