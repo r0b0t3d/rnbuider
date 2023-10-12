@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 /* eslint-disable complexity */
 /* eslint-disable no-negated-condition */
 import { Command, flags } from '@oclif/command';
@@ -64,6 +65,7 @@ hello world from ./src/build.ts!
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients');
       if (clients.length > 0) {
+        const appVersions = require(process.cwd() + '/app.json');
         questions.push({
           type: 'checkbox-plus',
           name: 'client',
@@ -75,9 +77,18 @@ hello world from ./src/build.ts!
           source: (answersSoFar: string, input: string) => {
             input = input || '';
             return new Promise(resolve => {
-              const result = clients.filter(client =>
-                client.includes(input.toLowerCase()),
-              );
+              const result = clients
+                .map(
+                  client =>
+                    `${client}${
+                      appVersions[client].name
+                        ? ` - ${appVersions[client].name}`
+                        : ''
+                    }`,
+                )
+                .filter(client =>
+                  client.toLowerCase().includes(input.toLowerCase()),
+                );
               resolve(result);
             });
           },
