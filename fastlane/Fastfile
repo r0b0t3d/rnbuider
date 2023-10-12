@@ -137,7 +137,7 @@ platform :ios do
 
   desc "Process build"
   lane :build do |options|
-    puts "Start building app for env #{options[:env]}"
+    puts "Start iOS build #{options}"
     version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
     platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
@@ -329,6 +329,7 @@ platform :android do
 
   desc "Process build"
   lane :build do |options|
+    puts "Start android build #{options}"
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
     local_version = get_local_version(options[:json_file], options[:client], 'android')
