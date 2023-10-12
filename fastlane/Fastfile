@@ -199,7 +199,7 @@ platform :ios do
         file: file,
         notes: options[:notes] || "Fastlane build",
         testers: options[:testersIos],
-        groups: options[:groups],
+        groups: options[:groupsIos],
       )
     end
     if options[:distribute] == 'store'
@@ -375,7 +375,7 @@ platform :android do
         file: file,
         notes: options[:notes] || "Fastlane build",
         testers: options[:testersAndroid],
-        groups: options[:groups],
+        groups: options[:groupsAndroid],
       )
     end
     if options[:distribute] == 'store'

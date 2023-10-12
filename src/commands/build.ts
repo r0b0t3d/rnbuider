@@ -232,7 +232,9 @@ hello world from ./src/build.ts!
           const androidBuild = result.target.includes('android');
           const iosBuild = result.target.includes('ios');
           const bothPlatforms = androidBuild && iosBuild;
-          const name = androidBuild ? 'testersAndroid' : 'testersIos';
+          const name = `${testersAnswer.testers}${
+            androidBuild ? 'Android' : 'Ios'
+          }`;
           const answers = await inquirer.prompt([
             {
               type: 'input',
@@ -253,7 +255,7 @@ hello world from ./src/build.ts!
             const anotherAnswer = await inquirer.prompt([
               {
                 type: 'input',
-                name: 'testersIos',
+                name: `${testersAnswer.testers}Ios`,
                 message:
                   'Please enter tester ' +
                   (testersAnswer.testers === 'groups'
