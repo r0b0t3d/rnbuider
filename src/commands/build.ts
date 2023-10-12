@@ -229,20 +229,45 @@ hello world from ./src/build.ts!
       ]);
       if (testersAnswer.testers) {
         if (testersAnswer.testers !== 'no-tester') {
+          const androidBuild = result.target.includes('android');
+          const iosBuild = result.target.includes('ios');
+          const bothPlatforms = androidBuild && iosBuild;
+          const name = androidBuild ? 'testersAndroid' : 'testersIos';
           const answers = await inquirer.prompt([
             {
               type: 'input',
-              name: 'testers',
+              name,
               message:
                 'Please enter tester ' +
                 (testersAnswer.testers === 'groups' ? 'group(s)' : 'email(s)'),
-              suffix: ' (separated by commas)',
+              suffix: ` for ${
+                androidBuild ? 'Android' : 'iOS'
+              } (separated by commas)`,
             },
           ]);
           result = {
             ...result,
-            [testersAnswer.testers]: answers.testers,
+            ...answers,
           };
+          if (bothPlatforms) {
+            const anotherAnswer = await inquirer.prompt([
+              {
+                type: 'input',
+                name: 'testersIos',
+                message:
+                  'Please enter tester ' +
+                  (testersAnswer.testers === 'groups'
+                    ? 'group(s)'
+                    : 'email(s)'),
+                suffix: ' for iOS (separated by commas)',
+                default: answers.testersAndroid,
+              },
+            ]);
+            result = {
+              ...result,
+              ...anotherAnswer,
+            };
+          }
         }
       }
     }

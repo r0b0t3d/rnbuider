@@ -178,7 +178,6 @@ platform :ios do
       keychain_password: 'rnbuilder',
     )
     process_build(
-      testers: options[:testers],
       scheme: ENV['XCODEPROJ_SCHEME'],
       output_name: app_name,
       export_method: export_method,
@@ -190,7 +189,7 @@ platform :ios do
       upload_installr(
         file: file,
         notes: options[:scheme],
-        testers: options[:testers]
+        testers: options[:testersIos]
       )
     end
     if options[:firebase]
@@ -199,7 +198,7 @@ platform :ios do
         service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
         file: file,
         notes: options[:notes] || "Fastlane build",
-        testers: options[:testers],
+        testers: options[:testersIos],
         groups: options[:groups],
       )
     end
@@ -357,7 +356,7 @@ platform :android do
     )
     process_android_build(
       branch: options[:branch],
-      testers: options[:testers],
+      testers: options[:testersAndroid],
       flavor: flavor,
       build_type: build_type,
       task: options[:distribute] == 'store' ? 'bundle' : 'assemble',
@@ -367,7 +366,7 @@ platform :android do
       upload_installr(
         file: file,
         notes: options[:notes] || "Fastlane build",
-        testers: options[:testers]
+        testers: options[:testersAndroid]
       )
     end
     if options[:firebase]
