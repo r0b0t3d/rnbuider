@@ -262,7 +262,10 @@ hello world from ./src/build.ts!
                     ? 'group(s)'
                     : 'email(s)'),
                 suffix: ' for iOS (separated by commas)',
-                default: answers.testersAndroid,
+                default:
+                  testersAnswer.testers === 'groups'
+                    ? answers.groupsAndroid
+                    : answers.testersAndroid,
               },
             ]);
             result = {
