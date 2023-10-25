@@ -332,7 +332,8 @@ hello world from ./src/build.ts!
     }
 
     if (client) {
-      client.forEach((c: string) => {
+      client.forEach((cl: string) => {
+        const c = cl.split(' ')[0];
         shell.cd(`fastlane/clients/${c}`);
         shell.exec('pwd');
         this.runPlatforms(target, [...parameters, `client:${c}`], otherParams);
