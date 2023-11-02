@@ -4,7 +4,11 @@
 import { Command, flags } from '@oclif/command';
 import * as inquirer from 'inquirer';
 import * as shell from 'shelljs';
-import { buildKeyValuePairs, getDirectories } from '../utils/common';
+import {
+  buildKeyValuePairs,
+  getDirectories,
+  getFastlaneConfigs,
+} from '../utils/common';
 
 inquirer.registerPrompt(
   'checkbox-plus',
@@ -61,6 +65,7 @@ hello world from ./src/build.ts!
   static args = [{ name: 'build' }];
 
   askForMissingFields = async (flags: any) => {
+    const fastlaneConfigs = getFastlaneConfigs();
     let questions = [];
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients');
@@ -131,7 +136,7 @@ hello world from ./src/build.ts!
         name: 'branch',
         message: 'What is the source branch?',
         default: 'dev',
-        choices: ['dev', 'master'],
+        choices: fastlaneConfigs.branches ?? ['dev', 'master'],
         filter(val: string) {
           return val.toLowerCase();
         },

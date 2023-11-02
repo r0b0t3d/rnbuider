@@ -13,6 +13,14 @@ export const getDirectories = (path: string) => {
   return [];
 };
 
+export const getFastlaneConfigs = () => {
+  const configPath = process.cwd() + '/fastlane/configs.json';
+  if (fs.existsSync(configPath)) {
+    return require(process.cwd() + '/fastlane/configs.json');
+  }
+  return {};
+};
+
 const defaultVersion = {
   version: '0.0.1',
   build: 1,
