@@ -250,6 +250,10 @@ hello world from ./src/build.ts!
               suffix: ` for ${
                 androidBuild ? 'Android' : 'iOS'
               } (separated by commas)`,
+              default:
+                testersAnswer.testers === 'groups'
+                  ? fastlaneConfigs.testerGroups
+                  : '',
             },
           ]);
           result = {
@@ -269,7 +273,7 @@ hello world from ./src/build.ts!
                 suffix: ' for iOS (separated by commas)',
                 default:
                   testersAnswer.testers === 'groups'
-                    ? answers.groupsAndroid
+                    ? answers.groupsAndroid ?? fastlaneConfigs.testerGroups
                     : answers.testersAndroid,
               },
             ]);
