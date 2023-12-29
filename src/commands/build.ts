@@ -333,6 +333,7 @@ hello world from ./src/build.ts!
       if (target.includes('android')) {
         shell.cd('./android');
         shell.exec('./gradlew clean');
+        shell.exec('rm -rf .gradle');
         shell.cd('../');
       }
       if (target.includes('ios')) {
