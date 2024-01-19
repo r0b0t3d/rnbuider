@@ -143,6 +143,12 @@ platform :ios do
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios"
     )
+    grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
+    add_git_tag(
+      grouping: grouping,
+      prefix: 'v',
+      build_number: platform_version["build"]
+    )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
       description: "Start building...",
@@ -340,6 +346,12 @@ platform :android do
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android"
+    )
+    grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
+    add_git_tag(
+      grouping: grouping,
+      prefix: 'v',
+      build_number: platform_version["build"]
     )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
