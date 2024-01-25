@@ -86,8 +86,8 @@ hello world from ./src/build.ts!
                 .map(
                   client =>
                     `${client}${
-                      appVersions[client].name
-                        ? ` - ${appVersions[client].name}`
+                      appVersions[client]?.name
+                        ? ` - ${appVersions[client]?.name}`
                         : ''
                     }`,
                 )
