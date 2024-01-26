@@ -637,11 +637,27 @@ lane :check_version do |options|
     )
     store_version = Actions.lane_context[SharedValues::LATEST_VERSION]
     local_version = get_local_version(options[:json_file], ENV['CLIENT'], 'ios')
-    puts "Store version: #{store_version}, Local version: #{local_version['version']}"
+    is_same = store_version == local_version['version']
+    puts "iOS Store version: #{store_version}, Local version: #{local_version['version']}"
     send_message(
       title: "#{ENV['CLIENT']}",
       description: "iOS\nStore version: #{store_version}\nLocal version: #{local_version['version']}",
-      color: '#00C40F',
+      color: is_same ? '#00C40F' : '#E70000',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
+
+    prod_version = google_play_track_release_names(
+      json_key: ENV["JSON_KEY_FILE"],
+      package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+      track: 'production'
+    )
+    android_local_version = get_local_version(options[:json_file], ENV['CLIENT'], 'android')
+    is_android_same = prod_version.first == android_local_version['version']
+    puts "Android Store version: #{prod_version.first}, Local version: #{android_local_version['version']}"
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: "Android\nStore version: #{prod_version.first}\nLocal version: #{android_local_version['version']}",
+      color: is_android_same ? '#00C40F' : '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
   rescue => ex
