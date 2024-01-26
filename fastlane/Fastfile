@@ -627,6 +627,33 @@ lane :match_check do |options|
   end
 end
 
+lane :check_version do |options|
+  begin
+    puts "Check current version for #{ENV['CLIENT']}"
+    app_store_build_number(
+      username: ENV['APPLE_ID'],
+      team_id: ENV['ITC_TEAM_ID'],
+      app_identifier: ENV['APP_IDENTIFIER'],
+    )
+    store_version = Actions.lane_context[SharedValues::LATEST_VERSION]
+    local_version = get_local_version(options[:json_file], ENV['CLIENT'], 'ios')
+    puts "Store version: #{store_version}, Local version: #{local_version['version']}"
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: "iOS\nStore version: #{store_version}\nLocal version: #{local_version['version']}",
+      color: '#00C40F',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
+  rescue => ex
+    send_message(
+      title: "#{ENV['CLIENT']}",
+      description: ex.message,
+      color: '#E70000',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
+    )
+  end
+end
+
 lane :google_key do |options|
   begin
     puts "Running google key check for #{ENV['CLIENT']}"

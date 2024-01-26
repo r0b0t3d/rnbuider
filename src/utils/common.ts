@@ -21,6 +21,15 @@ export const getFastlaneConfigs = () => {
   return {};
 };
 
+export const getJsonFile = (env: string) => {
+  let fileName = 'app';
+  if (env !== 'prod') {
+    fileName = `${fileName}.${env}`;
+  }
+  const file = process.cwd() + `/${fileName}.json`;
+  return file;
+};
+
 const defaultVersion = {
   version: '0.0.1',
   build: 1,

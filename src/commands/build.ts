@@ -8,6 +8,7 @@ import {
   buildKeyValuePairs,
   getDirectories,
   getFastlaneConfigs,
+  getJsonFile,
 } from '../utils/common';
 
 inquirer.registerPrompt(
@@ -288,15 +289,6 @@ hello world from ./src/build.ts!
     return result;
   };
 
-  getJsonFile(env: string) {
-    let fileName = 'app';
-    if (env !== 'prod') {
-      fileName = `${fileName}.${env}`;
-    }
-    const file = process.cwd() + `/${fileName}.json`;
-    return file;
-  }
-
   runPlatforms(target: string[], parameters: any, otherParams: any) {
     target.forEach((t: string) => {
       const cmd = `bundle exec fastlane ${t} build ${parameters.join(
@@ -311,7 +303,7 @@ hello world from ./src/build.ts!
     const { flags } = this.parse(Build);
     const params = await this.askForMissingFields(flags);
     const { client, target, ...otherParams } = params;
-    const jsonFile = this.getJsonFile(otherParams.env);
+    const jsonFile = getJsonFile(otherParams.env);
     const parameters: any = buildKeyValuePairs({
       ...otherParams,
       json_file: jsonFile,
