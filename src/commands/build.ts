@@ -34,7 +34,7 @@ hello world from ./src/build.ts!
     target: flags.string({
       char: 't',
       description: 'Set the build target: android, ios or both',
-      options: ['android', 'ios'],
+      options: ['android', 'ios', 'both'],
     }),
     env: flags.string({
       char: 'e',
@@ -323,7 +323,15 @@ hello world from ./src/build.ts!
   async run() {
     const { flags } = this.parse(Build);
     const params = await this.askForMissingFields(flags);
-    const { client, target, ...otherParams } = params;
+    const { client, target: originalTarget, ...otherParams } = params;
+    let target = originalTarget;
+    if (typeof target === 'string') {
+      if (target === 'both') {
+        target = ['ios', 'android'];
+      } else {
+        target = [target];
+      }
+    }
     const jsonFile = getJsonFile(otherParams.env);
     const parameters: any = buildKeyValuePairs({
       ...otherParams,
