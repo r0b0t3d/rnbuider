@@ -57,6 +57,10 @@ hello world from ./src/build.ts!
       char: 'd',
       description: 'Specify where to distribute app',
     }),
+    firebase: flags.boolean({
+      char: 'f',
+      description: 'If enabled, the build will be uploaded to firebase',
+    }),
     testersIos: flags.string({
       char: 't',
       description: 'Tester ids for iOS distribution',
@@ -184,12 +188,14 @@ hello world from ./src/build.ts!
     }
     const postQuestions = [];
     if (result.env !== 'prod') {
-      postQuestions.push({
-        type: 'confirm',
-        name: 'firebase',
-        message: 'Would you like to upload to firebase?',
-        default: true,
-      });
+      if (!flags.firebase) {
+        postQuestions.push({
+          type: 'confirm',
+          name: 'firebase',
+          message: 'Would you like to upload to firebase?',
+          default: true,
+        });
+      }
       if (process.env.INSTALLR_TOKEN) {
         postQuestions.push({
           type: 'confirm',
@@ -219,7 +225,10 @@ hello world from ./src/build.ts!
         ...answers,
       };
     }
-    if (result.installr || result.firebase) {
+    if (
+      result.installr ||
+      (result.firebase && !flags.testersIos && !flags.testersAndroid)
+    ) {
       const testersAnswer = await inquirer.prompt([
         {
           type: 'expand',
