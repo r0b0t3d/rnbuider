@@ -53,6 +53,18 @@ hello world from ./src/build.ts!
       char: 'i',
       description: 'If enabled, the build will be uploaded to installR',
     }),
+    distribute: flags.string({
+      char: 'd',
+      description: 'Specify where to distribute app',
+    }),
+    testersIos: flags.string({
+      char: 't',
+      description: 'Tester ids for iOS distribution',
+    }),
+    testersAndroid: flags.string({
+      char: 'u',
+      description: 'Tester ids for Android distribution',
+    }),
     ignore_git_reset: flags.boolean({
       char: 'g',
       description: 'Ignore git reset when building',
