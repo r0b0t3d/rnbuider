@@ -168,7 +168,7 @@ hello world from ./src/build.ts!
       };
     }
     questions = [];
-    if (result.env === 'prod') {
+    if (result.env === 'prod' && !flags.distribute) {
       questions.push({
         type: 'list',
         name: 'distribute',
