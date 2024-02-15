@@ -204,7 +204,7 @@ hello world from ./src/build.ts!
           default: true,
         });
       }
-    } else if (result.distribute === 'store') {
+    } else if (result.distribute === 'store' && !flags.version) {
       postQuestions.push({
         type: 'list',
         name: 'version',
