@@ -227,7 +227,10 @@ hello world from ./src/build.ts!
     }
     if (
       result.installr ||
-      (result.firebase && !flags.testersIos && !flags.testersAndroid)
+      (result.distribute !== 'store' &&
+        result.firebase &&
+        !flags.groupsIos &&
+        !flags.groupsAndroid)
     ) {
       const testersAnswer = await inquirer.prompt([
         {
