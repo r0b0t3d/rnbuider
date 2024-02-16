@@ -148,11 +148,11 @@ platform :ios do
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios"
     )
     grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
-    add_git_tag(
-      grouping: grouping,
-      prefix: 'v',
-      build_number: platform_version["build"]
-    )
+    # add_git_tag(
+    #   grouping: grouping,
+    #   prefix: 'v',
+    #   build_number: platform_version["build"]
+    # )
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
       description: "Start building...",
@@ -238,7 +238,6 @@ platform :ios do
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
-    sync_git(message: "Success ✅")
   end
 
   desc "Submit for review"
@@ -284,10 +283,10 @@ platform :ios do
   end
 
   error do |lane, exception|
-    sync_git(message: "Failure ❌ #{exception}")
+    puts exception
     send_message(
       title: "#{ENV['CLIENT']} ios",
-      description: "Failure ❌",
+      description: "Failure ❌ #{exception}",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
@@ -352,11 +351,11 @@ platform :android do
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android"
     )
     grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
-    add_git_tag(
-      grouping: grouping,
-      prefix: 'v',
-      build_number: platform_version["build"]
-    )
+    # add_git_tag(
+    #   grouping: grouping,
+    #   prefix: 'v',
+    #   build_number: platform_version["build"]
+    # )
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
       description: "Start building...",
@@ -422,7 +421,6 @@ platform :android do
         inline: true,
       }],
     )
-    sync_git(message: "Success ✅")
   end
 
   desc "Update Store Listing"
@@ -445,10 +443,10 @@ platform :android do
   end
 
   error do |lane, exception|
-    sync_git(message: "Failure ❌ #{exception}")
+    puts exception
     send_message(
       title: "#{ENV['CLIENT']} android",
-      description: "Failure ❌",
+      description: "Failure ❌ #{exception}",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
