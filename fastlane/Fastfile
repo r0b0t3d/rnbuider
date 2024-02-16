@@ -238,6 +238,7 @@ platform :ios do
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
+    reset_git_repo(force: true)
   end
 
   desc "Submit for review"
@@ -421,6 +422,7 @@ platform :android do
         inline: true,
       }],
     )
+    reset_git_repo(force: true)
   end
 
   desc "Update Store Listing"
