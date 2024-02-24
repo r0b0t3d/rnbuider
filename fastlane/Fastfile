@@ -296,6 +296,7 @@ end
 
 platform :android do
   def get_android_version(increment = "patch", local_version)
+    new_version = local_version
     begin
       prod_version = google_play_track_release_names(
           json_key: ENV["JSON_KEY_FILE"],
@@ -318,9 +319,9 @@ platform :android do
       if Gem::Version.new(internal_version.first.to_s) > Gem::Version.new(new_version.to_s)
           new_version = internal_version.first
       end
-      return new_version
     rescue => exception
       puts exception
+      new_version = next_version(local_version, increment)
     end
     # new_version = prompt(text: "Can't get latest version from store. Please specify next version (e.g: 2.2.3)")
     return new_version
