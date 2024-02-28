@@ -77,6 +77,9 @@ hello world from ./src/build.ts!
       char: 's',
       description: 'Ignore cleanup when building',
     }),
+    groupsIos: flags.string({
+      description: 'Groups ids for iOS distribution',
+    }),
   };
 
   static args = [{ name: 'build' }];
