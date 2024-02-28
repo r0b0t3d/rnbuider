@@ -80,6 +80,9 @@ hello world from ./src/build.ts!
     groupsIos: flags.string({
       description: 'Groups ids for iOS distribution',
     }),
+    groupsAndroid: flags.string({
+      description: 'Groups ids for Android distribution',
+    }),
   };
 
   static args = [{ name: 'build' }];
