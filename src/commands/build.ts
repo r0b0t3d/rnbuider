@@ -38,8 +38,8 @@ hello world from ./src/build.ts!
     }),
     env: flags.string({
       char: 'e',
-      description: 'Set the environment: prod, adhoc, staging',
-      options: ['staging', 'adhoc', 'prod'],
+      description: 'Set the environment: prod, staging, dev',
+      options: ['staging', 'dev', 'prod'],
     }),
     branch: flags.string({
       char: 'b',
@@ -143,8 +143,8 @@ hello world from ./src/build.ts!
         type: 'list',
         name: 'env',
         message: 'What is the environment?',
-        default: 'internal',
-        choices: ['internal', 'staging', 'prod'],
+        default: 'staging',
+        choices: ['dev', 'staging', 'prod'],
         filter(val: string) {
           return val.toLowerCase();
         },
