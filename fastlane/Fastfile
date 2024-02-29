@@ -215,6 +215,7 @@ platform :ios do
         dsym = Actions.lane_context[SharedValues::DSYM_OUTPUT_PATH]
         upload_symbols_to_crashlytics(
           dsym_path: dsym,
+          binary_path: "#{ios_project_path}/Pods/FirebaseCrashlytics"
         )
       end
     end
