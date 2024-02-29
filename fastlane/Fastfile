@@ -211,6 +211,7 @@ platform :ios do
         testers: options[:testersIos],
         groups: options[:groupsIos],
       )
+      upload_symbols_to_crashlytics
     end
     if options[:distribute] == 'store'
       upload_to_app_store(
@@ -497,7 +498,7 @@ tester_udids_file = "tester_udids.txt"
 desc "Sync devices"
 lane :sync_udids do
   firebase_app_distribution_get_udids(
-    app: ENV['FIREBASE_IOS_APP'],
+    # app: ENV['FIREBASE_IOS_APP'],
     output_file: tester_udids_file,
     service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
   )
