@@ -211,10 +211,12 @@ platform :ios do
         testers: options[:testersIos],
         groups: options[:groupsIos],
       )
-      dsym = Actions.lane_context[SharedValues::DSYM_OUTPUT_PATH]
-      upload_symbols_to_crashlytics(
-        dsym_path: dsym,
-      )
+      if ENV['FIREBASE_CRASHLYTICS'] == 'true'
+        dsym = Actions.lane_context[SharedValues::DSYM_OUTPUT_PATH]
+        upload_symbols_to_crashlytics(
+          dsym_path: dsym,
+        )
+      end
     end
     if options[:distribute] == 'store'
       upload_to_app_store(
