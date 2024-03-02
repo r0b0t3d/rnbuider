@@ -366,9 +366,6 @@ hello world from ./src/build.ts!
         shell.exec('rm -rf .gradle');
         shell.cd('../');
       }
-      if (target.includes('ios')) {
-        shell.exec('npx pod-install');
-      }
     }
 
     if (client) {
