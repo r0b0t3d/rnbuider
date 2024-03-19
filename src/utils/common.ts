@@ -23,7 +23,7 @@ export const getFastlaneConfigs = () => {
 
 export const getJsonFile = (env: string) => {
   let fileName = 'app';
-  if (env !== 'prod') {
+  if (env === 'dev' || env === 'staging') {
     fileName = `${fileName}.${env}`;
   }
   const file = process.cwd() + `/${fileName}.json`;

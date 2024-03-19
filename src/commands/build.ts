@@ -39,7 +39,6 @@ hello world from ./src/build.ts!
     env: flags.string({
       char: 'e',
       description: 'Set the environment: prod, staging, dev',
-      options: ['staging', 'dev', 'prod'],
     }),
     branch: flags.string({
       char: 'b',
@@ -146,8 +145,7 @@ hello world from ./src/build.ts!
         type: 'list',
         name: 'env',
         message: 'What is the environment?',
-        default: 'staging',
-        choices: ['dev', 'staging', 'prod'],
+        choices: fastlaneConfigs.env ?? ['dev', 'staging', 'prod'],
         filter(val: string) {
           return val.toLowerCase();
         },
@@ -158,8 +156,8 @@ hello world from ./src/build.ts!
         type: 'list',
         name: 'branch',
         message: 'What is the source branch?',
-        default: 'dev',
-        choices: fastlaneConfigs.branches ?? ['dev', 'master'],
+        default: '',
+        choices: ['', ...(fastlaneConfigs.branches ?? ['dev', 'master'])],
         filter(val: string) {
           return val.toLowerCase();
         },
@@ -348,9 +346,10 @@ hello world from ./src/build.ts!
     });
 
     if (!flags.ignore_git_reset) {
-      shell.exec(
-        `git reset --hard && git checkout ${params.branch} && git pull`,
-      );
+      if (params.branch) {
+        shell.exec(`git reset --hard && git checkout ${params.branch}`);
+      }
+      shell.exec('git pull');
       shell.exec('bundle update --bundler');
       shell.exec('bundle install');
     }
