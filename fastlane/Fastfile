@@ -205,7 +205,7 @@ platform :ios do
         testers: options[:testersIos]
       )
     end
-    if options[:firebase]
+    if options[:distribute] == 'firebase'
       upload_firebase(
         app: ENV['FIREBASE_IOS_APP'],
         service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
