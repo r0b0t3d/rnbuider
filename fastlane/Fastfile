@@ -63,11 +63,13 @@ platform :ios do
         username: ENV['APPLE_ID'],
         team_id: ENV['ITC_TEAM_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
+        api_key_path: ENV['MATCH_API_KEY_PATH'],
       )
       app_store_build_number(
         username: ENV['APPLE_ID'],
         team_id: ENV['ITC_TEAM_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
+        api_key_path: ENV['MATCH_API_KEY_PATH'],
       )
     rescue => exception
       puts exception
@@ -225,6 +227,7 @@ platform :ios do
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
         team_id: ENV['ITC_TEAM_ID'],
+        api_key_path: ENV['MATCH_API_KEY_PATH'],
         submit_for_review: false,
         skip_screenshots: true,
         skip_metadata: true,
