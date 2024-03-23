@@ -24,12 +24,17 @@ export default class MatchNuke extends Command {
 
   async run() {
     const clients = getDirectories('./fastlane/clients');
-    clients.forEach(client => {
-      const envPath = `fastlane/clients/${client}/fastlane`;
-      shell.cd(envPath);
+    if (clients.length > 0) {
+      clients.forEach(client => {
+        const envPath = `fastlane/clients/${client}/fastlane`;
+        shell.cd(envPath);
+        shell.exec('bundle exec fastlane match_check');
+        shell.cd('../../../../');
+        shell.exec('pwd');
+      });
+    } else {
+      shell.cd('fastlane');
       shell.exec('bundle exec fastlane match_check');
-      shell.cd('../../../../');
-      shell.exec('pwd');
-    });
+    }
   }
 }
