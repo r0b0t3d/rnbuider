@@ -227,6 +227,7 @@ hello world from ./src/build.ts!
       result = {
         ...result,
         ...answers,
+        distribute: answers.firebase ? 'firebase' : result.distribute,
       };
     }
     if (
