@@ -507,8 +507,9 @@ tester_udids_file = "tester_udids.txt"
 
 desc "Sync devices"
 lane :sync_udids do
+  project_number = ENV['FIREBASE_IOS_APP'].match(/:(\d+):/)[1]
   firebase_app_distribution_get_udids(
-    project_number: ENV['FIREBASE_PROJECT_NUMBER'],
+    project_number: project_number,
     output_file: tester_udids_file,
     service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
   )
