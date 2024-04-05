@@ -147,7 +147,7 @@ platform :ios do
     version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
     platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
-      message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios"
+      message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios #{options[:env]}"
     )
     grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
     # add_git_tag(
@@ -361,7 +361,7 @@ platform :android do
     end
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
     sync_git(
-      message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android"
+      message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android #{options[:env]}"
     )
     grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
     # add_git_tag(

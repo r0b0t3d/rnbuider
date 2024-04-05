@@ -53,6 +53,12 @@ def write_json_version(json_file, client, platform, version)
   if !version.nil? && !version.empty?
     puts "Set version #{version}"
     platform_version['version'] = version
+  else
+    # Increase patch version
+    version_arr = platform_version['version'].split('.')
+    version_arr[2] = version_arr[2].succ
+    platform_version['version'] = version_arr.join('.')
+    puts "Increase version #{platform_version['version']}"
   end
   platform_version['build'] = platform_version['build'] + 1
   platform_version['buildDate'] = Time.now.strftime("%d/%m/%Y %H:%M")
