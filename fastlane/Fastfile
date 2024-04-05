@@ -355,10 +355,7 @@ platform :android do
     flavor = ENV["FLAVOR"]
     build_type = ENV["BUILD_TYPE"]
     local_version = get_local_version(options[:json_file], options[:client], 'android')
-    version = local_version["version"]
-    if options[:distribute] == 'store' 
-      version = get_android_version(options[:version], local_version['version'])
-    end
+    version = options[:distribute] == 'store' ? get_android_version(options[:version], local_version['version']) : nil
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android #{options[:env]}"
