@@ -513,6 +513,7 @@ lane :sync_udids do
   register_devices(
     devices_file: tester_udids_file,
     username: ENV['APPLE_ID'],
+    api_key_path: ENV['MATCH_API_KEY_PATH'],
     team_id: ENV['APPLE_TEAM_ID'],
   )
   sync_git(
