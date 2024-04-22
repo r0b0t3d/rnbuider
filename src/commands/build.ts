@@ -82,6 +82,9 @@ hello world from ./src/build.ts!
     groupsAndroid: flags.string({
       description: 'Groups ids for Android distribution',
     }),
+    skipCheckVersion: flags.boolean({
+      description: 'Skip checking current version on stores',
+    }),
   };
 
   static args = [{ name: 'build' }];

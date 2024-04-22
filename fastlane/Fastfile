@@ -144,7 +144,7 @@ platform :ios do
   desc "Process build"
   lane :build do |options|
     puts "Start iOS build #{options}"
-    version = options[:distribute] == 'store' ? get_ios_version(options[:version]) : nil
+    version = options[:distribute] != 'store' || options[:skipCheckVersion] ? nil : get_ios_version(options[:version])
     platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios #{options[:env]}"
