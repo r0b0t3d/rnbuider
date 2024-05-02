@@ -688,7 +688,7 @@ end
 
 lane :google_key do |options|
   begin
-    puts "Running google key check for #{ENV['CLIENT']}"
+    puts "Running google key check for #{ENV['CLIENT']} #{ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"]}"
     prod_version = google_play_track_release_names(
       json_key: ENV["JSON_KEY_FILE"],
       package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
@@ -702,6 +702,7 @@ lane :google_key do |options|
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
   rescue => ex
+    puts ex.message
     send_message(
       title: "#{ENV['CLIENT']}",
       description: ex.message,
