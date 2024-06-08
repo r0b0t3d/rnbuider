@@ -336,9 +336,6 @@ hello world from ./src/build.ts!
   async run() {
     const { flags } = this.parse(Build);
     const params = await this.askForMissingFields(flags);
-    console.log({ params });
-    return;
-
     const { client, target: originalTarget, ...otherParams } = params;
     let target = originalTarget;
     if (typeof target === 'string') {
