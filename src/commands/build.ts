@@ -363,7 +363,6 @@ hello world from ./src/build.ts!
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
     if (!flags.ignore_cleanup) {
-      shell.exec('yarn install');
       // Clean android if any
       if (target.includes('android')) {
         shell.cd('./android');
@@ -372,6 +371,7 @@ hello world from ./src/build.ts!
         shell.cd('../');
       }
     }
+    shell.exec('yarn install');
 
     if (client) {
       client.forEach((cl: string) => {
