@@ -34,7 +34,7 @@ hello world from ./src/build.ts!
     target: flags.string({
       char: 't',
       description: 'Set the build target: android, ios or both',
-      options: ['android', 'ios', 'both'],
+      options: ['android', 'ios', 'android,ios'],
     }),
     env: flags.string({
       char: 'e',
@@ -92,6 +92,7 @@ hello world from ./src/build.ts!
   askForMissingFields = async (flags: any) => {
     const fastlaneConfigs = getFastlaneConfigs();
     let questions = [];
+    let result = flags;
     if (!flags.client) {
       const clients = getDirectories('./fastlane/clients');
       if (clients.length > 0) {
@@ -142,6 +143,8 @@ hello world from ./src/build.ts!
         default: ['android', 'ios'],
         choices: ['android', 'ios'],
       });
+    } else {
+      result.target = flags.target.split(',');
     }
     if (!flags.env) {
       questions.push({
@@ -166,7 +169,6 @@ hello world from ./src/build.ts!
         },
       });
     }
-    let result = flags;
     if (questions.length > 0) {
       const answers = await inquirer.prompt(questions);
       result = {
@@ -334,6 +336,9 @@ hello world from ./src/build.ts!
   async run() {
     const { flags } = this.parse(Build);
     const params = await this.askForMissingFields(flags);
+    console.log({ params });
+    return;
+
     const { client, target: originalTarget, ...otherParams } = params;
     let target = originalTarget;
     if (typeof target === 'string') {
