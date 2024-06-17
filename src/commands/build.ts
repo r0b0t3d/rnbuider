@@ -362,6 +362,7 @@ hello world from ./src/build.ts!
 
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
+    shell.exec('rm ios/.xcode.env.local');
     if (!flags.ignore_cleanup) {
       // Clean android if any
       if (target.includes('android')) {
