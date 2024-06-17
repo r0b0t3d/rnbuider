@@ -373,6 +373,7 @@ hello world from ./src/build.ts!
       }
     }
     shell.exec('yarn install');
+    shell.exec('npx pod-install');
 
     if (client) {
       client.forEach((cl: string) => {
