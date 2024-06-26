@@ -186,7 +186,7 @@ platform :ios do
       git_url: ENV['MATCH_GIT_URL'],
       git_branch: ENV['CLIENT'],
       force_for_new_devices: true,
-      readonly: ENV['MATCH_READONLY'] || is_ci,
+      readonly: ENV['MATCH_READONLY'],
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
