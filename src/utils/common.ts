@@ -90,3 +90,12 @@ export const normalise = (input: string) => input.replace(/'/g, '').trim();
 export const capitalize = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
+
+export const getTesterGroups = (fastlaneConfigs: any, env: string) => {
+  const testers = fastlaneConfigs.testerGroups;
+  if (typeof testers === 'string') {
+    return testers;
+  }
+  // Find the tester group for the current environment
+  return testers[env];
+};

@@ -9,6 +9,7 @@ import {
   getDirectories,
   getFastlaneConfigs,
   getJsonFile,
+  getTesterGroups,
 } from '../utils/common';
 
 inquirer.registerPrompt(
@@ -287,7 +288,7 @@ hello world from ./src/build.ts!
               } (separated by commas)`,
               default:
                 testersAnswer.testers === 'groups'
-                  ? fastlaneConfigs.testerGroups
+                  ? getTesterGroups(fastlaneConfigs, result.env)
                   : '',
             },
           ]);
@@ -308,7 +309,8 @@ hello world from ./src/build.ts!
                 suffix: ' for iOS (separated by commas)',
                 default:
                   testersAnswer.testers === 'groups'
-                    ? answers.groupsAndroid ?? fastlaneConfigs.testerGroups
+                    ? answers.groupsAndroid ??
+                      getTesterGroups(fastlaneConfigs, result.env)
                     : answers.testersAndroid,
               },
             ]);
