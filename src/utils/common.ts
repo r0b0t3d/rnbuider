@@ -93,6 +93,9 @@ export const capitalize = (string: string) => {
 
 export const getTesterGroups = (fastlaneConfigs: any, env: string) => {
   const testers = fastlaneConfigs.testerGroups;
+  if (!testers) {
+    return '';
+  }
   if (typeof testers === 'string') {
     return testers;
   }
