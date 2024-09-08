@@ -91,7 +91,6 @@ hello world from ./src/build.ts!
   static args = [{ name: 'build' }];
 
   askForMissingFields = async (flags: any) => {
-    const fastlaneConfigs = getFastlaneConfigs();
     let questions = [];
     let result = flags;
     if (!flags.client) {
@@ -152,7 +151,7 @@ hello world from ./src/build.ts!
         type: 'list',
         name: 'env',
         message: 'What is the environment?',
-        choices: fastlaneConfigs.env ?? ['dev', 'staging', 'prod'],
+        choices: this.fastlaneConfigs.env ?? ['dev', 'staging', 'prod'],
         filter(val: string) {
           return val.toLowerCase();
         },
@@ -164,7 +163,7 @@ hello world from ./src/build.ts!
         name: 'branch',
         message: 'What is the source branch?',
         default: '',
-        choices: ['', ...(fastlaneConfigs.branches ?? ['dev', 'master'])],
+        choices: ['', ...(this.fastlaneConfigs.branches ?? ['dev', 'master'])],
         filter(val: string) {
           return val.toLowerCase();
         },
@@ -288,7 +287,7 @@ hello world from ./src/build.ts!
               } (separated by commas)`,
               default:
                 testersAnswer.testers === 'groups'
-                  ? getTesterGroups(fastlaneConfigs, result.env)
+                  ? getTesterGroups(this.fastlaneConfigs, result.env)
                   : '',
             },
           ]);
@@ -310,7 +309,7 @@ hello world from ./src/build.ts!
                 default:
                   testersAnswer.testers === 'groups'
                     ? answers.groupsAndroid ??
-                      getTesterGroups(fastlaneConfigs, result.env)
+                      getTesterGroups(this.fastlaneConfigs, result.env)
                     : answers.testersAndroid,
               },
             ]);
@@ -335,7 +334,10 @@ hello world from ./src/build.ts!
     });
   }
 
+  fastlaneConfigs: any;
+
   async run() {
+    this.fastlaneConfigs = getFastlaneConfigs();
     const { flags } = this.parse(Build);
     const params = await this.askForMissingFields(flags);
     const { client, target: originalTarget, ...otherParams } = params;
@@ -375,7 +377,11 @@ hello world from ./src/build.ts!
       }
     }
     shell.exec('yarn install');
-    shell.exec('npx pod-install');
+    if (this.fastlaneConfigs.newArchitecture) {
+      shell.exec('cd ios && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install');
+    } else {
+      shell.exec('npx pod-install');
+    }
 
     if (client) {
       client.forEach((cl: string) => {
