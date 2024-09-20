@@ -56,7 +56,7 @@ def write_json_version(json_file, client, platform, version)
   else
     # Increase patch version
     version_arr = platform_version['version'].split('.')
-    version_arr[2] = version_arr[2].succ
+    version_arr[2] = version_arr[2].nil? ? 0.succ : version_arr[2].succ
     platform_version['version'] = version_arr.join('.')
     puts "Increase version #{platform_version['version']}"
   end
