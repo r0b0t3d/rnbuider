@@ -75,7 +75,10 @@ export const prepareLaunchScreen = async ({
           })
           .png()
           .toFile(
-            path.join(androidAssetFolder, 'mipmap-xxxhdpi/bootsplash_logo.png'),
+            path.join(
+              androidAssetFolder,
+              'drawable-xxxhdpi/bootsplash_logo.png',
+            ),
           ),
         sharp(inputFile)
           .resize({
@@ -83,7 +86,10 @@ export const prepareLaunchScreen = async ({
           })
           .png()
           .toFile(
-            path.join(androidAssetFolder, 'mipmap-xxhdpi/bootsplash_logo.png'),
+            path.join(
+              androidAssetFolder,
+              'drawable-xxhdpi/bootsplash_logo.png',
+            ),
           ),
         sharp(inputFile)
           .resize({
@@ -91,7 +97,7 @@ export const prepareLaunchScreen = async ({
           })
           .png()
           .toFile(
-            path.join(androidAssetFolder, 'mipmap-xhdpi/bootsplash_logo.png'),
+            path.join(androidAssetFolder, 'drawable-xhdpi/bootsplash_logo.png'),
           ),
         sharp(inputFile)
           .resize({
@@ -99,7 +105,7 @@ export const prepareLaunchScreen = async ({
           })
           .png()
           .toFile(
-            path.join(androidAssetFolder, 'mipmap-hdpi/bootsplash_logo.png'),
+            path.join(androidAssetFolder, 'drawable-hdpi/bootsplash_logo.png'),
           ),
         sharp(inputFile)
           .resize({
@@ -107,7 +113,7 @@ export const prepareLaunchScreen = async ({
           })
           .png()
           .toFile(
-            path.join(androidAssetFolder, 'mipmap-mdpi/bootsplash_logo.png'),
+            path.join(androidAssetFolder, 'drawable-mdpi/bootsplash_logo.png'),
           ),
       ]);
     }
