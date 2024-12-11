@@ -68,6 +68,11 @@ export const prepareLaunchScreen = async ({
           ),
         );
       // Android
+      ensureDir(path.join(androidAssetFolder, 'drawable-xxxhdpi'));
+      ensureDir(path.join(androidAssetFolder, 'drawable-xxhdpi'));
+      ensureDir(path.join(androidAssetFolder, 'drawable-xhdpi'));
+      ensureDir(path.join(androidAssetFolder, 'drawable-hdpi'));
+      ensureDir(path.join(androidAssetFolder, 'drawable-mdpi'));
       await Promise.all([
         sharp(inputFile)
           .resize({
