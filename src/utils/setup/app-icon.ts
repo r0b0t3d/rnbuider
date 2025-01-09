@@ -28,6 +28,7 @@ export const prepareAppIcon = async ({ iosAssetFolder }: any) => {
     await sharp(normalise(appIconFile))
       .resize(1024, 1024)
       .png()
+      .removeAlpha()
       .toFile(
         path.join(iosAssetFolder, 'AppIcon.appiconset/ItunesArtwork@2x.png'),
       );

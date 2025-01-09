@@ -3,9 +3,7 @@
   "description": "React Native builder tool",
   "version": "0.6.44",
   "author": "Tuan Luong @r0b0t3d",
-  "bin": {
-    "rnbuilder": "./bin/run"
-  },
+  "bin": "./bin/run",
   "bugs": "https://github.com/r0b0t3d/rnbuilder/issues",
   "dependencies": {
     "@oclif/command": "^1",
@@ -67,5 +65,6 @@
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md"
   },
-  "types": "lib/index.d.ts"
+  "types": "lib/index.d.ts",
+  "packageManager": "yarn@3.6.4+sha512.e70835d4d6d62c07be76b3c1529cb640c7443f0fe434ef4b6478a5a399218cbaf1511b396b3c56eb03bc86424cff2320f6167ad2fde273aa0df6e60b7754029f"
 }
