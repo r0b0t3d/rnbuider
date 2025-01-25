@@ -72,10 +72,7 @@ hello world from ./src/setup.ts!
       setEnvValue('APPLE_TEAM_ID', appleTeamId, envVars);
     }
 
-    const iosAssetFolder = path.join(
-      process.cwd(),
-      `/ios/edular/assets/${client}`,
-    );
+    const iosAssetFolder = path.join(process.cwd(), `configs/${client}`);
     const androidAssetFolder = path.join(
       process.cwd(),
       `/android/app/src/${client}/res`,
