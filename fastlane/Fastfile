@@ -474,7 +474,11 @@ lane :sync_onesignal do |options|
     FileUtils.mkdir_p(cert_path)
     if portal_client
       service_config = {}
-      service_config['U27F4V844T'] = []
+      service_config['U27F4V844T'] = {                # APNS
+      scope: 'team',
+      environment: 'all',
+      identifiers: {}
+    }
       key = portal_client.create_key!(name: 'APNs', service_configs: service_config)
       file = portal_client.download_key(id: key['keyId'])
       puts key
