@@ -197,6 +197,7 @@ platform :ios do
       profile: ENV["sigh_#{app_id}_#{match_type}_profile-path"],
       profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{match_type}_profile-path"]
     )
+    temporary_fix_ios_post_build
     file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     if options[:installr]
       upload_installr(
@@ -502,6 +503,14 @@ lane :sync_onesignal do |options|
   #   # apns_p8: "TUlHVEFnRUFNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQkhrd2R3SUJBUVFnTEJMUnMrQXhwVmUxejducQo2T1VYQjVKd1lGVEN6U25UcjhmbnM2WTRPMzJnQ2dZSUtvWkl6ajBEQVFlaFJBTkNBQVJjL2MwODUrZGh5eXk2CnVEc0JOOXQ4YW41M2xlV2VWOUNrUzdWSFlMcmk4Q0l4ZUd3c0oyZTRhWUxKWjFMMGZySEZVamsrTGlOVnBxOHcKaFcva2JyNXI="
   #   apns_p8: Base64.encode64(File.read(key_path).to_s),    
   # )
+end
+
+desc "Temporary workaround to remove unwanted files from the IPA"
+lane :temporary_fix_ios_post_build do
+  # Workaround to remove ._Symbols from ipa.
+  ipa_location = lane_context[SharedValues::IPA_OUTPUT_PATH]
+  sh("unzip -l #{ipa_location} | grep ._Symbols || true")
+  sh("zip -d #{ipa_location} ._Symbols/ || true")
 end
 
 tester_udids_file = "tester_udids.txt"
