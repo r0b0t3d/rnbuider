@@ -197,7 +197,7 @@ platform :ios do
       profile: ENV["sigh_#{app_id}_#{match_type}_profile-path"],
       profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{match_type}_profile-path"]
     )
-    # temporary_fix_ios_post_build
+    temporary_fix_ios_post_build
     file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     if options[:installr]
       upload_installr(
