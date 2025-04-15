@@ -89,7 +89,9 @@ export const prepareLaunchScreen = async ({
 
   // There is no full screen for android, so generate icon
   // Android
-  const androidIcon = launchScreen === 'icon' ? inputFile : fallbackFile;
+  const androidIcon = normalise(
+    launchScreen === 'icon' ? inputFile : fallbackFile,
+  );
   if (androidIcon) {
     ensureDir(path.join(androidAssetFolder, 'drawable-xxxhdpi'));
     ensureDir(path.join(androidAssetFolder, 'drawable-xxhdpi'));

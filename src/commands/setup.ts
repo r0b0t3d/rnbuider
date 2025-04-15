@@ -85,7 +85,7 @@ hello world from ./src/setup.ts!
     const { launchScreen, launchScreenColor } = await prepareLaunchScreen({
       iosAssetFolder,
       androidAssetFolder,
-      appIconFile,
+      fallbackFile: appIconFile,
     });
     if (launchScreen) {
       setEnvValue(
