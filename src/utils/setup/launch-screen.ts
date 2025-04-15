@@ -85,64 +85,59 @@ export const prepareLaunchScreen = async ({
           );
       }
     }
-    // There is no full screen for android, so generate icon
-    // Android
-    const androidIcon = launchScreen === 'icon' ? inputFile : fallbackFile;
-    if (androidIcon) {
-      ensureDir(path.join(androidAssetFolder, 'drawable-xxxhdpi'));
-      ensureDir(path.join(androidAssetFolder, 'drawable-xxhdpi'));
-      ensureDir(path.join(androidAssetFolder, 'drawable-xhdpi'));
-      ensureDir(path.join(androidAssetFolder, 'drawable-hdpi'));
-      ensureDir(path.join(androidAssetFolder, 'drawable-mdpi'));
-      await Promise.all([
-        sharp(androidIcon)
-          .resize({
-            width: 1024,
-          })
-          .png()
-          .toFile(
-            path.join(
-              androidAssetFolder,
-              'drawable-xxxhdpi/bootsplash_logo.png',
-            ),
-          ),
-        sharp(androidIcon)
-          .resize({
-            width: 768,
-          })
-          .png()
-          .toFile(
-            path.join(
-              androidAssetFolder,
-              'drawable-xxhdpi/bootsplash_logo.png',
-            ),
-          ),
-        sharp(androidIcon)
-          .resize({
-            width: 512,
-          })
-          .png()
-          .toFile(
-            path.join(androidAssetFolder, 'drawable-xhdpi/bootsplash_logo.png'),
-          ),
-        sharp(androidIcon)
-          .resize({
-            width: 384,
-          })
-          .png()
-          .toFile(
-            path.join(androidAssetFolder, 'drawable-hdpi/bootsplash_logo.png'),
-          ),
-        sharp(androidIcon)
-          .resize({
-            width: 341,
-          })
-          .png()
-          .toFile(
-            path.join(androidAssetFolder, 'drawable-mdpi/bootsplash_logo.png'),
-          ),
-      ]);
-    }
+  }
+
+  // There is no full screen for android, so generate icon
+  // Android
+  const androidIcon = launchScreen === 'icon' ? inputFile : fallbackFile;
+  if (androidIcon) {
+    ensureDir(path.join(androidAssetFolder, 'drawable-xxxhdpi'));
+    ensureDir(path.join(androidAssetFolder, 'drawable-xxhdpi'));
+    ensureDir(path.join(androidAssetFolder, 'drawable-xhdpi'));
+    ensureDir(path.join(androidAssetFolder, 'drawable-hdpi'));
+    ensureDir(path.join(androidAssetFolder, 'drawable-mdpi'));
+    await Promise.all([
+      sharp(androidIcon)
+        .resize({
+          width: 1024,
+        })
+        .png()
+        .toFile(
+          path.join(androidAssetFolder, 'drawable-xxxhdpi/bootsplash_logo.png'),
+        ),
+      sharp(androidIcon)
+        .resize({
+          width: 768,
+        })
+        .png()
+        .toFile(
+          path.join(androidAssetFolder, 'drawable-xxhdpi/bootsplash_logo.png'),
+        ),
+      sharp(androidIcon)
+        .resize({
+          width: 512,
+        })
+        .png()
+        .toFile(
+          path.join(androidAssetFolder, 'drawable-xhdpi/bootsplash_logo.png'),
+        ),
+      sharp(androidIcon)
+        .resize({
+          width: 384,
+        })
+        .png()
+        .toFile(
+          path.join(androidAssetFolder, 'drawable-hdpi/bootsplash_logo.png'),
+        ),
+      sharp(androidIcon)
+        .resize({
+          width: 341,
+        })
+        .png()
+        .toFile(
+          path.join(androidAssetFolder, 'drawable-mdpi/bootsplash_logo.png'),
+        ),
+    ]);
   }
 
   return { launchScreen, launchScreenColor };
