@@ -79,12 +79,13 @@ hello world from ./src/setup.ts!
     );
     // Create client env files
     // shell.exec(`mkdir configs/${client}`);
-    await prepareAppIcon({
+    const { appIconFile } = await prepareAppIcon({
       iosAssetFolder,
     });
     const { launchScreen, launchScreenColor } = await prepareLaunchScreen({
       iosAssetFolder,
       androidAssetFolder,
+      appIconFile,
     });
     if (launchScreen) {
       setEnvValue(

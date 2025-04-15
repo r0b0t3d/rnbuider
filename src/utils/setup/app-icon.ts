@@ -33,4 +33,5 @@ export const prepareAppIcon = async ({ iosAssetFolder }: any) => {
         path.join(iosAssetFolder, 'AppIcon.appiconset/ItunesArtwork@2x.png'),
       );
   }
+  return { appIconFile };
 };

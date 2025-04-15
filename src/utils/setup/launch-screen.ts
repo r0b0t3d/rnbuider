@@ -1,11 +1,12 @@
 import * as sharp from 'sharp';
 import * as path from 'path';
 import * as inquirer from 'inquirer';
-import { copyDir, copyFile, ensureDir, normalise } from '../common';
+import { copyDir, ensureDir, normalise } from '../common';
 
 export const prepareLaunchScreen = async ({
   iosAssetFolder,
   androidAssetFolder,
+  fallbackFile,
 }: any) => {
   const questions = [
     {
@@ -67,14 +68,34 @@ export const prepareLaunchScreen = async ({
             'BootSplashLogo.imageset/bootsplash_logo.png',
           ),
         );
-      // Android
+    } else if (launchScreen === 'fullscreen') {
+      if (inputFile) {
+        // ios
+        await copyDir(
+          './template/BootSplashImage.imageset',
+          path.join(iosAssetFolder, 'BootSplashImage.imageset'),
+        );
+        await sharp(inputFile)
+          .png()
+          .toFile(
+            path.join(
+              iosAssetFolder,
+              'BootSplashImage.imageset/splashTablet.png',
+            ),
+          );
+      }
+    }
+    // There is no full screen for android, so generate icon
+    // Android
+    const androidIcon = launchScreen === 'icon' ? inputFile : fallbackFile;
+    if (androidIcon) {
       ensureDir(path.join(androidAssetFolder, 'drawable-xxxhdpi'));
       ensureDir(path.join(androidAssetFolder, 'drawable-xxhdpi'));
       ensureDir(path.join(androidAssetFolder, 'drawable-xhdpi'));
       ensureDir(path.join(androidAssetFolder, 'drawable-hdpi'));
       ensureDir(path.join(androidAssetFolder, 'drawable-mdpi'));
       await Promise.all([
-        sharp(inputFile)
+        sharp(androidIcon)
           .resize({
             width: 1024,
           })
@@ -85,7 +106,7 @@ export const prepareLaunchScreen = async ({
               'drawable-xxxhdpi/bootsplash_logo.png',
             ),
           ),
-        sharp(inputFile)
+        sharp(androidIcon)
           .resize({
             width: 768,
           })
@@ -96,7 +117,7 @@ export const prepareLaunchScreen = async ({
               'drawable-xxhdpi/bootsplash_logo.png',
             ),
           ),
-        sharp(inputFile)
+        sharp(androidIcon)
           .resize({
             width: 512,
           })
@@ -104,7 +125,7 @@ export const prepareLaunchScreen = async ({
           .toFile(
             path.join(androidAssetFolder, 'drawable-xhdpi/bootsplash_logo.png'),
           ),
-        sharp(inputFile)
+        sharp(androidIcon)
           .resize({
             width: 384,
           })
@@ -112,7 +133,7 @@ export const prepareLaunchScreen = async ({
           .toFile(
             path.join(androidAssetFolder, 'drawable-hdpi/bootsplash_logo.png'),
           ),
-        sharp(inputFile)
+        sharp(androidIcon)
           .resize({
             width: 341,
           })
@@ -121,33 +142,6 @@ export const prepareLaunchScreen = async ({
             path.join(androidAssetFolder, 'drawable-mdpi/bootsplash_logo.png'),
           ),
       ]);
-    }
-  } else if (launchScreen === 'fullscreen') {
-    if (inputFile) {
-      // ios
-      await copyDir(
-        './template/BootSplashImage.imageset',
-        path.join(iosAssetFolder, 'BootSplashImage.imageset'),
-      );
-      await sharp(inputFile)
-        .png()
-        .toFile(
-          path.join(
-            iosAssetFolder,
-            'BootSplashImage.imageset/splashTablet.png',
-          ),
-        );
-
-      // Android
-      ensureDir(path.join(androidAssetFolder, 'layout'));
-      ensureDir(path.join(androidAssetFolder, 'drawable'));
-      await copyFile(
-        './template/splash.xml',
-        path.join(androidAssetFolder, 'layout/splash.xml'),
-      );
-      await sharp(inputFile)
-        .png()
-        .toFile(path.join(androidAssetFolder, 'drawable/splash.png'));
     }
   }
 
