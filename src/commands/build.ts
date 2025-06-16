@@ -355,7 +355,7 @@ hello world from ./src/build.ts!
       json_file: jsonFile,
     });
 
-    if (!flags.ignore_git_reset) {
+    if (flags.ignore_git_reset) {
       if (params.branch) {
         shell.exec(`git reset --hard && git checkout ${params.branch}`);
       }
@@ -367,7 +367,7 @@ hello world from ./src/build.ts!
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
     shell.exec('rm ios/.xcode.env.local');
-    if (!flags.ignore_cleanup) {
+    if (flags.ignore_cleanup) {
       // Clean android if any
       if (target.includes('android')) {
         shell.cd('./android');
