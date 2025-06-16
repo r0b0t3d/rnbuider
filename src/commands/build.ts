@@ -353,6 +353,7 @@ hello world from ./src/build.ts!
     const parameters: any = buildKeyValuePairs({
       ...otherParams,
       json_file: jsonFile,
+      ignore_cleanup: flags.ignore_cleanup,
     });
 
     if (flags.ignore_git_reset) {
@@ -372,7 +373,7 @@ hello world from ./src/build.ts!
       if (target.includes('android')) {
         shell.cd('./android');
         shell.exec('./gradlew clean');
-        shell.exec('rm -rf .gradle');
+        // shell.exec('rm -rf .gradle');
         shell.cd('../');
       }
     }
