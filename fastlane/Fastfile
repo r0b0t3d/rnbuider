@@ -129,7 +129,7 @@ platform :ios do
     end
     build_app(
       workspace: "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcworkspace",
-      clean: options[:ignore_cleanup] || true,
+      clean: !options[:ignore_cleanup],
       scheme: options[:scheme],
       export_method: options[:export_method],
       output_name: options[:output_name],
