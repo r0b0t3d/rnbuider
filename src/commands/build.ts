@@ -378,11 +378,7 @@ hello world from ./src/build.ts!
       }
     }
     shell.exec('yarn install');
-    if (this.fastlaneConfigs.newArchitecture) {
-      shell.exec('cd ios && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install');
-    } else {
-      shell.exec('cd ios && RCT_NEW_ARCH_ENABLED=0 bundle exec pod install');
-    }
+    shell.exec('cd ios && bundle exec pod install');
 
     if (client) {
       client.forEach((cl: string) => {
