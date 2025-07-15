@@ -368,17 +368,23 @@ hello world from ./src/build.ts!
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
     shell.exec('rm ios/.xcode.env.local');
-    if (flags.ignore_cleanup) {
-      // Clean android if any
-      if (target.includes('android')) {
-        shell.cd('./android');
-        shell.exec('./gradlew clean');
-        // shell.exec('rm -rf .gradle');
-        shell.cd('../');
-      }
-    }
+    // if (flags.ignore_cleanup) {
+    //   // Clean android if any
+    //   if (target.includes('android')) {
+    //     // shell.cd('./android');
+    //     // shell.exec('./gradlew clean');
+    //     shell.exec(
+    //       'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
+    //     );
+    //     // shell.cd('../');
+    //   }
+    // }
+    shell.exec(
+      'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
+    );
     shell.exec('yarn install');
     shell.exec('cd ios && bundle exec pod install');
+    shell.exec('cd android && ./gradlew generateCodegenArtifactsFromSchema');
 
     if (client) {
       client.forEach((cl: string) => {
