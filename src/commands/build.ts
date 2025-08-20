@@ -73,9 +73,9 @@ hello world from ./src/build.ts!
       char: 'g',
       description: 'Ignore git reset when building',
     }),
-    ignore_cleanup: flags.boolean({
+    cleanup: flags.boolean({
       char: 's',
-      description: 'Ignore cleanup when building',
+      description: 'Do cleanup when building',
     }),
     groupsIos: flags.string({
       description: 'Groups ids for iOS distribution',
@@ -353,7 +353,6 @@ hello world from ./src/build.ts!
     const parameters: any = buildKeyValuePairs({
       ...otherParams,
       json_file: jsonFile,
-      ignore_cleanup: flags.ignore_cleanup,
     });
 
     if (flags.ignore_git_reset) {
@@ -368,22 +367,13 @@ hello world from ./src/build.ts!
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
     shell.exec('rm ios/.xcode.env.local');
-    // if (flags.ignore_cleanup) {
-    //   // Clean android if any
-    //   if (target.includes('android')) {
-    //     // shell.cd('./android');
-    //     // shell.exec('./gradlew clean');
-    //     shell.exec(
-    //       'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
-    //     );
-    //     // shell.cd('../');
-    //   }
-    // }
-    shell.exec(
-      'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
-    );
-    shell.exec('yarn install');
-    shell.exec('yarn pod');
+    if (flags.cleanup) {
+      shell.exec(
+        'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
+      );
+      shell.exec('yarn install');
+      shell.exec('yarn pod');
+    }
     shell.exec('cd android && ./gradlew generateCodegenArtifactsFromSchema');
 
     if (client) {
