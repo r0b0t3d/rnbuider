@@ -383,7 +383,7 @@ hello world from ./src/build.ts!
       'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
     );
     shell.exec('yarn install');
-    shell.exec('cd ios && bundle exec pod install');
+    shell.exec('yarn pod');
     shell.exec('cd android && ./gradlew generateCodegenArtifactsFromSchema');
 
     if (client) {
