@@ -190,6 +190,16 @@ platform :ios do
       app_identifier << "#{app_id}.#{ext}"
     end
 
+    # ✅ Ensure all app identifiers exist in Developer Portal
+    app_identifier.each do |id|
+      produce(
+        username: ENV['APPLE_ID'],
+        app_identifier: id,
+        app_name: id.split('.').last, # use target name for readability
+        skip_itc: true # don’t create App Store Connect entry for extensions
+      )
+    end
+
     # Provisioning profiles for main app + extensions
     match(
       app_identifier: app_identifier,
