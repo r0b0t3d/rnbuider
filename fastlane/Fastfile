@@ -57,6 +57,12 @@ platform :ios do
   ios_project_path = "#{ENV['PROJECT_DIR']}/ios"
   xcodeproj = "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcodeproj"
 
+  # Utility: split service extensions into list
+  def service_extensions
+    return [] unless ENV['SERVICE_EXTENSION_NAME']
+    ENV['SERVICE_EXTENSION_NAME'].split(',').map(&:strip)
+  end
+
   def get_ios_version(increment = "patch")
     begin 
       latest_testflight_build_number(
@@ -80,15 +86,15 @@ platform :ios do
     puts "Store Version #{store_version}"
     next_v = next_version(store_version, increment)
     if Gem::Version.new(tf_version) >= Gem::Version.new(next_v)
-        tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] || 1
-        store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
-        puts "TF build number #{tf_build_number}"
-        puts "Store build number #{store_build_number}"
-        if tf_build_number == store_build_number 
-          next_v = next_version(tf_version, 'patch')
-        else
-          next_v = tf_version
-        end
+      tf_build_number = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] || 1
+      store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
+      puts "TF build number #{tf_build_number}"
+      puts "Store build number #{store_build_number}"
+      if tf_build_number == store_build_number 
+        next_v = next_version(tf_version, 'patch')
+      else
+        next_v = tf_version
+      end
     end
     puts "Next Version #{next_v}"
     return next_v
@@ -114,19 +120,25 @@ platform :ios do
   private_lane :process_build do |options|
     puts "Process build with options: #{options}"
 
+    # Main app
     update_project_provisioning(
       xcodeproj: xcodeproj,
       profile: options[:profile],
       build_configuration: "Release",
     )
-    if ENV['SERVICE_EXTENSION_NAME']
-      update_project_provisioning(
-        xcodeproj: xcodeproj,
-        profile: options[:profile_service_extension],
-        target_filter: ENV['SERVICE_EXTENSION_NAME'],
-        build_configuration: "Release",
-      )
+
+    # Service extensions
+    if options[:extension_profiles]
+      options[:extension_profiles].each do |ext, profile|
+        update_project_provisioning(
+          xcodeproj: xcodeproj,
+          profile: profile,
+          target_filter: ext,
+          build_configuration: "Release",
+        )
+      end
     end
+
     build_app(
       workspace: "#{ios_project_path}/#{ENV['XCODEPROJ_NAME']}.xcworkspace",
       clean: false,
@@ -149,12 +161,9 @@ platform :ios do
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios #{options[:env]}"
     )
+
     grouping = options[:client].nil? ? options[:env] : "#{options[:client]}-#{options[:env]}"
-    # add_git_tag(
-    #   grouping: grouping,
-    #   prefix: 'v',
-    #   build_number: platform_version["build"]
-    # )
+
     send_message(
       title: "#{ENV['CLIENT']} ios - #{options[:env]}",
       description: "Start building...",
@@ -169,14 +178,19 @@ platform :ios do
         inline: true,
       }],
     )
+
     app_id = ENV['APP_IDENTIFIER']
     app_name = ENV['APP_NAME']
     app_identifier = [app_id]
     export_method = options[:distribute] == 'store' ? 'app-store' : 'ad-hoc'
     match_type = options[:distribute] == 'store' ? 'appstore' : 'adhoc'
-    if ENV['SERVICE_EXTENSION_NAME']
-      app_identifier = app_identifier.push("#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}")
+
+    # Collect extension identifiers
+    service_extensions.each do |ext|
+      app_identifier << "#{app_id}.#{ext}"
     end
+
+    # Provisioning profiles for main app + extensions
     match(
       app_identifier: app_identifier,
       type: match_type,
@@ -190,15 +204,23 @@ platform :ios do
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
+
+    # Collect profiles for extensions
+    extension_profiles = service_extensions.map do |ext|
+      [ext, ENV["sigh_#{app_id}.#{ext}_#{match_type}_profile-path"]]
+    end.to_h
+
     process_build(
       scheme: ENV['XCODEPROJ_SCHEME'],
       output_name: app_name,
       export_method: export_method,
       profile: ENV["sigh_#{app_id}_#{match_type}_profile-path"],
-      profile_service_extension: ENV["sigh_#{app_id}.#{ENV['SERVICE_EXTENSION_NAME']}_#{match_type}_profile-path"]
+      extension_profiles: extension_profiles
     )
+
     temporary_fix_ios_post_build
     file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+
     if options[:installr]
       upload_installr(
         file: file,
@@ -206,6 +228,7 @@ platform :ios do
         testers: options[:testersIos]
       )
     end
+
     if options[:distribute] == 'firebase'
       upload_firebase(
         app: ENV['FIREBASE_IOS_APP'],
@@ -223,6 +246,7 @@ platform :ios do
         )
       end
     end
+
     if options[:distribute] == 'store'
       upload_to_app_store(
         username: ENV['APPLE_ID'],
@@ -235,6 +259,7 @@ platform :ios do
         run_precheck_before_submit: false,
       )
     end
+
     send_message(
       title: "#{ENV['CLIENT']} ios",
       description: "Success ✅",
