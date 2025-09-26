@@ -194,6 +194,7 @@ platform :ios do
     app_identifier.each do |id|
       produce(
         username: ENV['APPLE_ID'],
+        team_id: ENV['APPLE_TEAM_ID'],   # 👈 add this
         app_identifier: id,
         app_name: id.split('.').last, # use target name for readability
         skip_itc: true # don’t create App Store Connect entry for extensions
