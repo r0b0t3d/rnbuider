@@ -229,7 +229,7 @@ platform :ios do
       extension_profiles: extension_profiles
     )
 
-    temporary_fix_ios_post_build
+    # temporary_fix_ios_post_build
     file = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
 
     if options[:installr]
