@@ -93,53 +93,28 @@ export const prepareLaunchScreen = async ({
     launchScreen === 'icon' ? inputFile : fallbackFile,
   );
   if (androidIcon) {
-    ensureDir(path.join(androidAssetFolder, 'drawable-xxxhdpi'));
-    ensureDir(path.join(androidAssetFolder, 'drawable-xxhdpi'));
-    ensureDir(path.join(androidAssetFolder, 'drawable-xhdpi'));
-    ensureDir(path.join(androidAssetFolder, 'drawable-hdpi'));
-    ensureDir(path.join(androidAssetFolder, 'drawable-mdpi'));
-    await Promise.all([
-      sharp(androidIcon)
-        .resize({
-          width: 1024,
+    const densities = [
+      { folder: 'drawable-xxxhdpi', size: 960, padding: 144 },
+      { folder: 'drawable-xxhdpi', size: 720, padding: 108 },
+      { folder: 'drawable-xhdpi', size: 480, padding: 72 },
+      { folder: 'drawable-hdpi', size: 360, padding: 54 },
+      { folder: 'drawable-mdpi', size: 240, padding: 36 },
+    ];
+    densities.map(({ folder, size, padding }) => {
+      ensureDir(path.join(androidAssetFolder, folder));
+      const logoSize = size - padding * 2;
+      return sharp(androidIcon)
+        .resize({ width: logoSize })
+        .extend({
+          top: padding,
+          bottom: padding,
+          left: padding,
+          right: padding,
+          background: { r: 0, g: 0, b: 0, alpha: 0 }, // transparent padding
         })
         .png()
-        .toFile(
-          path.join(androidAssetFolder, 'drawable-xxxhdpi/bootsplash_logo.png'),
-        ),
-      sharp(androidIcon)
-        .resize({
-          width: 768,
-        })
-        .png()
-        .toFile(
-          path.join(androidAssetFolder, 'drawable-xxhdpi/bootsplash_logo.png'),
-        ),
-      sharp(androidIcon)
-        .resize({
-          width: 512,
-        })
-        .png()
-        .toFile(
-          path.join(androidAssetFolder, 'drawable-xhdpi/bootsplash_logo.png'),
-        ),
-      sharp(androidIcon)
-        .resize({
-          width: 384,
-        })
-        .png()
-        .toFile(
-          path.join(androidAssetFolder, 'drawable-hdpi/bootsplash_logo.png'),
-        ),
-      sharp(androidIcon)
-        .resize({
-          width: 341,
-        })
-        .png()
-        .toFile(
-          path.join(androidAssetFolder, 'drawable-mdpi/bootsplash_logo.png'),
-        ),
-    ]);
+        .toFile(path.join(androidAssetFolder, `${folder}/bootsplash_logo.png`));
+    });
   }
 
   return { launchScreen, launchScreenColor };

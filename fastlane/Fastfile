@@ -64,18 +64,18 @@ platform :ios do
   end
 
   def get_ios_version(increment = "patch")
-    begin 
+    begin
       latest_testflight_build_number(
         username: ENV['APPLE_ID'],
         team_id: ENV['ITC_TEAM_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
-        api_key_path: ENV['MATCH_API_KEY_PATH'],
+        api_key: get_api_key,
       )
       app_store_build_number(
         username: ENV['APPLE_ID'],
         team_id: ENV['ITC_TEAM_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
-        api_key_path: ENV['MATCH_API_KEY_PATH'],
+        api_key: get_api_key,
       )
     rescue => exception
       puts exception
@@ -110,6 +110,16 @@ platform :ios do
       unlock: true,
       timeout: 3600
     )
+  end
+
+  def get_api_key
+    if ENV['MATCH_API_KEY_PATH'] && ENV['APP_STORE_CONNECT_KEY_ID'] && ENV['APP_STORE_CONNECT_ISSUER_ID']
+      app_store_connect_api_key(
+        key_id: ENV['APP_STORE_CONNECT_KEY_ID'],
+        issuer_id: ENV['APP_STORE_CONNECT_ISSUER_ID'],
+        key_filepath: ENV['MATCH_API_KEY_PATH']
+      )
+    end
   end
 
   before_all do
@@ -189,25 +199,25 @@ platform :ios do
     service_extensions.each do |ext|
       app_identifier << "#{app_id}.#{ext}"
     end
-
-    # ✅ Ensure all app identifiers exist in Developer Portal
-    app_identifier.each do |id|
-      produce(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['APPLE_TEAM_ID'],   # 👈 add this
-        app_identifier: id,
-        app_name: id.split('.').last, # use target name for readability
-        skip_itc: true # don’t create App Store Connect entry for extensions
-      )
+    if ENV['SKIP_CHECKING_APP_ID'] != 'true'
+      # ✅ Ensure all app identifiers exist in Developer Portal
+      app_identifier.each do |id|
+        produce(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['APPLE_TEAM_ID'],   # 👈 add this
+          app_identifier: id,
+          app_name: id.split('.').last, # use target name for readability
+          skip_itc: true # don’t create App Store Connect entry for extensions
+        )
+      end
     end
-
     # Provisioning profiles for main app + extensions
     match(
       app_identifier: app_identifier,
       type: match_type,
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
-      api_key_path: ENV['MATCH_API_KEY_PATH'],
+      api_key: get_api_key,
       git_url: ENV['MATCH_GIT_URL'],
       git_branch: ENV['CLIENT'],
       force_for_new_devices: true,
@@ -263,7 +273,7 @@ platform :ios do
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
         team_id: ENV['ITC_TEAM_ID'],
-        api_key_path: ENV['MATCH_API_KEY_PATH'],
+        api_key: api_key,
         submit_for_review: false,
         skip_screenshots: true,
         skip_metadata: true,
@@ -562,7 +572,7 @@ lane :sync_udids do
   register_devices(
     devices_file: tester_udids_file,
     username: ENV['APPLE_ID'],
-    api_key_path: ENV['MATCH_API_KEY_PATH'],
+    api_key: get_api_key,
     team_id: ENV['APPLE_TEAM_ID'],
   )
   sync_git(
@@ -668,7 +678,7 @@ lane :match_check do |options|
       type: 'appstore',
       username: ENV['APPLE_ID'],
       team_id: ENV['APPLE_TEAM_ID'],
-      api_key_path: ENV['MATCH_API_KEY_PATH'],
+      api_key: get_api_key,
       git_url: ENV['MATCH_GIT_URL'],
       git_branch: ENV['CLIENT'],
       force_for_new_devices: true,
