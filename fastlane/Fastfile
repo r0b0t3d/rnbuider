@@ -273,7 +273,7 @@ platform :ios do
         username: ENV['APPLE_ID'],
         app_identifier: ENV['APP_IDENTIFIER'],
         team_id: ENV['ITC_TEAM_ID'],
-        api_key: api_key,
+        api_key: get_api_key,
         submit_for_review: false,
         skip_screenshots: true,
         skip_metadata: true,

@@ -93,12 +93,30 @@ export const prepareLaunchScreen = async ({
     launchScreen === 'icon' ? inputFile : fallbackFile,
   );
   if (androidIcon) {
+    const iconSize = 512;
+    const iconPadding = 96;
     const densities = [
-      { folder: 'drawable-xxxhdpi', size: 960, padding: 144 },
-      { folder: 'drawable-xxhdpi', size: 720, padding: 108 },
-      { folder: 'drawable-xhdpi', size: 480, padding: 72 },
-      { folder: 'drawable-hdpi', size: 360, padding: 54 },
-      { folder: 'drawable-mdpi', size: 240, padding: 36 },
+      {
+        folder: 'drawable-xxxhdpi',
+        size: iconSize * 4,
+        padding: iconPadding * 4,
+      },
+      {
+        folder: 'drawable-xxhdpi',
+        size: iconSize * 3,
+        padding: iconPadding * 3,
+      },
+      {
+        folder: 'drawable-xhdpi',
+        size: iconSize * 2,
+        padding: iconPadding * 2,
+      },
+      {
+        folder: 'drawable-hdpi',
+        size: iconSize * 1.5,
+        padding: iconPadding * 1.5,
+      },
+      { folder: 'drawable-mdpi', size: iconSize, padding: iconPadding },
     ];
     densities.map(({ folder, size, padding }) => {
       ensureDir(path.join(androidAssetFolder, folder));
