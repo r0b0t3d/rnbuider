@@ -359,11 +359,10 @@ hello world from ./src/build.ts!
       if (params.branch) {
         shell.exec(`git reset --hard && git checkout ${params.branch}`);
       }
-      shell.exec('git pull');
-      shell.exec('bundle update --bundler');
-      shell.exec('bundle install');
     }
-
+    shell.exec('git pull');
+    shell.exec('bundle update --bundler');
+    shell.exec('bundle install');
     // Clean fastlane builds
     shell.exec('rm -rf fastlane/builds');
     shell.exec('rm ios/.xcode.env.local');
@@ -371,8 +370,8 @@ hello world from ./src/build.ts!
       shell.exec(
         'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
       );
-      shell.exec('yarn install');
     }
+    shell.exec('yarn install');
     shell.exec('cd android && ./gradlew generateCodegenArtifactsFromSchema');
 
     if (client) {

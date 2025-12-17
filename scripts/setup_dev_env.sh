@@ -23,6 +23,9 @@ else
   eval "$(/usr/local/bin/brew shellenv)"
 fi
 
+# Install libyaml
+brew install libyaml
+
 # Install asdf via Homebrew
 if ! command -v asdf >/dev/null; then
   echo "📦 Installing asdf..."
