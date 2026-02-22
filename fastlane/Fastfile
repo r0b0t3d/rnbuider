@@ -69,8 +69,10 @@ platform :ios do
   end
 
   def get_ios_version(increment = "patch")
+    puts "Get iOS version: Increment #{increment}"
     begin
       if @api_key
+        puts "Using API key"
         latest_testflight_build_number(
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
@@ -86,6 +88,7 @@ platform :ios do
           platform: 'ios',
         )
       else
+        puts "Not using API key"
         latest_testflight_build_number(
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
