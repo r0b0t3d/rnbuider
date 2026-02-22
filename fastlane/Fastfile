@@ -70,18 +70,35 @@ platform :ios do
 
   def get_ios_version(increment = "patch")
     begin
-      latest_testflight_build_number(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-        api_key: @api_key,
-      )
-      app_store_build_number(
-        username: ENV['APPLE_ID'],
-        team_id: ENV['ITC_TEAM_ID'],
-        app_identifier: ENV['APP_IDENTIFIER'],
-        api_key: @api_key,
-      )
+      if @api_key
+        latest_testflight_build_number(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['ITC_TEAM_ID'],
+          app_identifier: ENV['APP_IDENTIFIER'],
+          api_key: @api_key,
+          platform: 'ios',
+        )
+        app_store_build_number(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['ITC_TEAM_ID'],
+          app_identifier: ENV['APP_IDENTIFIER'],
+          api_key: @api_key,
+          platform: 'ios',
+        )
+      else
+        latest_testflight_build_number(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['ITC_TEAM_ID'],
+          app_identifier: ENV['APP_IDENTIFIER'],
+          platform: 'ios',
+        )
+        app_store_build_number(
+          username: ENV['APPLE_ID'],
+          team_id: ENV['ITC_TEAM_ID'],
+          app_identifier: ENV['APP_IDENTIFIER'],
+          platform: 'ios',
+        )
+      end
     rescue => exception
       puts exception
     end
