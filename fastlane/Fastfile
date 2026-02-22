@@ -68,7 +68,7 @@ platform :ios do
     ENV['SERVICE_EXTENSION_NAME'].split(',').map(&:strip)
   end
 
-  def get_ios_version(increment = "patch")
+  def get_ios_version(increment = "patch", local_version = nil)
     puts "Get iOS version: Increment #{increment}"
     begin
       if @api_key
@@ -77,37 +77,33 @@ platform :ios do
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
           app_identifier: ENV['APP_IDENTIFIER'],
-          api_key: @api_key,
-          platform: 'ios',
+          api_key: @api_key
         )
         app_store_build_number(
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
           app_identifier: ENV['APP_IDENTIFIER'],
-          api_key: @api_key,
-          platform: 'ios',
+          api_key: @api_key
         )
       else
         puts "Not using API key"
         latest_testflight_build_number(
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
-          app_identifier: ENV['APP_IDENTIFIER'],
-          platform: 'ios',
+          app_identifier: ENV['APP_IDENTIFIER']
         )
         app_store_build_number(
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
-          app_identifier: ENV['APP_IDENTIFIER'],
-          platform: 'ios',
+          app_identifier: ENV['APP_IDENTIFIER']
         )
       end
     rescue => exception
       puts exception
     end
-    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || "0.0.0"
-    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || "0.0.0"
+    tf_version = Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] || local_version || "0.0.0"
     puts "TF Version #{tf_version}"
+    store_version = Actions.lane_context[SharedValues::LATEST_VERSION] || local_version || "0.0.0"
     puts "Store Version #{store_version}"
     next_v = next_version(store_version, increment)
     if Gem::Version.new(tf_version) >= Gem::Version.new(next_v)
@@ -187,7 +183,8 @@ platform :ios do
   desc "Process build"
   lane :build do |options|
     puts "Start iOS build #{options}"
-    version = options[:distribute] != 'store' || options[:skipCheckVersion] ? nil : get_ios_version(options[:version])
+    local_version = get_local_version(options[:json_file], options[:client], 'ios')
+    version = options[:distribute] != 'store' || options[:skipCheckVersion] ? nil : get_ios_version(options[:version], local_version['version'])
     platform_version = write_json_version(options[:json_file], options[:client], 'ios', version)
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - ios #{options[:env]}"
