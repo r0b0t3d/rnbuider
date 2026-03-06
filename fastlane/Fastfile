@@ -403,6 +403,26 @@ platform :android do
     return new_version
   end
 
+  def get_google_console(json_file, client)
+    begin
+      file = File.read(json_file)
+      data_hash = JSON.parse(file)
+      if client && data_hash[client].is_a?(Hash)
+        return data_hash[client]['googleConsole'] ||
+               (data_hash[client]['android'].is_a?(Hash) ? data_hash[client]['android']['googleConsole'] : nil)
+      end
+      if data_hash['googleConsole']
+        return data_hash['googleConsole']
+      end
+      if data_hash['android'].is_a?(Hash) && data_hash['android']['googleConsole']
+        return data_hash['android']['googleConsole']
+      end
+    rescue => ex
+      puts ex.message
+    end
+    nil
+  end
+
   desc "Process android build"
   private_lane :process_android_build do |options|
     gradle(
@@ -422,6 +442,8 @@ platform :android do
     local_version = get_local_version(options[:json_file], options[:client], 'android')
     version = options[:distribute] == 'store' ? get_android_version(options[:version], local_version['version']) : nil
     platform_version = write_json_version(options[:json_file], options[:client], 'android', version)
+    google_console = get_google_console(options[:json_file], options[:client])
+    ENV['GOOGLE_CONSOLE_LINK'] = google_console if google_console
     sync_git(
       message: "bump version #{options[:client]} #{platform_version["version"]} (#{platform_version["build"]}) - android #{options[:env]}"
     )
@@ -431,19 +453,25 @@ platform :android do
     #   prefix: 'v',
     #   build_number: platform_version["build"]
     # )
+    start_fields = [{
+      name: "Version",
+      value: "#{platform_version["version"]} (#{platform_version["build"]})",
+      inline: true,
+    }, {
+      name: "Environment",
+      value: options[:env],
+      inline: true,
+    }]
+    start_fields << {
+      name: "Google Console",
+      value: google_console,
+      inline: false,
+    } if google_console
     send_message(
       title: "#{ENV['CLIENT']} android - #{options[:env]}",
       description: "Start building...",
       color: "#282C34",
-      fields: [{
-        name: "Version",
-        value: "#{platform_version["version"]} (#{platform_version["build"]})",
-        inline: true,
-      }, {
-        name: "Environment",
-        value: options[:env],
-        inline: true,
-      }],
+      fields: start_fields,
     )
     process_android_build(
       flavor: flavor,
@@ -481,20 +509,26 @@ platform :android do
         json_key: ENV["JSON_KEY_FILE"]
       )
     end
+    success_fields = [{
+      name: "Version",
+      value: "#{platform_version["version"]} (#{platform_version["build"]})",
+      inline: true,
+    }, {
+      name: "Environment",
+      value: options[:env],
+      inline: true,
+    }]
+    success_fields << {
+      name: "Google Console",
+      value: google_console,
+      inline: false,
+    } if google_console
     send_message(
       title: "#{ENV['CLIENT']} android",
       description: "Success ✅",
       color: '#00C40F',
       mention_users: ENV['DISCORD_MENTION_USERS'],
-      fields: [{
-        name: "Version",
-        value: "#{platform_version["version"]} (#{platform_version["build"]})",
-        inline: true,
-      }, {
-        name: "Environment",
-        value: options[:env],
-        inline: true,
-      }],
+      fields: success_fields,
     )
     reset_git_repo(force: true, skip_clean: true)
   end
@@ -520,11 +554,20 @@ platform :android do
 
   error do |lane, exception|
     puts exception
+    error_fields = []
+    if ENV['GOOGLE_CONSOLE_LINK'] && !ENV['GOOGLE_CONSOLE_LINK'].empty?
+      error_fields << {
+        name: "Google Console",
+        value: ENV['GOOGLE_CONSOLE_LINK'],
+        inline: false,
+      }
+    end
     send_message(
       title: "#{ENV['CLIENT']} android",
       description: "Failure ❌ #{exception}",
       color: '#E70000',
       mention_users: ENV['DISCORD_MENTION_USERS'],
+      fields: error_fields,
     )
   end
 end

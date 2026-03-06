@@ -69,9 +69,9 @@ hello world from ./src/build.ts!
       char: 'u',
       description: 'Tester ids for Android distribution',
     }),
-    ignore_git_reset: flags.boolean({
+    gitReset: flags.boolean({
       char: 'g',
-      description: 'Ignore git reset when building',
+      description: 'Do git reset when building',
     }),
     cleanup: flags.boolean({
       char: 's',
@@ -355,7 +355,7 @@ hello world from ./src/build.ts!
       json_file: jsonFile,
     });
 
-    if (flags.ignore_git_reset) {
+    if (flags.gitReset) {
       if (params.branch) {
         shell.exec(`git reset --hard && git checkout ${params.branch}`);
       }

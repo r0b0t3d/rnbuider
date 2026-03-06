@@ -1,5 +1,4 @@
-rnbuilder
-=========
+# rnbuilder
 
 React Native builder tool
 
@@ -10,11 +9,15 @@ React Native builder tool
 [![License](https://img.shields.io/npm/l/rnbuilder.svg)](https://github.com/r0b0t3d/rnbuilder/blob/master/package.json)
 
 <!-- toc -->
-* [Usage](#usage)
-* [Commands](#commands)
+
+- [Usage](#usage)
+- [Commands](#commands)
 <!-- tocstop -->
+
 # Usage
+
 <!-- usage -->
+
 ```sh-session
 $ npm install -g rnbuilder
 $ rnbuilder COMMAND
@@ -26,21 +29,25 @@ USAGE
   $ rnbuilder COMMAND
 ...
 ```
+
 <!-- usagestop -->
+
 # Commands
+
 <!-- commands -->
-* [`rnbuilder build [BUILD]`](#rnbuilder-build-build)
-* [`rnbuilder check-version [MATCH-CHECK]`](#rnbuilder-check-version-match-check)
-* [`rnbuilder codepush [BUILD]`](#rnbuilder-codepush-build)
-* [`rnbuilder google-key [MATCH-CHECK]`](#rnbuilder-google-key-match-check)
-* [`rnbuilder help [COMMAND]`](#rnbuilder-help-command)
-* [`rnbuilder initialize`](#rnbuilder-initialize)
-* [`rnbuilder match-check [MATCH-CHECK]`](#rnbuilder-match-check-match-check)
-* [`rnbuilder match-nuke [BUILD]`](#rnbuilder-match-nuke-build)
-* [`rnbuilder onesignal [BUILD]`](#rnbuilder-onesignal-build)
-* [`rnbuilder setup [SETUP]`](#rnbuilder-setup-setup)
-* [`rnbuilder submit-review [SUBMIT-REVIEW]`](#rnbuilder-submit-review-submit-review)
-* [`rnbuilder sync-udids [BUILD]`](#rnbuilder-sync-udids-build)
+
+- [`rnbuilder build [BUILD]`](#rnbuilder-build-build)
+- [`rnbuilder check-version [MATCH-CHECK]`](#rnbuilder-check-version-match-check)
+- [`rnbuilder codepush [BUILD]`](#rnbuilder-codepush-build)
+- [`rnbuilder google-key [MATCH-CHECK]`](#rnbuilder-google-key-match-check)
+- [`rnbuilder help [COMMAND]`](#rnbuilder-help-command)
+- [`rnbuilder initialize`](#rnbuilder-initialize)
+- [`rnbuilder match-check [MATCH-CHECK]`](#rnbuilder-match-check-match-check)
+- [`rnbuilder match-nuke [BUILD]`](#rnbuilder-match-nuke-build)
+- [`rnbuilder onesignal [BUILD]`](#rnbuilder-onesignal-build)
+- [`rnbuilder setup [SETUP]`](#rnbuilder-setup-setup)
+- [`rnbuilder submit-review [SUBMIT-REVIEW]`](#rnbuilder-submit-review-submit-review)
+- [`rnbuilder sync-udids [BUILD]`](#rnbuilder-sync-udids-build)
 
 ## `rnbuilder build [BUILD]`
 
@@ -56,7 +63,7 @@ OPTIONS
   -d, --distribute=distribute           Specify where to distribute app
   -e, --env=env                         Set the environment: prod, staging, dev
   -f, --firebase                        If enabled, the build will be uploaded to firebase
-  -g, --ignore_git_reset                Ignore git reset when building
+  -g, --gitReset                        Do git reset when building
   -h, --help                            show CLI help
   -i, --installr=installr               If enabled, the build will be uploaded to installR
   -s, --cleanup                         Do cleanup when building
@@ -279,4 +286,5 @@ EXAMPLE
 ```
 
 _See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.63/src/commands/sync-udids.ts)_
+
 <!-- commandsstop -->
