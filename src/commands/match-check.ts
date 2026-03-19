@@ -4,12 +4,16 @@ import * as shell from 'shelljs';
 import { getDirectories } from '../utils/common';
 import * as inquirer from 'inquirer';
 
-export default class MatchNuke extends Command {
-  static description = 'Nuke certificates';
+inquirer.registerPrompt(
+  'checkbox-plus',
+  require('inquirer-checkbox-plus-prompt'),
+);
+export default class MatchCheck extends Command {
+  static description = 'Check match certificates';
 
   static examples = [
     `$ rnbuilder match-check
-    Nuke certificates ./src/match-check.ts!
+    Check match certificates ./src/match-check.ts!
 `,
   ];
 
@@ -17,7 +21,7 @@ export default class MatchNuke extends Command {
     help: flags.help({ char: 'h' }),
     client: flags.string({
       char: 'c',
-      description: 'Select client that you want to sync udids',
+      description: 'Select client that you want to check match certificates',
     }),
   };
 
