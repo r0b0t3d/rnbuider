@@ -632,9 +632,9 @@ lane :sync_udids do
   )
   register_devices(
     devices_file: tester_udids_file,
-    username: ENV['APPLE_ID'],
     api_key: @api_key,
     team_id: ENV['APPLE_TEAM_ID'],
+    username: ENV['MATCH_API_KEY_PATH'].nil? ? ENV['APPLE_ID'] : nil,
   )
   sync_git(
     message: 'registered tester devices'
