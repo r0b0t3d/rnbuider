@@ -142,7 +142,7 @@ platform :ios do
       )
     end
   end
-
+  
   desc 'Process build'
   private_lane :process_build do |options|
     puts "Process build with options: #{options}"
@@ -630,11 +630,12 @@ lane :sync_udids do
     output_file: tester_udids_file,
     service_credentials_file: ENV['FIREBASE_SERVICE_ACCOUNT_FILE'],
   )
+  use_api_key = !ENV['MATCH_API_KEY_PATH'].nil? && !ENV['APP_STORE_CONNECT_KEY_ID'].nil? && !ENV['APP_STORE_CONNECT_ISSUER_ID'].nil?
   register_devices(
     devices_file: tester_udids_file,
-    api_key: @api_key,
+    api_key: get_api_key,
     team_id: ENV['APPLE_TEAM_ID'],
-    username: ENV['MATCH_API_KEY_PATH'].nil? ? ENV['APPLE_ID'] : nil,
+    username: use_api_key ? nil : ENV['APPLE_ID'],
   )
   sync_git(
     message: 'registered tester devices'
