@@ -42,10 +42,10 @@ export default class MatchCheck extends Command {
         source: (answersSoFar: string, input: string) => {
           input = input || '';
           return new Promise(resolve => {
-            const result = clients.filter(client =>
+            const filtered = clients.filter(client =>
               client.toLowerCase().includes(input.toLowerCase()),
             );
-            resolve(result);
+            resolve(['all', ...filtered]);
           });
         },
         validate: (input: string[]) => {
@@ -59,8 +59,9 @@ export default class MatchCheck extends Command {
         },
       });
       const answers = await inquirer.prompt(questions);
-      if (answers.client.length > 0) {
-        answers.client.forEach((c: string) => {
+      const selectedClients = answers.client.includes('all') ? clients : answers.client;
+      if (selectedClients.length > 0) {
+        selectedClients.forEach((c: string) => {
           const envPath = `./fastlane/clients/${c}/fastlane`;
           shell.exec('pwd');
           shell.cd(envPath);
