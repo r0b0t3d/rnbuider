@@ -362,7 +362,7 @@ platform :ios do
   desc "Reject current App Store review version"
   lane :reject_review do
     require 'spaceship'
-    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(api_key: @api_key)
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: @api_key)
     app = Spaceship::ConnectAPI::App.find(ENV['APP_IDENTIFIER'])
     version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
     rejectable = %w[WAITING_FOR_REVIEW IN_REVIEW PENDING_DEVELOPER_RELEASE]
