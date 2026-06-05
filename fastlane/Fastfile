@@ -359,6 +359,33 @@ platform :ios do
     )
   end
 
+  desc "Reject current App Store review version"
+  lane :reject_review do
+    require 'spaceship'
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(api_key: @api_key)
+    app = Spaceship::ConnectAPI::App.find(ENV['APP_IDENTIFIER'])
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    rejectable = %w[WAITING_FOR_REVIEW IN_REVIEW PENDING_DEVELOPER_RELEASE]
+    if version && rejectable.include?(version.app_store_state)
+      version.reject!
+      send_message(
+        title: "#{ENV['CLIENT']} ios",
+        description: "Rejected version #{version.version_string} (#{version.app_store_state}) ✅",
+        color: '#00C40F',
+        mention_users: ENV['DISCORD_MENTION_USERS'],
+      )
+    else
+      state = version ? version.app_store_state : 'unknown'
+      UI.important "Nothing to reject — state: #{state}"
+      send_message(
+        title: "#{ENV['CLIENT']} ios",
+        description: "Nothing to reject — state: #{state}",
+        color: '#E0A800',
+        mention_users: ENV['DISCORD_MENTION_USERS'],
+      )
+    end
+  end
+
   error do |lane, exception|
     puts exception
     send_message(
