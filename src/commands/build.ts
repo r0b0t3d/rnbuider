@@ -86,6 +86,11 @@ hello world from ./src/build.ts!
     skipCheckVersion: flags.boolean({
       description: 'Skip checking current version on stores',
     }),
+    install: flags.boolean({
+      char: 'n',
+      description: 'Install dependencies before building',
+      default: false,
+    }),
   };
 
   static args = [{ name: 'build' }];
@@ -308,8 +313,8 @@ hello world from ./src/build.ts!
                 suffix: ' for iOS (separated by commas)',
                 default:
                   testersAnswer.testers === 'groups'
-                    ? answers.groupsAndroid ??
-                      getTesterGroups(this.fastlaneConfigs, result.env)
+                    ? (answers.groupsAndroid ??
+                      getTesterGroups(this.fastlaneConfigs, result.env))
                     : answers.testersAndroid,
               },
             ]);
@@ -371,13 +376,16 @@ hello world from ./src/build.ts!
         'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
       );
     }
-    const installCmd = shell.test('-f', 'bun.lockb') || shell.test('-f', 'bun.lock')
-      ? 'bun install'
-      : shell.test('-f', 'pnpm-lock.yaml')
-      ? 'pnpm install'
-      : 'yarn install';
-    shell.exec(installCmd);
-    shell.exec('cd android && ./gradlew generateCodegenArtifactsFromSchema');
+    if (flags.install) {
+      const installCmd =
+        shell.test('-f', 'bun.lockb') || shell.test('-f', 'bun.lock')
+          ? 'bun install'
+          : shell.test('-f', 'pnpm-lock.yaml')
+            ? 'pnpm install'
+            : 'yarn install';
+      shell.exec(installCmd);
+      shell.exec('cd android && ./gradlew generateCodegenArtifactsFromSchema');
+    }
 
     if (client) {
       client.forEach((cl: string) => {
