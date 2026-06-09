@@ -146,6 +146,9 @@ hello world from ./src/setup.ts!
     // Setup fastlane
     const { firebaseIosApp, firebaseAndroidApp } = await setupFastlane({
       client,
+      bundleId,
+      applicationId,
+      appName,
     });
     const fastlaneDir = path.join(
       process.cwd(),

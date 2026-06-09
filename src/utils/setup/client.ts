@@ -1,17 +1,9 @@
 import * as inquirer from 'inquirer';
+import { addProductFlavor } from './android';
+import { createXcodeScheme } from './ios-scheme';
 
-export const createClientConfig = (client: string) => {
-  return inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'android-client',
-      message: `Please add **${client}** to **productFlavors** in android>app>build.gradle`,
-    },
-    {
-      type: 'confirm',
-      name: 'ios-client',
-      message: `Please add **${client} prod** scheme and config Pre actions`,
-    },
+export const createClientConfig = async (client: string) => {
+  const { appName, bundleId, applicationId } = await inquirer.prompt([
     {
       type: 'input',
       name: 'appName',
@@ -27,8 +19,13 @@ export const createClientConfig = (client: string) => {
       type: 'input',
       name: 'applicationId',
       message:
-        'What is application id (this is for android in case you need difference id for platforms)?',
+        'What is application id (android, if different from bundle id)?',
       default: `com.edular.${client}`,
     },
   ]);
+
+  addProductFlavor({ client, applicationId });
+  createXcodeScheme({ client, bundleId });
+
+  return { appName, bundleId, applicationId };
 };
