@@ -325,7 +325,7 @@ platform :ios do
     }
 
     if ENV['SUPPORT_SPANISH'] == 'true'
-      release_notes['es-ES'] = 'Corrección de errores y mejoras de rendimiento'
+      release_notes['es-MX'] = 'Corrección de errores y mejoras de rendimiento'
     end
 
     upload_to_app_store(
