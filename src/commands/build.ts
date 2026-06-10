@@ -366,17 +366,17 @@ hello world from ./src/build.ts!
       }
     }
     shell.exec('git pull');
-    shell.exec('bundle update --bundler');
-    shell.exec('bundle install');
-    // Clean fastlane builds
-    shell.exec('rm -rf fastlane/builds');
-    shell.exec('rm ios/.xcode.env.local');
     if (flags.cleanup) {
+      // Clean fastlane builds
+      shell.exec('rm -rf fastlane/builds');
+      shell.exec('rm ios/.xcode.env.local');
       shell.exec(
         'rm -rf android/.gradle android/build android/app/build android/app/.cxx node_modules',
       );
     }
     if (flags.install) {
+      shell.exec('bundle update --bundler');
+      shell.exec('bundle install');
       const installCmd =
         shell.test('-f', 'bun.lockb') || shell.test('-f', 'bun.lock')
           ? 'bun install'
