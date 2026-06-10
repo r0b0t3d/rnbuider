@@ -3,7 +3,7 @@ require 'json'
 require "fileutils"
 
 desc "Send discord message"
-lane :send_message do |options| 
+lane :send_message do |options|
   if ENV['DISCORD_WEBHOOK_URL']
     discord_notification(
       webhook_url: ENV['DISCORD_WEBHOOK_URL'],
@@ -111,7 +111,7 @@ platform :ios do
       store_build_number = Actions.lane_context[SharedValues::LATEST_BUILD_NUMBER] || 1
       puts "TF build number #{tf_build_number}"
       puts "Store build number #{store_build_number}"
-      if tf_build_number == store_build_number 
+      if tf_build_number == store_build_number
         next_v = next_version(tf_version, 'patch')
       else
         next_v = tf_version
@@ -142,7 +142,7 @@ platform :ios do
       )
     end
   end
-  
+
   desc 'Process build'
   private_lane :process_build do |options|
     puts "Process build with options: #{options}"
@@ -319,6 +319,15 @@ platform :ios do
 
   desc "Submit for review"
   lane :submit_review do |options|
+    release_notes = {
+      'default' => 'Bug fixes and performance improvements',
+      'en-US' => 'Bug fixes and performance improvements'
+    }
+
+    if ENV['SUPPORT_SPANISH'] == 'true'
+      release_notes['es-ES'] = 'Corrección de errores y mejoras de rendimiento'
+    end
+
     upload_to_app_store(
       username: ENV['APPLE_ID'],
       app_identifier: ENV['APP_IDENTIFIER'],
@@ -331,10 +340,7 @@ platform :ios do
       force: true,
       app_version: options[:app_version],
       build_number: options[:build_number],
-      release_notes: {
-        'default' => 'Bug fixes and performance improvements',
-        'en-US' => 'Bug fixes and performance improvements'
-      },
+      release_notes: release_notes,
       run_precheck_before_submit: false,
       reject_if_possible: true,
       submission_information: {
@@ -362,7 +368,7 @@ platform :ios do
   desc "Reject current App Store review version"
   lane :reject_review do
     require 'spaceship'
-    
+
     ENV["FASTLANE_TEAM_ID"] = ENV["APPLE_TEAM_ID"]
     ENV["FASTLANE_ITC_TEAM_ID"] = ENV["ITC_TEAM_ID"]
 
@@ -664,7 +670,7 @@ lane :sync_onesignal do |options|
   end
   keys = portal_client.list_keys
   apnsKey = keys.select { |key| key["keyName"] == "APNs" }
-  puts apnsKey[0]  
+  puts apnsKey[0]
   # setup_onesignal(
   #   auth_token: options[:auth_token],
   #   app_name: "#{ENV['CLIENT'].capitalize()} Prod",
@@ -676,7 +682,7 @@ lane :sync_onesignal do |options|
   #   apns_team_id: ENV["APPLE_TEAM_ID"],
   #   apns_bundle_id: ENV["APP_IDENTIFIER"],
   #   # apns_p8: "TUlHVEFnRUFNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQkhrd2R3SUJBUVFnTEJMUnMrQXhwVmUxejducQo2T1VYQjVKd1lGVEN6U25UcjhmbnM2WTRPMzJnQ2dZSUtvWkl6ajBEQVFlaFJBTkNBQVJjL2MwODUrZGh5eXk2CnVEc0JOOXQ4YW41M2xlV2VWOUNrUzdWSFlMcmk4Q0l4ZUd3c0oyZTRhWUxKWjFMMGZySEZVamsrTGlOVnBxOHcKaFcva2JyNXI="
-  #   apns_p8: Base64.encode64(File.read(key_path).to_s),    
+  #   apns_p8: Base64.encode64(File.read(key_path).to_s),
   # )
 end
 
@@ -778,7 +784,7 @@ lane :get_team_names do |options|
 
   search = options[:search].downcase
 
-  str_dev_portal = "" 
+  str_dev_portal = ""
   UI.message "---- Developer teams for #{search} ----"
   client.teams.each do |team|
     teamName = team['name'].downcase
@@ -788,7 +794,7 @@ lane :get_team_names do |options|
     end
   end
 
-  str_client_tunes = "" 
+  str_client_tunes = ""
   UI.message "---- Appstore Connect teams for #{search} ----"
   client_tunes.teams.each do |team|
     teamName = team['name'].downcase
