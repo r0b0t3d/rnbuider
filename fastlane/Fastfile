@@ -809,6 +809,16 @@ end
 lane :match_check do |options|
   begin
     puts "Running match check for #{ENV['CLIENT']}"
+    
+    create_keychain(
+      name: "rnbuilder",
+      password: "rnbuilder",
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
+    )
+
     match(
       app_identifier: ENV['APP_IDENTIFIER'],
       type: 'appstore',
@@ -822,6 +832,8 @@ lane :match_check do |options|
       keychain_name: 'rnbuilder',
       keychain_password: 'rnbuilder',
     )
+    sh("security list-keychains")
+    sh("security find-identity -v -p codesigning ~/Library/Keychains/rnbuilder-db")
     send_message(
       title: "#{ENV['CLIENT']}",
       description: "Apple account is ready",
