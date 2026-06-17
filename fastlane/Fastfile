@@ -570,7 +570,7 @@ platform :android do
       )
     end
     if options[:distribute] == 'store'
-      upload_to_play_store(
+      play_store_params = {
         track: 'production',
         release_status: ENV['RELEASE_STATUS'] || 'completed',
         skip_upload_changelogs: false,
@@ -579,8 +579,9 @@ platform :android do
         skip_upload_images: true,
         skip_upload_screenshots: true,
         package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
-        json_key: ENV["JSON_KEY_FILE"]
-      )
+      }
+      play_store_params[:json_key] = ENV["JSON_KEY_FILE"] if ENV["JSON_KEY_FILE"]
+      upload_to_play_store(play_store_params)
     end
     success_fields = [{
       name: "Version",
