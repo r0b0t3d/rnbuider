@@ -1,39 +1,54 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-function insertIntoProductFlavors(gradle: string, flavor: string): string {
-  // Find productFlavors block and insert before its closing brace
+function insertIntoProductFlavors(gradle: string, client: string): string {
   const blockStart = gradle.indexOf('productFlavors {');
   if (blockStart === -1) {
-    // No productFlavors block — append one inside android {}
     const androidEnd = gradle.lastIndexOf('}');
     return (
       gradle.slice(0, androidEnd) +
-      `\n    productFlavors {\n${flavor}\n    }\n` +
+      `\n    productFlavors {\n        ${client}\n    }\n` +
       gradle.slice(androidEnd)
     );
   }
 
-  // Walk forward matching braces to find closing }
-  let depth = 0;
-  let i = blockStart;
-  while (i < gradle.length) {
+  const bracePos = gradle.indexOf('{', blockStart) + 1;
+
+  // Find closing brace of productFlavors block
+  let depth = 1;
+  let i = bracePos;
+  while (i < gradle.length && depth > 0) {
     if (gradle[i] === '{') depth++;
-    else if (gradle[i] === '}') {
-      depth--;
-      if (depth === 0) break;
-    }
+    else if (gradle[i] === '}') depth--;
     i++;
   }
-  return gradle.slice(0, i) + '\n' + flavor + '\n' + gradle.slice(i);
+  const blockEnd = i - 1;
+
+  const blockContent = gradle.slice(bracePos, blockEnd);
+  const lines = blockContent.split('\n');
+
+  // Detect indentation from existing flavor lines
+  const existingLine = lines.find(l => /^\s+\w+\s*$/.test(l));
+  const indent = existingLine ? (existingLine.match(/^(\s+)/) ?? ['', '        '])[1] : '        ';
+
+  // Find insertion point to maintain alphabetical order
+  let insertAt = lines.length - 1; // default: before last empty/closing line
+  for (let li = 0; li < lines.length; li++) {
+    const name = lines[li].trim();
+    if (/^\w+$/.test(name) && name.localeCompare(client) > 0) {
+      insertAt = li;
+      break;
+    }
+  }
+
+  lines.splice(insertAt, 0, `${indent}${client}`);
+  return gradle.slice(0, bracePos) + lines.join('\n') + gradle.slice(blockEnd);
 }
 
 export function addProductFlavor({
   client,
-  applicationId,
 }: {
   client: string;
-  applicationId: string;
 }): void {
   const gradlePath = path.join(
     process.cwd(),
@@ -47,20 +62,13 @@ export function addProductFlavor({
 
   const gradle = fs.readFileSync(gradlePath, 'utf-8');
 
-  // Already has this flavor
-  const flavorRegex = new RegExp(`\\b${client}\\s*\\{`);
+  const flavorRegex = new RegExp(`^\\s+${client}\\s*$`, 'm');
   if (flavorRegex.test(gradle)) {
     console.log(`Flavor "${client}" already exists in build.gradle — skipping`);
     return;
   }
 
-  const flavorBlock =
-    `        ${client} {\n` +
-    `            dimension "default"\n` +
-    `            applicationId "${applicationId}"\n` +
-    `        }`;
-
-  const updated = insertIntoProductFlavors(gradle, flavorBlock);
+  const updated = insertIntoProductFlavors(gradle, client);
   fs.writeFileSync(gradlePath, updated, 'utf-8');
   console.log(`Added flavor "${client}" to android/app/build.gradle`);
 }

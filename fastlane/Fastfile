@@ -2,6 +2,27 @@ require_relative "./version.rb"
 require 'json'
 require "fileutils"
 
+# googleauth 1.16.2 bugs in ImpersonatedServiceAccountCredentials:
+# 1. fetch_access_token! is private but google-api-ruby-client calls it directly.
+# 2. prepare_auth_header ignores the return value of updater_proc.call — BaseClient#apply
+#    returns a cloned hash rather than mutating in-place, so auth_header stays empty,
+#    causing a 401 CREDENTIALS_MISSING on the IAM GenerateAccessToken call.
+begin
+  require 'googleauth'
+  if defined?(Google::Auth::ImpersonatedServiceAccountCredentials)
+    Google::Auth::ImpersonatedServiceAccountCredentials.class_eval do
+      public :fetch_access_token!
+
+      private
+
+      def prepare_auth_header
+        @source_credentials.updater_proc.call({})
+      end
+    end
+  end
+rescue LoadError, NameError
+end
+
 desc "Send discord message"
 lane :send_message do |options|
   if ENV['DISCORD_WEBHOOK_URL']
@@ -447,16 +468,16 @@ platform :android do
   def get_android_version(increment = "patch", local_version)
     new_version = local_version
     begin
-      prod_version = google_play_track_release_names(
+      prod_version = google_play_track_release_names({
           json_key: ENV["JSON_KEY_FILE"],
           package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
           track: 'production'
-      )
-      internal_version = google_play_track_release_names(
+      }.compact)
+      internal_version = google_play_track_release_names({
           json_key: ENV["JSON_KEY_FILE"],
           package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
           track: 'internal'
-      )
+      }.compact)
       version = prod_version.first
       if version?.include? "("
         version = local_version
@@ -580,7 +601,9 @@ platform :android do
         skip_upload_screenshots: true,
         package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
       }
-      play_store_params[:json_key] = ENV["JSON_KEY_FILE"] if ENV["JSON_KEY_FILE"]
+      if ENV["JSON_KEY_FILE"]
+        play_store_params[:json_key] = ENV["JSON_KEY_FILE"]
+      end
       upload_to_play_store(play_store_params)
     end
     success_fields = [{
@@ -614,7 +637,7 @@ platform :android do
     images = options[:images] || false
     screenshots = options[:screenshots] || false
     UI.message "Update Store Listing with metadata:#{metadata} changelogs:#{changelogs} images:#{images} screenshots:#{screenshots}"
-    upload_to_play_store(
+    upload_to_play_store({
       skip_upload_apk: true,
       skip_upload_aab: true,
       skip_upload_metadata: !metadata,
@@ -623,6 +646,29 @@ platform :android do
       skip_upload_screenshots: !screenshots,
       package_name: ENV["APP_IDENTIFIER"],
       json_key: ENV["JSON_KEY_FILE"]
+    }.compact)
+  end
+
+  desc "Upload existing AAB to Play Store without building"
+  lane :upload_store do |options|
+    play_store_params = {
+      track: options[:track] || 'production',
+      release_status: ENV['RELEASE_STATUS'] || 'completed',
+      skip_upload_changelogs: false,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
+    }
+    play_store_params[:json_key] = ENV["JSON_KEY_FILE"] if ENV["JSON_KEY_FILE"]
+    play_store_params[:aab] = options[:aab] if options[:aab]
+    upload_to_play_store(play_store_params)
+    send_message(
+      title: "#{ENV['CLIENT']} android",
+      description: "Uploaded to Play Store ✅",
+      color: '#00C40F',
+      mention_users: ENV['DISCORD_MENTION_USERS'],
     )
   end
 
@@ -860,11 +906,11 @@ lane :check_version do |options|
       mention_users: ENV['DISCORD_MENTION_USERS'],
     )
 
-    prod_version = google_play_track_release_names(
+    prod_version = google_play_track_release_names({
       json_key: ENV["JSON_KEY_FILE"],
       package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
       track: 'production'
-    )
+    }.compact)
     android_local_version = get_local_version(options[:json_file], ENV['CLIENT'], 'android')
     is_android_same = prod_version.first == android_local_version['version']
     puts "Android Store version: #{prod_version.first}, Local version: #{android_local_version['version']}"
@@ -887,11 +933,11 @@ end
 lane :google_key do |options|
   begin
     puts "Running google key check for #{ENV['CLIENT']} #{ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"]}"
-    prod_version = google_play_track_release_names(
+    prod_version = google_play_track_release_names({
       json_key: ENV["JSON_KEY_FILE"],
       package_name: ENV["APP_IDENTIFIER_ANDROID"] || ENV["APP_IDENTIFIER"],
       track: 'production'
-    )
+    }.compact)
     puts "Prod version #{prod_version}"
     send_message(
       title: "#{ENV['CLIENT']}",

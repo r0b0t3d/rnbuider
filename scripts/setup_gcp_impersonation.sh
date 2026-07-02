@@ -6,9 +6,17 @@ if ! command -v gcloud >/dev/null 2>&1; then
   exit 1
 fi
 
-read -rp "Enter Google Cloud project ID: " PROJECT_ID
-read -rp "Enter service account email: " SERVICE_ACCOUNT_EMAIL
-read -rp "Enter your Google account email: " USER_EMAIL
+echo "Available projects:"
+gcloud projects list --format="table(projectId,name)" 2>/dev/null || echo "  (could not list projects)"
+echo ""
+read -rp "Enter Google Cloud project ID [edular-19fe4]: " PROJECT_ID
+PROJECT_ID="${PROJECT_ID:-edular-19fe4}"
+
+read -rp "Enter service account email [fastlane@edular-19fe4.iam.gserviceaccount.com]: " SERVICE_ACCOUNT_EMAIL
+SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_EMAIL:-fastlane@edular-19fe4.iam.gserviceaccount.com}"
+
+read -rp "Enter your Google account email [klassapp2013@gmail.com]: " USER_EMAIL
+USER_EMAIL="${USER_EMAIL:-klassapp2013@gmail.com}"
 
 echo ""
 echo "Using:"
@@ -57,6 +65,7 @@ append_if_missing "$HOME/.bashrc"
 append_if_missing "$HOME/.zshrc"
 
 export GOOGLE_APPLICATION_CREDENTIALS="$ADC_PATH"
+export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT="$SERVICE_ACCOUNT_EMAIL"
 
 echo ""
 echo "Done."

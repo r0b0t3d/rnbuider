@@ -24,7 +24,7 @@ export const createClientConfig = async (client: string) => {
     },
   ]);
 
-  addProductFlavor({ client, applicationId });
+  addProductFlavor({ client });
   createXcodeScheme({ client, bundleId });
 
   return { appName, bundleId, applicationId };
