@@ -654,7 +654,7 @@ platform :android do
     play_store_params = {
       track: options[:track] || 'production',
       release_status: ENV['RELEASE_STATUS'] || 'completed',
-      skip_upload_changelogs: false,
+      skip_upload_changelogs: true,
       skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_images: true,
