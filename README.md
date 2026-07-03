@@ -14,6 +14,23 @@ React Native builder tool
 * [Commands](#commands)
 <!-- tocstop -->
 
+# Setup
+
+## Google Play Store (Android)
+
+Builds are uploaded to Google Play using **GCP service account impersonation** — no private key files stored on disk.
+
+Run once per machine:
+
+```sh-session
+$ rnbuilder setup-gcp
+```
+
+Each client `.env` must set `GOOGLE_APPLICATION_CREDENTIALS` pointing to the SA's ADC file.
+Google Play Console limits one service account to 10 developer accounts — use multiple SAs for more clients.
+
+See [docs/gcp-service-account-impersonation.md](docs/gcp-service-account-impersonation.md) for full setup, adding new service accounts, client mapping, and troubleshooting.
+
 # Usage
 
 <!-- usage -->
@@ -44,6 +61,7 @@ USAGE
 * [`rnbuilder onesignal [BUILD]`](#rnbuilder-onesignal-build)
 * [`rnbuilder reject-review [REJECT-REVIEW]`](#rnbuilder-reject-review-reject-review)
 * [`rnbuilder setup [SETUP]`](#rnbuilder-setup-setup)
+* [`rnbuilder setup-gcp`](#rnbuilder-setup-gcp)
 * [`rnbuilder submit-review [SUBMIT-REVIEW]`](#rnbuilder-submit-review-submit-review)
 * [`rnbuilder sync-udids [BUILD]`](#rnbuilder-sync-udids-build)
 
@@ -265,6 +283,21 @@ EXAMPLE
 ```
 
 _See code: [src/commands/setup.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/setup.ts)_
+
+## `rnbuilder setup-gcp`
+
+Setup GCP service account impersonation for Google Play Store uploads.
+Run once per machine. See [docs/gcp-service-account-impersonation.md](docs/gcp-service-account-impersonation.md).
+
+```
+USAGE
+  $ rnbuilder setup-gcp
+
+EXAMPLE
+  $ rnbuilder setup-gcp
+```
+
+_See code: [src/commands/setup-gcp.ts](src/commands/setup-gcp.ts)_
 
 ## `rnbuilder submit-review [SUBMIT-REVIEW]`
 

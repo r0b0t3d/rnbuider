@@ -6,79 +6,110 @@ if ! command -v gcloud >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 is required but not found."
+  exit 1
+fi
+
 echo "Available projects:"
 gcloud projects list --format="table(projectId,name)" 2>/dev/null || echo "  (could not list projects)"
 echo ""
+
 read -rp "Enter Google Cloud project ID [edular-19fe4]: " PROJECT_ID
 PROJECT_ID="${PROJECT_ID:-edular-19fe4}"
-
-read -rp "Enter service account email [fastlane@edular-19fe4.iam.gserviceaccount.com]: " SERVICE_ACCOUNT_EMAIL
-SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_EMAIL:-fastlane@edular-19fe4.iam.gserviceaccount.com}"
 
 read -rp "Enter your Google account email [klassapp2013@gmail.com]: " USER_EMAIL
 USER_EMAIL="${USER_EMAIL:-klassapp2013@gmail.com}"
 
-echo ""
-echo "Using:"
-echo "  Project ID: $PROJECT_ID"
-echo "  Service Account: $SERVICE_ACCOUNT_EMAIL"
-echo "  User: $USER_EMAIL"
-echo ""
-
 gcloud config set project "$PROJECT_ID"
 
-echo "Granting Service Account Token Creator to your user..."
-gcloud iam service-accounts add-iam-policy-binding \
-  "$SERVICE_ACCOUNT_EMAIL" \
-  --role="roles/iam.serviceAccountTokenCreator" \
-  --member="user:$USER_EMAIL"
-
-echo "Logging you into gcloud..."
+echo ""
+echo "Logging into gcloud as $USER_EMAIL..."
 gcloud auth login "$USER_EMAIL"
 
-echo "Creating ADC with service account impersonation..."
-gcloud auth application-default login \
-  --impersonate-service-account="$SERVICE_ACCOUNT_EMAIL"
+echo ""
+echo "Creating base ADC (user credentials, no impersonation)..."
+gcloud auth application-default login
 
-echo "Setting default gcloud impersonation (optional but convenient)..."
-gcloud config set auth/impersonate_service_account "$SERVICE_ACCOUNT_EMAIL"
+BASE_ADC="$HOME/.config/gcloud/application_default_credentials.json"
+ADC_DIR="$HOME/.config/gcloud"
 
-ADC_PATH="$HOME/.config/gcloud/application_default_credentials.json"
-EXPORT_LINE="export GOOGLE_APPLICATION_CREDENTIALS=\"$ADC_PATH\""
+# Generate an impersonated ADC file for a service account.
+# Reuses the base user credentials — no extra gcloud login needed.
+generate_sa_adc() {
+  local sa_email="$1"
+  local sa_slug
+  sa_slug=$(echo "$sa_email" | cut -d'@' -f1 | tr -cs '[:alnum:]' '_')
+  local output="$ADC_DIR/adc_${sa_slug}.json"
 
-append_if_missing() {
-  local file="$1"
-  if [ -f "$file" ]; then
-    if grep -Fqx "$EXPORT_LINE" "$file"; then
-      echo "Already exists in $file"
-    else
-      printf '\n%s\n' "$EXPORT_LINE" >> "$file"
-      echo "Added GOOGLE_APPLICATION_CREDENTIALS to $file"
-    fi
-  else
-    printf '%s\n' "$EXPORT_LINE" > "$file"
-    echo "Created $file and added GOOGLE_APPLICATION_CREDENTIALS"
-  fi
+  echo ""
+  echo "Granting roles/iam.serviceAccountTokenCreator to $USER_EMAIL for $sa_email..."
+  # Unset gcloud impersonation so the grant runs as the user, not as an SA
+  gcloud config unset auth/impersonate_service_account 2>/dev/null || true
+  gcloud iam service-accounts add-iam-policy-binding \
+    "$sa_email" \
+    --role="roles/iam.serviceAccountTokenCreator" \
+    --member="user:$USER_EMAIL" \
+    --project="$PROJECT_ID"
+
+  python3 - "$BASE_ADC" "$sa_email" "$output" <<'PYEOF'
+import json, sys
+
+base_path, sa_email, output_path = sys.argv[1], sys.argv[2], sys.argv[3]
+
+with open(base_path) as f:
+    base = json.load(f)
+
+# If base is already an impersonated ADC, extract its source_credentials.
+# Otherwise use base directly as the source (authorized_user).
+src = base.get("source_credentials", base)
+
+adc = {
+    "delegates": [],
+    "service_account_impersonation_url": (
+        "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/"
+        f"{sa_email}:generateAccessToken"
+    ),
+    "source_credentials": src,
+    "type": "impersonated_service_account",
 }
 
-append_if_missing "$HOME/.bashrc"
-append_if_missing "$HOME/.zshrc"
+with open(output_path, "w") as f:
+    json.dump(adc, f, indent=2)
 
-export GOOGLE_APPLICATION_CREDENTIALS="$ADC_PATH"
-export GOOGLE_IMPERSONATE_SERVICE_ACCOUNT="$SERVICE_ACCOUNT_EMAIL"
+print(f"Created: {output_path}")
+print(f"Add to client .env:")
+print(f"  GOOGLE_APPLICATION_CREDENTIALS={output_path}")
+PYEOF
+}
+
+# Primary service account
+read -rp "Enter service account email [fastlane@edular-19fe4.iam.gserviceaccount.com]: " SERVICE_ACCOUNT_EMAIL
+SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_EMAIL:-fastlane@edular-19fe4.iam.gserviceaccount.com}"
+
+generate_sa_adc "$SERVICE_ACCOUNT_EMAIL"
+
+# Additional service accounts
+while true; do
+  echo ""
+  read -rp "Add another service account? (y/N): " ADD_MORE
+  case "${ADD_MORE:-N}" in
+    [Yy]*)
+      read -rp "Enter service account email: " EXTRA_SA
+      if [ -n "${EXTRA_SA:-}" ]; then
+        generate_sa_adc "$EXTRA_SA"
+      fi
+      ;;
+    *) break ;;
+  esac
+done
 
 echo ""
 echo "Done."
-echo "ADC file should be at:"
-echo "  $ADC_PATH"
 echo ""
-echo "GOOGLE_APPLICATION_CREDENTIALS has been exported for this session and added to:"
-echo "  $HOME/.bashrc"
-echo "  $HOME/.zshrc"
+echo "To test a service account token:"
+echo "  gcloud auth print-access-token --impersonate-service-account=<SA_EMAIL>"
 echo ""
-echo "Reload your shell config with one of these commands:"
-echo "  source ~/.bashrc"
-echo "  source ~/.zshrc"
-echo ""
-echo "To test access token generation:"
-echo "  gcloud auth print-access-token --impersonate-service-account=$SERVICE_ACCOUNT_EMAIL"
+echo "ADC files are in: $ADC_DIR/adc_*.json"
+echo "Each client .env needs:"
+echo "  GOOGLE_APPLICATION_CREDENTIALS=<path to their SA's adc file>"
