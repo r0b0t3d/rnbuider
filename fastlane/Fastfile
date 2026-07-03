@@ -465,6 +465,12 @@ platform :ios do
 end
 
 platform :android do
+  before_all do
+    if ENV['GOOGLE_APPLICATION_CREDENTIALS']
+      ENV['GOOGLE_APPLICATION_CREDENTIALS'] = File.expand_path(ENV['GOOGLE_APPLICATION_CREDENTIALS'])
+    end
+  end
+
   def get_android_version(increment = "patch", local_version)
     new_version = local_version
     begin

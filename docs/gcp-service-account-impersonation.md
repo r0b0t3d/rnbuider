@@ -84,7 +84,7 @@ Output: `~/.config/gcloud/adc_fastlane2.json`
 ### 4. Add to client `.env`
 
 ```env
-GOOGLE_APPLICATION_CREDENTIALS=/Users/<you>/.config/gcloud/adc_fastlane2.json
+GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/adc_fastlane2.json
 ```
 
 ---
@@ -111,8 +111,10 @@ APP_IDENTIFIER_ANDROID=com.example.app
 FLAVOR=MyApp
 BUILD_TYPE=Release
 # JSON_KEY_FILE=./key.json   ← keep commented out
-GOOGLE_APPLICATION_CREDENTIALS=/Users/tuanluong/.config/gcloud/adc_fastlane.json
+GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/adc_fastlane.json
 ```
+
+> `~` is expanded by the Fastfile's `before_all` hook — safe across machines regardless of username.
 
 ### Current SA → Client Mapping
 
@@ -186,6 +188,7 @@ Remove this patch once `googleauth` ships a fix.
 | `Google Play Android Developer API not enabled` | API disabled in GCP project | Enable at: `https://console.developers.google.com/apis/api/androidpublisher.googleapis.com/overview?project=edular-19fe4` |
 | `Some of the Android App Bundle uploads are not completed yet` | Google Play processing lag | Retry the command — transient error |
 | `PERMISSION_DENIED: iam.serviceAccounts.getIamPolicy` when running `gcloud iam` | `gcloud config auth/impersonate_service_account` still set from old setup — gcloud runs as SA, not user | Run `gcloud config unset auth/impersonate_service_account` then retry |
+| `PERMISSION_DENIED: Request had insufficient authentication scopes` | `GOOGLE_APPLICATION_CREDENTIALS` path not resolving — dotenv does not expand `~` or `$HOME`, so wrong/missing ADC file used | Fastfile `before_all` calls `File.expand_path` — ensure you are on latest Fastfile |
 
 ---
 
