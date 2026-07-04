@@ -39,7 +39,7 @@ ADC_DIR="$HOME/.config/gcloud"
 generate_sa_adc() {
   local sa_email="$1"
   local sa_slug
-  sa_slug=$(echo "$sa_email" | cut -d'@' -f1 | tr -cs '[:alnum:]' '_')
+  sa_slug=$(printf '%s' "$sa_email" | cut -d'@' -f1 | tr -cs '[:alnum:]' '_' | sed 's/_*$//')
   local output="$ADC_DIR/adc_${sa_slug}.json"
 
   echo ""
