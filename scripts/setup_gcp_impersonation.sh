@@ -15,11 +15,13 @@ echo "Available projects:"
 gcloud projects list --format="table(projectId,name)" 2>/dev/null || echo "  (could not list projects)"
 echo ""
 
-read -rp "Enter Google Cloud project ID [edular-19fe4]: " PROJECT_ID
-PROJECT_ID="${PROJECT_ID:-edular-19fe4}"
+DEFAULT_PROJECT_ID="${GCP_PROJECT_ID:-edular-19fe4}"
+read -rp "Enter Google Cloud project ID [$DEFAULT_PROJECT_ID]: " PROJECT_ID
+PROJECT_ID="${PROJECT_ID:-$DEFAULT_PROJECT_ID}"
 
-read -rp "Enter your Google account email [klassapp2013@gmail.com]: " USER_EMAIL
-USER_EMAIL="${USER_EMAIL:-klassapp2013@gmail.com}"
+DEFAULT_USER_EMAIL="${GCP_USER_EMAIL:-klassapp2013@gmail.com}"
+read -rp "Enter your Google account email [$DEFAULT_USER_EMAIL]: " USER_EMAIL
+USER_EMAIL="${USER_EMAIL:-$DEFAULT_USER_EMAIL}"
 
 gcloud config set project "$PROJECT_ID"
 
@@ -83,11 +85,22 @@ print(f"  GOOGLE_APPLICATION_CREDENTIALS={output_path}")
 PYEOF
 }
 
-# Primary service account
-read -rp "Enter service account email [fastlane@edular-19fe4.iam.gserviceaccount.com]: " SERVICE_ACCOUNT_EMAIL
-SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_EMAIL:-fastlane@edular-19fe4.iam.gserviceaccount.com}"
-
-generate_sa_adc "$SERVICE_ACCOUNT_EMAIL"
+# Service accounts from repo's fastlane/configs.json (gcp.serviceAccounts), if provided.
+if [ -n "${GCP_SERVICE_ACCOUNTS:-}" ]; then
+  echo ""
+  echo "Service accounts from fastlane/configs.json:"
+  IFS=',' read -ra CONFIG_SAS <<< "$GCP_SERVICE_ACCOUNTS"
+  for sa in "${CONFIG_SAS[@]}"; do
+    echo "  - $sa"
+  done
+  for sa in "${CONFIG_SAS[@]}"; do
+    generate_sa_adc "$sa"
+  done
+else
+  read -rp "Enter service account email [fastlane@edular-19fe4.iam.gserviceaccount.com]: " SERVICE_ACCOUNT_EMAIL
+  SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_EMAIL:-fastlane@edular-19fe4.iam.gserviceaccount.com}"
+  generate_sa_adc "$SERVICE_ACCOUNT_EMAIL"
+fi
 
 # Additional service accounts
 while true; do
