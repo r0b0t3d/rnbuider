@@ -10,6 +10,7 @@ React Native builder tool
 
 <!-- toc -->
 * [rnbuilder](#rnbuilder)
+* [Setup](#setup)
 * [Usage](#usage)
 * [Commands](#commands)
 <!-- tocstop -->
@@ -39,7 +40,7 @@ $ npm install -g rnbuilder
 $ rnbuilder COMMAND
 running command...
 $ rnbuilder (-v|--version|version)
-rnbuilder/0.6.71 darwin-arm64 node-v24.13.0
+rnbuilder/0.6.72 darwin-arm64 node-v24.13.0
 $ rnbuilder --help [COMMAND]
 USAGE
   $ rnbuilder COMMAND
@@ -97,7 +98,7 @@ EXAMPLE
   hello world from ./src/build.ts!
 ```
 
-_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/build.ts)_
+_See code: [src/commands/build.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/build.ts)_
 
 ## `rnbuilder check-version [MATCH-CHECK]`
 
@@ -116,7 +117,7 @@ EXAMPLE
        Nuke certificates ./src/match-check.ts!
 ```
 
-_See code: [src/commands/check-version.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/check-version.ts)_
+_See code: [src/commands/check-version.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/check-version.ts)_
 
 ## `rnbuilder codepush [BUILD]`
 
@@ -135,7 +136,7 @@ EXAMPLE
        Push changes to existing apps ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/codepush.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/codepush.ts)_
+_See code: [src/commands/codepush.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/codepush.ts)_
 
 ## `rnbuilder google-key [MATCH-CHECK]`
 
@@ -154,7 +155,7 @@ EXAMPLE
        Nuke certificates ./src/match-check.ts!
 ```
 
-_See code: [src/commands/google-key.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/google-key.ts)_
+_See code: [src/commands/google-key.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/google-key.ts)_
 
 ## `rnbuilder help [COMMAND]`
 
@@ -186,7 +187,7 @@ EXAMPLE
   initialize environment for first run from ./src/initialize.ts!
 ```
 
-_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/initialize.ts)_
+_See code: [src/commands/initialize.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/initialize.ts)_
 
 ## `rnbuilder match-check [MATCH-CHECK]`
 
@@ -205,7 +206,7 @@ EXAMPLE
        Check match certificates ./src/match-check.ts!
 ```
 
-_See code: [src/commands/match-check.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/match-check.ts)_
+_See code: [src/commands/match-check.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/match-check.ts)_
 
 ## `rnbuilder match-nuke [BUILD]`
 
@@ -224,7 +225,7 @@ EXAMPLE
        Nuke certificates ./src/match-nuke.ts!
 ```
 
-_See code: [src/commands/match-nuke.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/match-nuke.ts)_
+_See code: [src/commands/match-nuke.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/match-nuke.ts)_
 
 ## `rnbuilder onesignal [BUILD]`
 
@@ -246,7 +247,7 @@ EXAMPLE
        Create and upload push certificate to One Signal from ./src/commands/onesignal.ts!
 ```
 
-_See code: [src/commands/onesignal.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/onesignal.ts)_
+_See code: [src/commands/onesignal.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/onesignal.ts)_
 
 ## `rnbuilder reject-review [REJECT-REVIEW]`
 
@@ -264,7 +265,7 @@ EXAMPLE
   $ rnbuilder reject-review
 ```
 
-_See code: [src/commands/reject-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/reject-review.ts)_
+_See code: [src/commands/reject-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/reject-review.ts)_
 
 ## `rnbuilder setup [SETUP]`
 
@@ -282,22 +283,21 @@ EXAMPLE
   hello world from ./src/setup.ts!
 ```
 
-_See code: [src/commands/setup.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/setup.ts)_
+_See code: [src/commands/setup.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/setup.ts)_
 
 ## `rnbuilder setup-gcp`
 
-Setup GCP service account impersonation for Google Play Store uploads.
-Run once per machine. See [docs/gcp-service-account-impersonation.md](docs/gcp-service-account-impersonation.md).
+Setup GCP service account impersonation
 
 ```
 USAGE
   $ rnbuilder setup-gcp
 
-EXAMPLE
-  $ rnbuilder setup-gcp
+OPTIONS
+  -h, --help  show CLI help
 ```
 
-_See code: [src/commands/setup-gcp.ts](src/commands/setup-gcp.ts)_
+_See code: [src/commands/setup-gcp.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/setup-gcp.ts)_
 
 ## `rnbuilder submit-review [SUBMIT-REVIEW]`
 
@@ -316,7 +316,7 @@ EXAMPLE
        Push changes to existing apps ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/submit-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/submit-review.ts)_
+_See code: [src/commands/submit-review.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/submit-review.ts)_
 
 ## `rnbuilder sync-udids [BUILD]`
 
@@ -335,5 +335,5 @@ EXAMPLE
        Sync device UDIDs from firebase from ./src/firebase-sync-udids.ts!
 ```
 
-_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.71/src/commands/sync-udids.ts)_
+_See code: [src/commands/sync-udids.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.72/src/commands/sync-udids.ts)_
 <!-- commandsstop -->
