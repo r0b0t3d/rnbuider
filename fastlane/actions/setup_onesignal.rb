@@ -10,6 +10,7 @@ module Fastlane
         require 'net/http'
         require 'uri'
         require 'base64'
+        require 'json'
 
         app_id = params[:app_id].to_s.strip
         auth_token = params[:auth_token]
@@ -47,7 +48,10 @@ module Fastlane
           payload["apns_p12_password"] = apns_p12_password || ""
         end
 
-        payload["fcm_json"] = JSON.parse(fcm_json) unless fcm_json.nil?
+        # NOTE: the field is `fcm_v1_service_account_json`, not `fcm_json` —
+        # OneSignal's current Apps API (api.onesignal.com) renamed it when it
+        # dropped the legacy FCM server-key-only flow.
+        payload["fcm_v1_service_account_json"] = JSON.parse(fcm_json) unless fcm_json.nil?
         payload["gcm_key"] = android_token unless android_token.nil?
         payload["android_gcm_sender_id"] = android_gcm_sender_id unless android_gcm_sender_id.nil?
         payload["organization_id"] = organization_id unless organization_id.nil?
@@ -55,17 +59,15 @@ module Fastlane
         payload["apns_key_id"] = params[:apns_key_id] unless params[:apns_key_id].nil?
         payload["apns_team_id"] = apns_team_id unless apns_team_id.nil?
         payload["apns_bundle_id"] = apns_bundle_id unless apns_bundle_id.nil?
-        payload["apns_p8"] = apns_p8 unless apns_p8.nil?
 
-        # here's the actual lifting - POST or PUT to OneSignal
+        # here's the actual lifting - POST or PUT to OneSignal's current API
+        # (https://api.onesignal.com — the old https://onesignal.com/api/v1
+        # host still answers but is deprecated and uses a different auth
+        # scheme; do not revert to it)
 
-        json_headers = { 'Content-Type' => 'application/json', 'Authorization' => "Basic #{auth_token}" }
-        url = +'https://onesignal.com/api/v1/apps'
+        json_headers = { 'Content-Type' => 'application/json', 'Authorization' => "Key #{auth_token}" }
+        url = +'https://api.onesignal.com/apps'
         url << '/' + app_id if is_update
-
-        puts url
-        puts json_headers
-        puts payload
 
         uri = URI.parse(url)
         http = Net::HTTP.new(uri.host, uri.port)
@@ -77,20 +79,51 @@ module Fastlane
           response = http.post(uri.path, payload.to_json, json_headers)
         end
 
-        response_body = JSON.parse(response.body)
+        response_body = self.parse_response_body(response)
+
+        check_response_code(response, response_body, is_update)
 
         Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_ID] = response_body["id"]
-        Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_AUTH_KEY] = response_body["basic_auth_key"]
 
-        check_response_code(response, is_update)
+        # BREAKING CHANGE: the current Apps API no longer returns a
+        # per-app auth key in the create/update response (the legacy
+        # `basic_auth_key` field was removed). A REST API key now has to be
+        # minted explicitly via the Create API Key endpoint, and its
+        # `formatted_token` is only ever readable once, at creation — so we
+        # only do this the first time the app is created, not on update.
+        unless is_update
+          rest_api_key = self.create_rest_api_key(auth_token, response_body["id"])
+          Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_AUTH_KEY] = rest_api_key
+        end
       end
 
-      def self.check_response_code(response, is_update)
+      def self.create_rest_api_key(auth_token, app_id)
+        json_headers = { 'Content-Type' => 'application/json', 'Authorization' => "Bearer #{auth_token}" }
+        uri = URI.parse("https://api.onesignal.com/apps/#{app_id}/auth/tokens")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        response = http.post(uri.path, { name: 'fastlane' }.to_json, json_headers)
+        body = self.parse_response_body(response)
+        if response.code.to_i == 200
+          return body["formatted_token"]
+        end
+        UI.important("Could not create a OneSignal REST API key automatically (HTTP #{response.code}): #{body['errors'] || body}")
+        nil
+      end
+
+      def self.parse_response_body(response)
+        JSON.parse(response.body)
+      rescue JSON::ParserError
+        {}
+      end
+
+      def self.check_response_code(response, response_body, is_update)
         case response.code.to_i
         when 200, 204
           UI.success("Successfully #{is_update ? 'updated' : 'created new'} OneSignal app")
         else
-          UI.user_error!("Unexpected #{response.code} with response: #{response.body}")
+          errors = response_body['errors'] || response_body
+          UI.user_error!("OneSignal API error (HTTP #{response.code}) while #{is_update ? 'updating' : 'creating'} app: #{errors}")
         end
       end
 
@@ -113,7 +146,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :auth_token,
                                        env_name: "ONE_SIGNAL_AUTH_KEY",
                                        sensitive: true,
-                                       description: "OneSignal Authorization Key",
+                                       description: "OneSignal Organization API Key (Account & API Keys → Organization API Key), sent as a Bearer token. Not the legacy User Auth Key.",
                                        verify_block: proc do |value|
                                          if value.to_s.empty?
                                            UI.error("Please add 'ENV[\"ONE_SIGNAL_AUTH_KEY\"] = \"your token\"' to your Fastfile's `before_all` section.")
