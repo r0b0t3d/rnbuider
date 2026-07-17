@@ -744,8 +744,6 @@ lane :sync_onesignal do |options|
     organization_id: options[:organization_id],
     # Android setup
     fcm_json: fcm_json,
-    android_token: options[:android_token],
-    android_gcm_sender_id: options[:android_gcm_sender_id],
     # iOS setup
     apns_key_id: key_id.to_s,
     apns_team_id: ENV["APPLE_TEAM_ID"],
