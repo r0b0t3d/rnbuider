@@ -180,6 +180,7 @@ hello world from ./src/setup.ts!
     const { onesignal, onesignalRestApiKey } = await prepareOneSignal({
       client,
       fastlaneDir,
+      appleTeamId,
     });
     if (onesignal) {
       setEnvValue('ONESIGNAL_APP_ID', onesignal, devEnvVars);

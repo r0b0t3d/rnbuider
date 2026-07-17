@@ -25,9 +25,11 @@ async function askAppIdManually(): Promise<{
 export const prepareOneSignal = async ({
   client,
   fastlaneDir,
+  appleTeamId,
 }: {
   client: string;
   fastlaneDir: string;
+  appleTeamId?: string;
 }) => {
   const fastlaneConfigs = getFastlaneConfigs();
   let authToken = fastlaneConfigs.onesignalAuthToken;
@@ -72,8 +74,21 @@ export const prepareOneSignal = async ({
     },
   ]);
 
+  let teamId = appleTeamId;
+  if (!teamId) {
+    const { inputTeamId } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'inputTeamId',
+        message: 'Apple Developer Team ID (for the push certificate)?',
+      },
+    ]);
+    teamId = inputTeamId;
+  }
+
   const parameters = buildKeyValuePairs({
     auth_token: authToken,
+    ...(teamId ? { team_id: teamId } : {}),
     ...(androidToken ? { android_token: androidToken } : {}),
     ...(androidGcmSenderId ? { android_gcm_sender_id: androidGcmSenderId } : {}),
   });

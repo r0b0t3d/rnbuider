@@ -703,8 +703,7 @@ lane :sync_onesignal do |options|
   require 'base64'
   cert_path = "#{ENV['PROJECT_DIR']}/apnKeys"
   username = ENV['APPLE_ID']
-  team_id = ENV['APPLE_TEAM_ID']
-  team_id = UI.input('Multiple Apple Developer Teams found — enter the Team ID to use:') if team_id.to_s.strip.empty?
+  team_id = options[:team_id] || ENV['APPLE_TEAM_ID']
   portal_client = Spaceship::Portal.login(username)
   portal_client.select_team(team_id: team_id) if portal_client && !team_id.to_s.strip.empty?
 
