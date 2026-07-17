@@ -146,7 +146,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :auth_token,
                                        env_name: "ONE_SIGNAL_AUTH_KEY",
                                        sensitive: true,
-                                       description: "OneSignal Organization API Key (Account & API Keys → Organization API Key), sent as a Bearer token. Not the legacy User Auth Key.",
+                                       description: "OneSignal Organization API Key (Account & API Keys → Organization API Key) — not the legacy User Auth Key",
                                        verify_block: proc do |value|
                                          if value.to_s.empty?
                                            UI.error("Please add 'ENV[\"ONE_SIGNAL_AUTH_KEY\"] = \"your token\"' to your Fastfile's `before_all` section.")
