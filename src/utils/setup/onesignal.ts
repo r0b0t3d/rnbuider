@@ -26,10 +26,12 @@ export const prepareOneSignal = async ({
   client,
   fastlaneDir,
   appleTeamId,
+  appName,
 }: {
   client: string;
   fastlaneDir: string;
   appleTeamId?: string;
+  appName?: string;
 }) => {
   const fastlaneConfigs = getFastlaneConfigs();
   let authToken = fastlaneConfigs.onesignalAuthToken;
@@ -86,8 +88,12 @@ export const prepareOneSignal = async ({
     teamId = inputTeamId;
   }
 
+  const organizationId = fastlaneConfigs.onesignalOrganizationId;
+
   const parameters = buildKeyValuePairs({
     auth_token: authToken,
+    ...(appName ? { app_name: appName } : {}),
+    ...(organizationId ? { organization_id: organizationId } : {}),
     ...(teamId ? { team_id: teamId } : {}),
     ...(androidToken ? { android_token: androidToken } : {}),
     ...(androidGcmSenderId ? { android_gcm_sender_id: androidGcmSenderId } : {}),

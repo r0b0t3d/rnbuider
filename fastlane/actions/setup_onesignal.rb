@@ -31,6 +31,10 @@ module Fastlane
         is_update = has_app_id
 
         UI.user_error!('Please specify the `app_id` or the `app_name` parameters!') if !has_app_id && !has_app_name
+        # Creating a new app requires organization_id in the body — the Organization
+        # API Key must be associated with that org, or OneSignal rejects the create
+        # with a misleading "valid User Auth key" error.
+        UI.user_error!('Please specify the `organization_id` parameter when creating a new app!') if !is_update && organization_id.to_s.strip.empty?
 
         UI.message("Parameter App ID: #{app_id}") if has_app_id
         UI.message("Parameter App name: #{app_name}") if has_app_name
@@ -123,7 +127,16 @@ module Fastlane
           UI.success("Successfully #{is_update ? 'updated' : 'created new'} OneSignal app")
         else
           errors = response_body['errors'] || response_body
-          UI.user_error!("OneSignal API error (HTTP #{response.code}) while #{is_update ? 'updating' : 'creating'} app: #{errors}")
+          if !is_update && errors.to_s.include?('User Auth key')
+            UI.user_error!(
+              "OneSignal rejected app creation (HTTP #{response.code}): #{errors}\n" \
+              "The Organization API Key must be associated with the `organization_id` " \
+              "sent in the request body — double check the `organization_id` param " \
+              "matches the org this key belongs to (Organization > Keys & IDs)."
+            )
+          else
+            UI.user_error!("OneSignal API error (HTTP #{response.code}) while #{is_update ? 'updating' : 'creating'} app: #{errors}")
+          end
         end
       end
 
@@ -217,7 +230,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :organization_id,
                                        env_name: "ONE_SIGNAL_ORGANIZATION_ID",
                                        sensitive: true,
-                                       description: "OneSignal Organization ID",
+                                       description: "OneSignal Organization ID — required when creating a new app, must match the org the `auth_token` key belongs to",
                                        optional: true)
         ]
       end

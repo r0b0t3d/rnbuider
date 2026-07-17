@@ -740,7 +740,8 @@ lane :sync_onesignal do |options|
   setup_onesignal(
     app_id: ENV['ONESIGNAL_APP_ID'],
     auth_token: options[:auth_token],
-    app_name: "#{ENV['CLIENT'].capitalize()} Prod",
+    app_name: options[:app_name] || "#{ENV['CLIENT'].capitalize()} Prod",
+    organization_id: options[:organization_id],
     # Android setup
     fcm_json: fcm_json,
     android_token: options[:android_token],

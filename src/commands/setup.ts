@@ -181,13 +181,10 @@ hello world from ./src/setup.ts!
       client,
       fastlaneDir,
       appleTeamId,
+      appName,
     });
     if (onesignal) {
-      setEnvValue('ONESIGNAL_APP_ID', onesignal, devEnvVars);
-      setEnvValue('ONESIGNAL_APP_ID', onesignal, stagingEnvVars);
       setEnvValue('ONESIGNAL_APP_ID', onesignal, prodEnvVars);
-      saveEnvValues(devEnvVars, devEnvPath);
-      saveEnvValues(stagingEnvVars, stagingEnvPath);
       saveEnvValues(prodEnvVars, prodEnvPath);
 
       setEnvValue('ONESIGNAL_APP_ID', onesignal, fastlaneEnvVars);
