@@ -1,4 +1,4 @@
-import { copyDir, copyFile, exists, normalise } from '../common';
+import { copyDir, copyFile, normalise } from '../common';
 import * as path from 'path';
 import * as inquirer from 'inquirer';
 import {
@@ -20,9 +20,13 @@ export const setupFastlane = async ({
 }) => {
   const clientDir = path.join(process.cwd(), `fastlane/clients/${client}`);
   const fastlaneDir = path.join(clientDir, 'fastlane');
-  if (!exists(fastlaneDir)) {
-    await copyDir(path.join(process.cwd(), 'template/fastlane'), fastlaneDir);
-  }
+  // Merge template files in without overwriting existing client files —
+  // fills gaps left by a partial/previous setup run (e.g. missing .env).
+  await copyDir(
+    path.join(process.cwd(), 'template/fastlane'),
+    fastlaneDir,
+    false,
+  );
 
   const { firebaseServiceAccountFile, jsonKeyFile }: any =
     await inquirer.prompt([

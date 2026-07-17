@@ -114,6 +114,33 @@ export async function getAccessToken(
   return result.access_token;
 }
 
+async function findExistingAppId({
+  accessToken,
+  projectId,
+  platform,
+  bundleId,
+  packageName,
+}: {
+  accessToken: string;
+  projectId: string;
+  platform: 'ios' | 'android';
+  bundleId?: string;
+  packageName?: string;
+}): Promise<string | undefined> {
+  const endpoint = platform === 'ios' ? 'iosApps' : 'androidApps';
+  const result = await httpsRequest(
+    `https://firebase.googleapis.com/v1beta1/projects/${projectId}/${endpoint}`,
+    'GET',
+    { Authorization: `Bearer ${accessToken}` },
+  );
+  const apps = result.apps || [];
+  const match =
+    platform === 'ios'
+      ? apps.find((app: any) => app.bundleId === bundleId)
+      : apps.find((app: any) => app.packageName === packageName);
+  return match?.appId;
+}
+
 export async function createFirebaseApp({
   accessToken,
   projectId,
@@ -145,8 +172,19 @@ export async function createFirebaseApp({
     JSON.stringify(payload),
   );
 
-  if (result.error)
+  if (result.error) {
+    if (result.error.status === 'ALREADY_EXISTS') {
+      const existingAppId = await findExistingAppId({
+        accessToken,
+        projectId,
+        platform,
+        bundleId,
+        packageName,
+      });
+      if (existingAppId) return existingAppId;
+    }
     throw new Error(`Firebase API error: ${JSON.stringify(result.error)}`);
+  }
   if (result.done) return result.response.appId;
   if (result.name) return pollOperation(result.name, accessToken);
 

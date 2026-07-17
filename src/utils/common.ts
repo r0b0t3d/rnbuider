@@ -53,9 +53,9 @@ export const getAppVersion = (env: string, client?: string, target = 'ios') => {
   return version;
 };
 
-export const copyDir = (src: string, dest: string) =>
+export const copyDir = (src: string, dest: string, force = true) =>
   new Promise((resolve, reject) => {
-    fs.cp(src, dest, { recursive: true }, (err: any) => {
+    fs.cp(src, dest, { recursive: true, force }, (err: any) => {
       if (err) {
         reject(err);
       } else {

@@ -730,11 +730,18 @@ lane :sync_onesignal do |options|
     end
   end
   puts "APNs key id: #{key_id}"
+
+  # Reuse the Firebase Service Account json copied in during setup as the
+  # FCM v1 credential for OneSignal — Google removed legacy GCM/FCM keys.
+  fcm_json_path = "#{ENV['PROJECT_DIR']}/fastlane/firebase.json"
+  fcm_json = File.exist?(fcm_json_path) ? File.read(fcm_json_path) : nil
+
   setup_onesignal(
     app_id: ENV['ONESIGNAL_APP_ID'],
     auth_token: options[:auth_token],
     app_name: "#{ENV['CLIENT'].capitalize()} Prod",
     # Android setup
+    fcm_json: fcm_json,
     android_token: options[:android_token],
     android_gcm_sender_id: options[:android_gcm_sender_id],
     # iOS setup

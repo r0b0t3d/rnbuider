@@ -17,6 +17,7 @@ module Fastlane
         apns_p12_password = params[:apns_p12_password]
         android_token = params[:android_token]
         android_gcm_sender_id = params[:android_gcm_sender_id]
+        fcm_json = params[:fcm_json]
         organization_id = params[:organization_id]
         apns_p8 = params[:apns_p8]
         apns_team_id = params[:apns_team_id]
@@ -46,6 +47,7 @@ module Fastlane
           payload["apns_p12_password"] = apns_p12_password || ""
         end
 
+        payload["fcm_json"] = JSON.parse(fcm_json) unless fcm_json.nil?
         payload["gcm_key"] = android_token unless android_token.nil?
         payload["android_gcm_sender_id"] = android_gcm_sender_id unless android_gcm_sender_id.nil?
         payload["organization_id"] = organization_id unless organization_id.nil?
@@ -122,6 +124,12 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :app_name,
                                        env_name: "ONE_SIGNAL_APP_NAME",
                                        description: "OneSignal App Name. This is required when creating an app (in other words, when `:app_id` is not set, and optional when updating an app",
+                                       optional: true),
+
+          FastlaneCore::ConfigItem.new(key: :fcm_json,
+                                       env_name: "FCM_JSON",
+                                       description: "Firebase Service Account JSON content (FCM v1) — replaces the deprecated legacy GCM key",
+                                       sensitive: true,
                                        optional: true),
 
           FastlaneCore::ConfigItem.new(key: :android_token,
