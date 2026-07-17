@@ -4,6 +4,7 @@ import { Command, flags } from '@oclif/command';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { prepareAppIcon } from '../utils/setup/app-icon';
+import { prepareAndroidKeystore } from '../utils/setup/android-keystore';
 import { prepareLaunchScreen } from '../utils/setup/launch-screen';
 import { createClientConfig } from '../utils/setup/client';
 import {
@@ -83,6 +84,7 @@ hello world from ./src/setup.ts!
       iosAssetFolder,
       androidAssetFolder,
     });
+    await prepareAndroidKeystore({ client, appName, configFolder: iosAssetFolder });
     const { launchScreen, launchScreenColor } = await prepareLaunchScreen({
       iosAssetFolder,
       androidAssetFolder,
