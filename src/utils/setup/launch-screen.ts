@@ -68,22 +68,22 @@ export const prepareLaunchScreen = async ({
             'BootSplashLogo.imageset/bootsplash_logo.png',
           ),
         );
-    } else if (launchScreen === 'fullscreen') {
-      if (inputFile) {
-        // ios
-        await copyDir(
-          './template/BootSplashImage.imageset',
-          path.join(iosAssetFolder, 'BootSplashImage.imageset'),
+    }
+  } else if (launchScreen === 'fullscreen') {
+    if (inputFile) {
+      // ios
+      await copyDir(
+        './template/BootSplashImage.imageset',
+        path.join(iosAssetFolder, 'BootSplashImage.imageset'),
+      );
+      await sharp(inputFile)
+        .png()
+        .toFile(
+          path.join(
+            iosAssetFolder,
+            'BootSplashImage.imageset/splashTablet.png',
+          ),
         );
-        await sharp(inputFile)
-          .png()
-          .toFile(
-            path.join(
-              iosAssetFolder,
-              'BootSplashImage.imageset/splashTablet.png',
-            ),
-          );
-      }
     }
   }
 

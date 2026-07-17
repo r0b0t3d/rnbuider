@@ -81,6 +81,7 @@ hello world from ./src/setup.ts!
     // shell.exec(`mkdir configs/${client}`);
     const { appIconFile } = await prepareAppIcon({
       iosAssetFolder,
+      androidAssetFolder,
     });
     const { launchScreen, launchScreenColor } = await prepareLaunchScreen({
       iosAssetFolder,
@@ -98,11 +99,12 @@ hello world from ./src/setup.ts!
       setEnvValue('LAUNCH_SCREEN_BACKGROUND_COLOR', launchScreenColor, envVars);
     }
 
-    // Onesignal
-    const { onesignal } = await prepareOneSignal();
-    if (onesignal) {
-      setEnvValue('ONESIGNAL_APP_ID', onesignal, envVars);
-    }
+    const devEnvPath = path.join(process.cwd(), `/configs/${client}/.env.dev`);
+    const stagingEnvPath = path.join(
+      process.cwd(),
+      `/configs/${client}/.env.staging`,
+    );
+    const prodEnvPath = path.join(process.cwd(), `/configs/${client}/.env.prod`);
 
     // Store dev env
     setEnvValue('ENV', 'dev', envVars);
@@ -112,10 +114,7 @@ hello world from ./src/setup.ts!
     }
     setEnvValue('BUNDLE_ID', `${bundleId}.dev`, devEnvVars);
     setEnvValue('APPLICATION_ID', `${applicationId}.dev`, devEnvVars);
-    saveEnvValues(
-      devEnvVars,
-      path.join(process.cwd(), `/configs/${client}/.env.dev`),
-    );
+    saveEnvValues(devEnvVars, devEnvPath);
 
     // Store staging env
     setEnvValue('ENV', 'staging', envVars);
@@ -125,10 +124,7 @@ hello world from ./src/setup.ts!
     }
     setEnvValue('BUNDLE_ID', `${bundleId}.staging`, stagingEnvVars);
     setEnvValue('APPLICATION_ID', `${applicationId}.staging`, stagingEnvVars);
-    saveEnvValues(
-      stagingEnvVars,
-      path.join(process.cwd(), `/configs/${client}/.env.staging`),
-    );
+    saveEnvValues(stagingEnvVars, stagingEnvPath);
 
     // Store prod env
     setEnvValue('ENV', 'prod', envVars);
@@ -138,10 +134,7 @@ hello world from ./src/setup.ts!
     }
     setEnvValue('BUNDLE_ID', bundleId, prodEnvVars);
     setEnvValue('APPLICATION_ID', applicationId, prodEnvVars);
-    saveEnvValues(
-      prodEnvVars,
-      path.join(process.cwd(), `/configs/${client}/.env.prod`),
-    );
+    saveEnvValues(prodEnvVars, prodEnvPath);
 
     // Setup fastlane
     const { firebaseIosApp, firebaseAndroidApp } = await setupFastlane({
@@ -160,7 +153,7 @@ hello world from ./src/setup.ts!
       setEnvValue('APP_IDENTIFIER', bundleId, fastlaneEnvVars);
     }
     if (applicationId) {
-      setEnvValue('APP_IDENTIFIER_ANDROID', bundleId, fastlaneEnvVars);
+      setEnvValue('APP_IDENTIFIER_ANDROID', applicationId, fastlaneEnvVars);
     }
     if (appName) {
       setEnvValue('APP_NAME', appName, fastlaneEnvVars);
@@ -181,5 +174,26 @@ hello world from ./src/setup.ts!
     }
 
     saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
+
+    // Onesignal — creates the push cert via fastlane, needs the client fastlane
+    // env (APPLE_TEAM_ID, APP_IDENTIFIER, CLIENT) already written above.
+    const { onesignal, onesignalRestApiKey } = await prepareOneSignal({
+      client,
+      fastlaneDir,
+    });
+    if (onesignal) {
+      setEnvValue('ONESIGNAL_APP_ID', onesignal, devEnvVars);
+      setEnvValue('ONESIGNAL_APP_ID', onesignal, stagingEnvVars);
+      setEnvValue('ONESIGNAL_APP_ID', onesignal, prodEnvVars);
+      saveEnvValues(devEnvVars, devEnvPath);
+      saveEnvValues(stagingEnvVars, stagingEnvPath);
+      saveEnvValues(prodEnvVars, prodEnvPath);
+
+      setEnvValue('ONESIGNAL_APP_ID', onesignal, fastlaneEnvVars);
+      if (onesignalRestApiKey) {
+        setEnvValue('ONESIGNAL_REST_API_KEY', onesignalRestApiKey, fastlaneEnvVars);
+      }
+      saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
+    }
   }
 }

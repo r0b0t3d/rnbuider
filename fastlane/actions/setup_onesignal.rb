@@ -50,6 +50,7 @@ module Fastlane
         payload["android_gcm_sender_id"] = android_gcm_sender_id unless android_gcm_sender_id.nil?
         payload["organization_id"] = organization_id unless organization_id.nil?
         payload["apns_p8"] = apns_p8 unless apns_p8.nil?
+        payload["apns_key_id"] = params[:apns_key_id] unless params[:apns_key_id].nil?
         payload["apns_team_id"] = apns_team_id unless apns_team_id.nil?
         payload["apns_bundle_id"] = apns_bundle_id unless apns_bundle_id.nil?
         payload["apns_p8"] = apns_p8 unless apns_p8.nil?

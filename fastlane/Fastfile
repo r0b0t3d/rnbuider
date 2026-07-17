@@ -700,12 +700,18 @@ end
 
 desc "Create Onesignal certificate"
 lane :sync_onesignal do |options|
+  require 'base64'
   cert_path = "#{ENV['PROJECT_DIR']}/apnKeys"
-  key_path = "#{cert_path}/#{ENV['CLIENT']}.p8"
   username = ENV['APPLE_ID']
   portal_client = Spaceship::Portal.login(username)
   portal_client.select_team(team_id: ENV['APPLE_TEAM_ID']) if portal_client
-  if !File.exist?(key_path)
+
+  keys = portal_client.list_keys
+  apnsKey = keys.select { |key| key["keyName"] == "APNs" }
+  key_id = apnsKey[0] ? apnsKey[0]["keyId"] : nil
+  key_path = key_id ? "#{cert_path}/#{ENV['CLIENT']}-#{key_id}.p8" : nil
+
+  if key_id.nil? || !File.exist?(key_path)
     FileUtils.mkdir_p(cert_path)
     if portal_client
       service_config = {}
@@ -718,25 +724,27 @@ lane :sync_onesignal do |options|
       file = portal_client.download_key(id: key['keyId'])
       puts key
       puts file
+      key_id = key['keyId']
+      key_path = "#{cert_path}/#{ENV['CLIENT']}-#{key_id}.p8"
       File.write(key_path, file)
     end
   end
-  keys = portal_client.list_keys
-  apnsKey = keys.select { |key| key["keyName"] == "APNs" }
-  puts apnsKey[0]
-  # setup_onesignal(
-  #   auth_token: options[:auth_token],
-  #   app_name: "#{ENV['CLIENT'].capitalize()} Prod",
-  #   # Android setup
-  #   android_token: options[:android_token],
-  #   android_gcm_sender_id: options[:android_gcm_sender_id],
-  #   # iOS setup
-  #   apns_key_id: apnsKey[0]["keyId"].to_s,
-  #   apns_team_id: ENV["APPLE_TEAM_ID"],
-  #   apns_bundle_id: ENV["APP_IDENTIFIER"],
-  #   # apns_p8: "TUlHVEFnRUFNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQkhrd2R3SUJBUVFnTEJMUnMrQXhwVmUxejducQo2T1VYQjVKd1lGVEN6U25UcjhmbnM2WTRPMzJnQ2dZSUtvWkl6ajBEQVFlaFJBTkNBQVJjL2MwODUrZGh5eXk2CnVEc0JOOXQ4YW41M2xlV2VWOUNrUzdWSFlMcmk4Q0l4ZUd3c0oyZTRhWUxKWjFMMGZySEZVamsrTGlOVnBxOHcKaFcva2JyNXI="
-  #   apns_p8: Base64.encode64(File.read(key_path).to_s),
-  # )
+  puts "APNs key id: #{key_id}"
+  setup_onesignal(
+    app_id: ENV['ONESIGNAL_APP_ID'],
+    auth_token: options[:auth_token],
+    app_name: "#{ENV['CLIENT'].capitalize()} Prod",
+    # Android setup
+    android_token: options[:android_token],
+    android_gcm_sender_id: options[:android_gcm_sender_id],
+    # iOS setup
+    apns_key_id: key_id.to_s,
+    apns_team_id: ENV["APPLE_TEAM_ID"],
+    apns_bundle_id: ENV["APP_IDENTIFIER"],
+    apns_p8: Base64.encode64(File.read(key_path).to_s),
+  )
+  puts "ONESIGNAL_APP_ID=#{Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_ID]}"
+  puts "ONESIGNAL_APP_AUTH_KEY=#{Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_AUTH_KEY]}"
 end
 
 desc "Temporary workaround to remove unwanted files from the IPA"
