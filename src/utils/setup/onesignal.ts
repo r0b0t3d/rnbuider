@@ -3,7 +3,7 @@ import * as shell from 'shelljs';
 import { buildKeyValuePairs, getFastlaneConfigs } from '../common';
 
 function parseValue(output: string, key: string): string | undefined {
-  const match = output.match(new RegExp(`^${key}=(.*)$`, 'm'));
+  const match = output.match(new RegExp(`^(?:\\[\\d{2}:\\d{2}:\\d{2}\\]:\\s*)?${key}=(.*)$`, 'm'));
   const value = match?.[1]?.trim();
   return value ? value : undefined;
 }
