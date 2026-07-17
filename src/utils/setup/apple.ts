@@ -12,11 +12,16 @@ function parseTeamIds(
 ): { name: string; id: string }[] {
   const startIdx = output.indexOf(sectionHeader);
   if (startIdx === -1) return [];
-  const rest = output.slice(startIdx + sectionHeader.length);
+  const lineEndIdx = output.indexOf('\n', startIdx);
+  const restStart = lineEndIdx === -1 ? output.length : lineEndIdx + 1;
+  const rest = output.slice(restStart);
   const nextSectionIdx = rest.indexOf('----');
   const section = nextSectionIdx === -1 ? rest : rest.slice(0, nextSectionIdx);
   const matches = [...section.matchAll(/([^\r\n(]+?)\s+\(([A-Za-z0-9]+)\)/g)];
-  return matches.map(m => ({ name: m[1].trim(), id: m[2] }));
+  return matches.map(m => ({
+    name: m[1].trim().replace(/^\[\d{2}:\d{2}:\d{2}\]:\s*/, ''),
+    id: m[2],
+  }));
 }
 
 async function resolveTeamId(

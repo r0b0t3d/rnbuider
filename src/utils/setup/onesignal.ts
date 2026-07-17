@@ -63,19 +63,6 @@ export const prepareOneSignal = async ({
     return askAppIdManually();
   }
 
-  const { androidToken, androidGcmSenderId } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'androidToken',
-      message: 'Android GCM key (optional)?',
-    },
-    {
-      type: 'input',
-      name: 'androidGcmSenderId',
-      message: 'Android GCM Sender Id (optional)?',
-    },
-  ]);
-
   let teamId = appleTeamId;
   if (!teamId) {
     const { inputTeamId } = await inquirer.prompt([
@@ -95,8 +82,6 @@ export const prepareOneSignal = async ({
     ...(appName ? { app_name: appName } : {}),
     ...(organizationId ? { organization_id: organizationId } : {}),
     ...(teamId ? { team_id: teamId } : {}),
-    ...(androidToken ? { android_token: androidToken } : {}),
-    ...(androidGcmSenderId ? { android_gcm_sender_id: androidGcmSenderId } : {}),
   });
 
   // shell.exec('bundle install', { cwd: fastlaneDir } as any);

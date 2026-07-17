@@ -16,8 +16,6 @@ module Fastlane
         auth_token = params[:auth_token]
         app_name = params[:app_name].to_s
         apns_p12_password = params[:apns_p12_password]
-        android_token = params[:android_token]
-        android_gcm_sender_id = params[:android_gcm_sender_id]
         fcm_json = params[:fcm_json]
         organization_id = params[:organization_id]
         apns_p8 = params[:apns_p8]
@@ -54,10 +52,20 @@ module Fastlane
 
         # NOTE: the field is `fcm_v1_service_account_json`, not `fcm_json` —
         # OneSignal's current Apps API (api.onesignal.com) renamed it when it
-        # dropped the legacy FCM server-key-only flow.
-        payload["fcm_v1_service_account_json"] = JSON.parse(fcm_json) unless fcm_json.nil?
-        payload["gcm_key"] = android_token unless android_token.nil?
-        payload["android_gcm_sender_id"] = android_gcm_sender_id unless android_gcm_sender_id.nil?
+        # dropped the legacy FCM server-key-only flow. The API stores/returns
+        # this as a JSON-encoded STRING (confirmed via a live GET/PUT), not a
+        # nested object — parsing it into a Hash here double-encodes it and
+        # OneSignal's Google-credential validation fails with a vague
+        # "Google returned an error" 400. Validate it's parseable, but send
+        # the raw string through untouched.
+        unless fcm_json.nil?
+          begin
+            JSON.parse(fcm_json)
+          rescue JSON::ParserError => e
+            UI.user_error!("Invalid fcm_json — must be the raw Firebase service account JSON file content: #{e.message}")
+          end
+          payload["fcm_v1_service_account_json"] = fcm_json
+        end
         payload["organization_id"] = organization_id unless organization_id.nil?
         payload["apns_p8"] = apns_p8 unless apns_p8.nil?
         payload["apns_key_id"] = params[:apns_key_id] unless params[:apns_key_id].nil?
@@ -145,7 +153,7 @@ module Fastlane
       end
 
       def self.details
-        "You can use this action to automatically create or update a OneSignal application. You can also upload a `.p12` with password, a GCM key, or both."
+        "You can use this action to automatically create or update a OneSignal application. You can also upload a `.p12` with password."
       end
 
       def self.available_options
@@ -175,18 +183,6 @@ module Fastlane
           FastlaneCore::ConfigItem.new(key: :fcm_json,
                                        env_name: "FCM_JSON",
                                        description: "Firebase Service Account JSON content (FCM v1) — replaces the deprecated legacy GCM key",
-                                       sensitive: true,
-                                       optional: true),
-
-          FastlaneCore::ConfigItem.new(key: :android_token,
-                                       env_name: "ANDROID_TOKEN",
-                                       description: "ANDROID GCM KEY",
-                                       sensitive: true,
-                                       optional: true),
-
-          FastlaneCore::ConfigItem.new(key: :android_gcm_sender_id,
-                                       env_name: "ANDROID_GCM_SENDER_ID",
-                                       description: "GCM SENDER ID",
                                        sensitive: true,
                                        optional: true),
 
@@ -255,8 +251,6 @@ module Fastlane
           'onesignal(
             auth_token: "Your OneSignal Auth Token",
             app_name: "Name for OneSignal App",
-            android_token: "Your Android GCM key (optional)",
-            android_gcm_sender_id: "Your Android GCM Sender ID (optional)",
             apns_p12: "Path to Apple .p12 file (optional)",
             apns_p12_password: "Password for .p12 file (optional)",
             apns_env: "production/sandbox (defaults to production)",
@@ -266,8 +260,6 @@ module Fastlane
             app_id: "Your OneSignal App ID",
             auth_token: "Your OneSignal Auth Token",
             app_name: "New Name for OneSignal App",
-            android_token: "Your Android GCM key (optional)",
-            android_gcm_sender_id: "Your Android GCM Sender ID (optional)",
             apns_p12: "Path to Apple .p12 file (optional)",
             apns_p12_password: "Password for .p12 file (optional)",
             apns_env: "production/sandbox (defaults to production)",
