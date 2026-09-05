@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 /* eslint-disable no-negated-condition */
 import { Command, flags } from '@oclif/command';
+import * as fs from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { prepareAppIcon } from '../utils/setup/app-icon';
@@ -17,6 +18,20 @@ import { getAppleTeam } from '../utils/setup/apple';
 import { prepareOneSignal } from '../utils/setup/onesignal';
 import { capitalize, checkFileExists } from '../utils/common';
 import { setupFastlane } from '../utils/setup/fastlane';
+
+function addAppJsonEntry({ client, appName }: { client: string; appName?: string }) {
+  const appJsonPath = path.join(process.cwd(), 'app.json');
+  const appJson = checkFileExists(appJsonPath)
+    ? JSON.parse(fs.readFileSync(appJsonPath, 'utf-8'))
+    : {};
+  const today = new Date().toISOString().slice(0, 10);
+  appJson[client] = {
+    name: appName ?? client,
+    android: { version: '0.0.0', build: 0, buildDate: today },
+    ios: { version: '0.0.0', build: 0, buildDate: today },
+  };
+  fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2) + '\n', 'utf-8');
+}
 
 export default class Setup extends Command {
   static description = 'Setup new client';
@@ -189,5 +204,7 @@ hello world from ./src/setup.ts!
       setEnvValue('ONESIGNAL_APP_ID', onesignal, prodEnvVars);
       saveEnvValues(prodEnvVars, prodEnvPath);
     }
+
+    addAppJsonEntry({ client, appName });
   }
 }
