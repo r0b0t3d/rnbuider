@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 
 export const buildKeyValuePairs = (params: any) =>
-  Object.keys(params).map(key => `${key}:${params[key]}`);
+  Object.keys(params).map(key => `${key}:"${String(params[key]).replace(/"/g, '\\"')}"`);
 
 export const getDirectories = (path: string) => {
   try {
