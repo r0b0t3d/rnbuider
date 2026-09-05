@@ -43,9 +43,10 @@ async function generateAdaptiveLayers(
   mipmapDir: string,
   canvasSize: number,
   safeZoneSize: number,
+  backgroundColor: { r: number; g: number; b: number },
 ) {
   await sharp({
-    create: { width: canvasSize, height: canvasSize, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
+    create: { width: canvasSize, height: canvasSize, channels: 4, background: { ...backgroundColor, alpha: 1 } },
   })
     .png()
     .toFile(path.join(mipmapDir, 'ic_launcher_background.png'));
@@ -98,9 +99,11 @@ async function generateNotificationIcon(sourceFile: string, drawableDir: string,
 export async function generateAndroidIcons({
   sourceFile,
   androidAssetFolder,
+  backgroundColor = { r: 255, g: 255, b: 255 },
 }: {
   sourceFile: string;
   androidAssetFolder: string;
+  backgroundColor?: { r: number; g: number; b: number };
 }): Promise<void> {
   const anydpiDir = path.join(androidAssetFolder, 'mipmap-anydpi-v26');
   ensureDir(anydpiDir);
@@ -119,6 +122,7 @@ export async function generateAndroidIcons({
       mipmapDir,
       Math.round(ADAPTIVE_CANVAS_BASE_SIZE * scale),
       Math.round(ADAPTIVE_SAFE_ZONE_BASE_SIZE * scale),
+      backgroundColor,
     );
     await generateNotificationIcon(sourceFile, drawableDir, Math.round(NOTIFICATION_BASE_SIZE * scale));
   }

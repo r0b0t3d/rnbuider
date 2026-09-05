@@ -179,7 +179,7 @@ hello world from ./src/setup.ts!
 
     // Onesignal — creates the push cert via fastlane, needs the client fastlane
     // env (APPLE_TEAM_ID, APP_IDENTIFIER, CLIENT) already written above.
-    const { onesignal, onesignalRestApiKey } = await prepareOneSignal({
+    const { onesignal } = await prepareOneSignal({
       client,
       fastlaneDir,
       appleTeamId,
@@ -188,12 +188,6 @@ hello world from ./src/setup.ts!
     if (onesignal) {
       setEnvValue('ONESIGNAL_APP_ID', onesignal, prodEnvVars);
       saveEnvValues(prodEnvVars, prodEnvPath);
-
-      setEnvValue('ONESIGNAL_APP_ID', onesignal, fastlaneEnvVars);
-      if (onesignalRestApiKey) {
-        setEnvValue('ONESIGNAL_REST_API_KEY', onesignalRestApiKey, fastlaneEnvVars);
-      }
-      saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
     }
   }
 }
