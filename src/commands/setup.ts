@@ -15,9 +15,9 @@ import {
   updateServiceDomain,
 } from '../utils/env';
 import { getAppleTeam } from '../utils/setup/apple';
-import { prepareOneSignal } from '../utils/setup/onesignal';
 import { capitalize, checkFileExists } from '../utils/common';
 import { setupFastlane } from '../utils/setup/fastlane';
+import { provisionFirebase } from '../utils/setup/firebase';
 
 function addAppJsonEntry({ client, appName }: { client: string; appName?: string }) {
   const appJsonPath = path.join(process.cwd(), 'app.json');
@@ -154,12 +154,7 @@ hello world from ./src/setup.ts!
     saveEnvValues(prodEnvVars, prodEnvPath);
 
     // Setup fastlane
-    const { firebaseIosApp, firebaseAndroidApp } = await setupFastlane({
-      client,
-      bundleId,
-      applicationId,
-      appName,
-    });
+    await setupFastlane({ client });
     const fastlaneDir = path.join(
       process.cwd(),
       `fastlane/clients/${client}/fastlane`,
@@ -183,27 +178,11 @@ hello world from ./src/setup.ts!
       setEnvValue('ITC_TEAM_ID', itcTeamId, fastlaneEnvVars);
     }
     setEnvValue('FLAVOR', capitalize(client), fastlaneEnvVars);
-    if (firebaseIosApp) {
-      setEnvValue('FIREBASE_IOS_APP', firebaseIosApp, fastlaneEnvVars);
-    }
-    if (firebaseAndroidApp) {
-      setEnvValue('FIREBASE_ANDROID_APP', firebaseAndroidApp, fastlaneEnvVars);
-    }
 
     saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
 
-    // Onesignal — creates the push cert via fastlane, needs the client fastlane
-    // env (APPLE_TEAM_ID, APP_IDENTIFIER, CLIENT) already written above.
-    const { onesignal } = await prepareOneSignal({
-      client,
-      fastlaneDir,
-      appleTeamId,
-      appName,
-    });
-    if (onesignal) {
-      setEnvValue('ONESIGNAL_APP_ID', onesignal, prodEnvVars);
-      saveEnvValues(prodEnvVars, prodEnvPath);
-    }
+    // Firebase apps + config files; needs the env files and fastlane .env written above.
+    await provisionFirebase({ client, fastlaneDir });
 
     addAppJsonEntry({ client, appName });
   }

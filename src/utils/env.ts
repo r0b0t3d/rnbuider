@@ -11,10 +11,16 @@ export const readEnvVars = (envFilePath: string) => {
     if (!line) {
       return;
     }
-    const result = line.split('=');
-    envObject[result[0]] = {
-      key: result[0],
-      value: result[1],
+    const separatorIndex = line.indexOf('=');
+    // Comments and other lines without `=` are kept verbatim
+    if (line.trim().startsWith('#') || separatorIndex === -1) {
+      envObject[`__raw_${index}`] = { raw: line, order: index };
+      return;
+    }
+    const key = line.slice(0, separatorIndex);
+    envObject[key] = {
+      key,
+      value: line.slice(separatorIndex + 1),
       order: index,
     };
   });
@@ -32,7 +38,9 @@ export const readEnvVars = (envFilePath: string) => {
 export const saveEnvValues = (newValues: any, destFilePath: string) => {
   const payload = Object.values(newValues)
     .sort((a: any, b: any) => a.order - b.order)
-    .map((data: any) => `${data.key}=${data.value}`);
+    .map((data: any) =>
+      data.raw !== undefined ? data.raw : `${data.key}=${data.value}`,
+    );
   // write everything back to the file system
   const dirname = path.dirname(destFilePath);
   fs.mkdirSync(dirname, { recursive: true });

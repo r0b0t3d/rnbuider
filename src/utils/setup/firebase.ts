@@ -1,192 +1,83 @@
-import * as crypto from 'crypto';
 import * as fs from 'fs';
-import * as https from 'https';
+import * as inquirer from 'inquirer';
+import * as path from 'path';
+import * as shell from 'shelljs';
 
-function base64url(input: string | Buffer): string {
-  const buf = typeof input === 'string' ? Buffer.from(input) : input;
-  return buf
-    .toString('base64')
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
-}
+// Firebase apps are provisioned by the project's own script with the operator's
+// `firebase login`. The client → Firebase project mapping lives in the project too.
+const CLIENTS_FILE = 'scripts/firebase-clients.json';
+const PROVISION_SCRIPT = 'scripts/firebase-provision.js';
 
-function createJWT(serviceAccount: any): string {
-  const now = Math.floor(Date.now() / 1000);
-  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const payload = base64url(
-    JSON.stringify({
-      iss: serviceAccount.client_email,
-      scope: 'https://www.googleapis.com/auth/cloud-platform',
-      aud: 'https://oauth2.googleapis.com/token',
-      iat: now,
-      exp: now + 3600,
-    }),
-  );
-  const data = `${header}.${payload}`;
-  const sign = crypto.createSign('RSA-SHA256');
-  sign.update(data);
-  return `${data}.${base64url(sign.sign(serviceAccount.private_key))}`;
-}
-
-function httpsRequest(
-  url: string,
-  method: 'GET' | 'POST',
-  headers: Record<string, string>,
-  body?: string,
-): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const { hostname, pathname, search } = new URL(url);
-    const req = https.request(
-      {
-        hostname,
-        path: pathname + search,
-        method,
-        headers: body
-          ? { ...headers, 'Content-Length': Buffer.byteLength(body) }
-          : headers,
-      },
-      res => {
-        let raw = '';
-        res.on('data', chunk => (raw += chunk));
-        res.on('end', () => {
-          try {
-            resolve(JSON.parse(raw));
-          } catch {
-            resolve(raw);
-          }
-        });
-      },
-    );
-    req.on('error', reject);
-    if (body) req.write(body);
-    req.end();
+const pickProject = async (clients: Record<string, { project: string }>) => {
+  const counts: Record<string, number> = {};
+  Object.values(clients).forEach(({ project }) => {
+    counts[project] = (counts[project] || 0) + 1;
   });
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
-
-async function pollOperation(
-  operationName: string,
-  accessToken: string,
-): Promise<string> {
-  const url = `https://firebase.googleapis.com/v1beta1/${operationName}`;
-  for (let i = 0; i < 20; i++) {
-    await sleep(3000);
-    const op = await httpsRequest(url, 'GET', {
-      Authorization: `Bearer ${accessToken}`,
-    });
-    if (op.done) {
-      if (op.error)
-        throw new Error(
-          `Firebase app creation failed: ${JSON.stringify(op.error)}`,
-        );
-      return op.response.appId;
-    }
-  }
-  throw new Error('Firebase app creation timed out after 60s');
-}
-
-export function getProjectId(serviceAccountPath: string): string {
-  const sa = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
-  return sa.project_id;
-}
-
-export async function getAccessToken(
-  serviceAccountPath: string,
-): Promise<string> {
-  const sa = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf-8'));
-  const jwt = createJWT(sa);
-  const body = new URLSearchParams({
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    assertion: jwt,
-  }).toString();
-  const result = await httpsRequest(
-    'https://oauth2.googleapis.com/token',
-    'POST',
-    { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  );
-  if (!result.access_token)
-    throw new Error(`Auth failed: ${JSON.stringify(result)}`);
-  return result.access_token;
-}
-
-async function findExistingAppId({
-  accessToken,
-  projectId,
-  platform,
-  bundleId,
-  packageName,
-}: {
-  accessToken: string;
-  projectId: string;
-  platform: 'ios' | 'android';
-  bundleId?: string;
-  packageName?: string;
-}): Promise<string | undefined> {
-  const endpoint = platform === 'ios' ? 'iosApps' : 'androidApps';
-  const result = await httpsRequest(
-    `https://firebase.googleapis.com/v1beta1/projects/${projectId}/${endpoint}`,
-    'GET',
-    { Authorization: `Bearer ${accessToken}` },
-  );
-  const apps = result.apps || [];
-  const match =
-    platform === 'ios'
-      ? apps.find((app: any) => app.bundleId === bundleId)
-      : apps.find((app: any) => app.packageName === packageName);
-  return match?.appId;
-}
-
-export async function createFirebaseApp({
-  accessToken,
-  projectId,
-  platform,
-  bundleId,
-  packageName,
-  displayName,
-}: {
-  accessToken: string;
-  projectId: string;
-  platform: 'ios' | 'android';
-  bundleId?: string;
-  packageName?: string;
-  displayName: string;
-}): Promise<string> {
-  const endpoint = platform === 'ios' ? 'iosApps' : 'androidApps';
-  const payload =
-    platform === 'ios'
-      ? { bundleId, displayName }
-      : { packageName, displayName };
-
-  const result = await httpsRequest(
-    `https://firebase.googleapis.com/v1beta1/projects/${projectId}/${endpoint}`,
-    'POST',
+  const { project } = await inquirer.prompt([
     {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
+      type: 'list',
+      name: 'project',
+      message:
+        'Firebase project for this client? (2 apps per client, max 30 apps per project)',
+      choices: Object.keys(counts).map(p => ({
+        name: `${p} (${counts[p]} clients)`,
+        value: p,
+      })),
     },
-    JSON.stringify(payload),
-  );
+  ]);
+  return project as string;
+};
 
-  if (result.error) {
-    if (result.error.status === 'ALREADY_EXISTS') {
-      const existingAppId = await findExistingAppId({
-        accessToken,
-        projectId,
-        platform,
-        bundleId,
-        packageName,
-      });
-      if (existingAppId) return existingAppId;
-    }
-    throw new Error(`Firebase API error: ${JSON.stringify(result.error)}`);
+// Needs configs/<client>/.env.prod and fastlane/clients/<client>/fastlane/.env written:
+// the script reads the package / bundle IDs and writes FIREBASE_ANDROID_APP / FIREBASE_IOS_APP.
+export const provisionFirebase = async ({
+  client,
+  fastlaneDir,
+}: {
+  client: string;
+  fastlaneDir: string;
+}) => {
+  const clientsPath = path.join(process.cwd(), CLIENTS_FILE);
+  if (
+    !fs.existsSync(clientsPath) ||
+    !fs.existsSync(path.join(process.cwd(), PROVISION_SCRIPT))
+  ) {
+    throw new Error(
+      `Firebase setup needs ${PROVISION_SCRIPT} and ${CLIENTS_FILE} in the project`,
+    );
   }
-  if (result.done) return result.response.appId;
-  if (result.name) return pollOperation(result.name, accessToken);
 
-  throw new Error(`Unexpected response: ${JSON.stringify(result)}`);
-}
+  const clients = JSON.parse(fs.readFileSync(clientsPath, 'utf-8'));
+  if (clients[client]) {
+    console.log(`${client} is mapped to ${clients[client].project}`);
+  } else {
+    clients[client] = { project: await pickProject(clients) };
+    const sorted: Record<string, unknown> = {};
+    Object.keys(clients)
+      .sort()
+      .forEach(key => {
+        sorted[key] = clients[key];
+      });
+    fs.writeFileSync(clientsPath, JSON.stringify(sorted, null, 2) + '\n');
+  }
+
+  const result = shell.exec(`node ${PROVISION_SCRIPT} ${client}`);
+  if (result.code !== 0) {
+    console.warn(
+      `Firebase provisioning failed; fix the error above and re-run: node ${PROVISION_SCRIPT} ${client}`,
+    );
+  }
+
+  const { apnsKey } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'apnsKey',
+      message:
+        'Create or reuse the APNs key via fastlane sync_apns_key now (Apple ID login)?',
+      default: true,
+    },
+  ]);
+  if (apnsKey) {
+    shell.exec('bundle exec fastlane sync_apns_key', { cwd: fastlaneDir } as any);
+  }
+};

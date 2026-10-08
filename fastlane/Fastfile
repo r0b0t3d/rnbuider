@@ -698,39 +698,82 @@ platform :android do
   end
 end
 
-desc "Create Onesignal certificate"
-lane :sync_onesignal do |options|
-  require 'base64'
+# A .p8 holds no key ID. APNs rejects a token signed with the wrong key / key ID / team with
+# 403 InvalidProviderToken; any other answer (400 BadDeviceToken for this dummy device) means it matched.
+def apns_key_matches?(path, key_id, team_id, topic)
+  require 'jwt'
+  require 'open3'
+  key = OpenSSL::PKey::EC.new(File.read(path))
+  token = JWT.encode({ iss: team_id, iat: Time.now.to_i }, key, 'ES256', { kid: key_id })
+  # curl config on stdin keeps the token out of the process list.
+  config = [
+    "url = \"https://api.push.apple.com/3/device/#{'0' * 64}\"",
+    "header = \"authorization: bearer #{token}\"",
+    "header = \"apns-topic: #{topic}\"",
+  ].join("\n")
+  code, = Open3.capture2('curl', '-s', '--http2', '-X', 'POST', '-d', '{}', '-o', '/dev/null', '-w', '%{http_code}', '-K', '-', stdin_data: config)
+  code == '400'
+rescue OpenSSL::PKey::PKeyError
+  false
+end
+
+desc "Create or reuse the team's APNs auth key (.p8) in PROJECT_DIR/apnKeys"
+lane :sync_apns_key do |options|
   cert_path = "#{ENV['PROJECT_DIR']}/apnKeys"
   username = ENV['APPLE_ID']
   team_id = options[:team_id] || ENV['APPLE_TEAM_ID']
   portal_client = Spaceship::Portal.login(username)
   portal_client.select_team(team_id: team_id) if portal_client && !team_id.to_s.strip.empty?
+  team_id ||= portal_client.team_id
 
-  keys = portal_client.list_keys
-  apnsKey = keys.select { |key| key["keyName"] == "APNs" }
-  key_id = apnsKey[0] ? apnsKey[0]["keyId"] : nil
-  key_path = key_id ? "#{cert_path}/#{ENV['CLIENT']}-#{key_id}.p8" : nil
+  # One key serves the whole team, so a .p8 saved by any client of the team (<client>-<keyId>.p8) is reused.
+  key_ids = portal_client.list_keys.select { |key| key["keyName"] == "APNs" }.map { |key| key["keyId"] }
+  key_id = key_ids.find { |id| Dir.glob("#{cert_path}/*-#{id}.p8").any? }
+  key_path = key_id ? Dir.glob("#{cert_path}/*-#{key_id}.p8").first : nil
 
-  if key_id.nil? || !File.exist?(key_path)
+  if key_id.nil? && key_ids.any?
+    # Legacy <client>.p8 files: find the one signing for a team key (this client's first), name it <client>-<keyId>.p8.
+    legacy = Dir.glob("#{cert_path}/*.p8").reject { |f| File.basename(f) =~ /-[A-Z0-9]{10}\.p8\z/ }
+    legacy = legacy.sort_by { |f| File.basename(f, '.p8') == ENV['CLIENT'] ? 0 : 1 }
+    key_id, file = key_ids.product(legacy).find { |id, f| apns_key_matches?(f, id, team_id, ENV['APP_IDENTIFIER']) }
+    if key_id
+      key_path = "#{cert_path}/#{File.basename(file, '.p8')}-#{key_id}.p8"
+      File.rename(file, key_path)
+      puts "Matched #{File.basename(file)} to key #{key_id}, renamed to #{File.basename(key_path)}"
+    end
+  end
+
+  if key_id.nil? && key_ids.any?
+    # Apple allows a single download per key and caps keys per team: never create another one here.
+    UI.user_error!("Team #{team_id} has APNs key(s) #{key_ids.join(', ')} but no #{cert_path}/*-<keyId>.p8 for them. Save the existing .p8 as #{ENV['CLIENT']}-<keyId>.p8 and re-run.")
+  end
+
+  if key_id.nil?
     FileUtils.mkdir_p(cert_path)
-    if portal_client
-      service_config = {}
-      service_config['U27F4V844T'] = {                # APNS
+    service_config = {}
+    service_config['U27F4V844T'] = {                # APNS
       scope: 'team',
       environment: 'all',
       identifiers: {}
     }
-      key = portal_client.create_key!(name: 'APNs', service_configs: service_config)
-      file = portal_client.download_key(id: key['keyId'])
-      puts key
-      puts file
-      key_id = key['keyId']
-      key_path = "#{cert_path}/#{ENV['CLIENT']}-#{key_id}.p8"
-      File.write(key_path, file)
-    end
+    key = portal_client.create_key!(name: 'APNs', service_configs: service_config)
+    file = portal_client.download_key(id: key['keyId'])
+    key_id = key['keyId']
+    key_path = "#{cert_path}/#{ENV['CLIENT']}-#{key_id}.p8"
+    File.write(key_path, file)
   end
   puts "APNs key id: #{key_id}"
+  # No API for this upload: Firebase Console → Project settings → Cloud Messaging → APNs auth key.
+  puts "Upload #{key_path} (Key ID #{key_id}, Team ID #{team_id}) to the Firebase iOS app #{ENV['APP_IDENTIFIER']}"
+  { key_id: key_id, key_path: key_path }
+end
+
+desc "Create Onesignal certificate"
+lane :sync_onesignal do |options|
+  require 'base64'
+  apns_key = sync_apns_key(team_id: options[:team_id])
+  key_id = apns_key[:key_id]
+  key_path = apns_key[:key_path]
 
   # Reuse the Firebase Service Account json copied in during setup as the
   # FCM v1 credential for OneSignal — Google removed legacy GCM/FCM keys.
@@ -738,7 +781,7 @@ lane :sync_onesignal do |options|
   fcm_json = File.exist?(fcm_json_path) ? File.read(fcm_json_path) : nil
 
   setup_onesignal(
-    app_id: ENV['ONESIGNAL_APP_ID'],
+    app_id: options[:app_id] || ENV['ONESIGNAL_APP_ID'],
     auth_token: options[:auth_token],
     app_name: options[:app_name] || "#{ENV['CLIENT'].capitalize()} Prod",
     organization_id: options[:organization_id],
