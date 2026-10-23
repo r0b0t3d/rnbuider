@@ -89,6 +89,17 @@ platform :ios do
     ENV['SERVICE_EXTENSION_NAME'].split(',').map(&:strip)
   end
 
+  # latest_testflight_build_number (fastlane 2.241.1) reads /apps/{id}/buildUploads,
+  # which App Store Connect rejects with 404 for Apple ID sessions. Only API keys can use it.
+  def load_latest_testflight_build
+    Spaceship::ConnectAPI.login(ENV['APPLE_ID'], use_portal: false, use_tunes: true, tunes_team_id: ENV['ITC_TEAM_ID'])
+    app = Spaceship::ConnectAPI::App.find(ENV['APP_IDENTIFIER'])
+    build = app.get_builds(sort: "-uploadedDate", limit: 1, includes: "preReleaseVersion").first
+    UI.user_error!("No TestFlight build found for #{ENV['APP_IDENTIFIER']}") unless build
+    Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER] = build.version
+    Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] = build.app_version
+  end
+
   def get_ios_version(increment = "patch", local_version = nil)
     puts "Get iOS version: Increment #{increment}"
     begin
@@ -108,11 +119,7 @@ platform :ios do
         )
       else
         puts "Not using API key"
-        latest_testflight_build_number(
-          username: ENV['APPLE_ID'],
-          team_id: ENV['ITC_TEAM_ID'],
-          app_identifier: ENV['APP_IDENTIFIER']
-        )
+        load_latest_testflight_build
         app_store_build_number(
           username: ENV['APPLE_ID'],
           team_id: ENV['ITC_TEAM_ID'],
