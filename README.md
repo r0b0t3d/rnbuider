@@ -59,7 +59,6 @@ USAGE
 * [`rnbuilder initialize`](#rnbuilder-initialize)
 * [`rnbuilder match-check [MATCH-CHECK]`](#rnbuilder-match-check-match-check)
 * [`rnbuilder match-nuke [BUILD]`](#rnbuilder-match-nuke-build)
-* [`rnbuilder onesignal [BUILD]`](#rnbuilder-onesignal-build)
 * [`rnbuilder reject-review [REJECT-REVIEW]`](#rnbuilder-reject-review-reject-review)
 * [`rnbuilder setup [SETUP]`](#rnbuilder-setup-setup)
 * [`rnbuilder setup-gcp`](#rnbuilder-setup-gcp)
@@ -226,28 +225,6 @@ EXAMPLE
 ```
 
 _See code: [src/commands/match-nuke.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.81/src/commands/match-nuke.ts)_
-
-## `rnbuilder onesignal [BUILD]`
-
-Create and upload push cerfiticate to One Signal
-
-```
-USAGE
-  $ rnbuilder onesignal [BUILD]
-
-OPTIONS
-  -c, --client=client                            Select client that you want to sync udids
-  -h, --help                                     show CLI help
-  --android_gcm_sender_id=android_gcm_sender_id
-  --android_token=android_token
-  --auth_token=auth_token                        Auth token for OneSignal
-
-EXAMPLE
-  $ rnbuilder onesignal
-       Create and upload push certificate to One Signal from ./src/commands/onesignal.ts!
-```
-
-_See code: [src/commands/onesignal.ts](https://github.com/r0b0t3d/rnbuilder/blob/v0.6.81/src/commands/onesignal.ts)_
 
 ## `rnbuilder reject-review [REJECT-REVIEW]`
 

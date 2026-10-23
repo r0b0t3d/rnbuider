@@ -768,35 +768,6 @@ lane :sync_apns_key do |options|
   { key_id: key_id, key_path: key_path }
 end
 
-desc "Create Onesignal certificate"
-lane :sync_onesignal do |options|
-  require 'base64'
-  apns_key = sync_apns_key(team_id: options[:team_id])
-  key_id = apns_key[:key_id]
-  key_path = apns_key[:key_path]
-
-  # Reuse the Firebase Service Account json copied in during setup as the
-  # FCM v1 credential for OneSignal — Google removed legacy GCM/FCM keys.
-  fcm_json_path = "#{ENV['PROJECT_DIR']}/fastlane/firebase.json"
-  fcm_json = File.exist?(fcm_json_path) ? File.read(fcm_json_path) : nil
-
-  setup_onesignal(
-    app_id: options[:app_id] || ENV['ONESIGNAL_APP_ID'],
-    auth_token: options[:auth_token],
-    app_name: options[:app_name] || "#{ENV['CLIENT'].capitalize()} Prod",
-    organization_id: options[:organization_id],
-    # Android setup
-    fcm_json: fcm_json,
-    # iOS setup
-    apns_key_id: key_id.to_s,
-    apns_team_id: ENV["APPLE_TEAM_ID"],
-    apns_bundle_id: ENV["APP_IDENTIFIER"],
-    apns_p8: Base64.encode64(File.read(key_path).to_s),
-  )
-  puts "ONESIGNAL_APP_ID=#{Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_ID]}"
-  puts "ONESIGNAL_APP_AUTH_KEY=#{Actions.lane_context[SharedValues::T_ONE_SIGNAL_APP_AUTH_KEY]}"
-end
-
 desc "Temporary workaround to remove unwanted files from the IPA"
 lane :temporary_fix_ios_post_build do
   # Workaround to remove ._Symbols from ipa.
