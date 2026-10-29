@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import { prepareAppIcon } from '../utils/setup/app-icon';
+import { addApplinksEntry } from '../utils/setup/applinks';
 import { prepareAndroidKeystore } from '../utils/setup/android-keystore';
 import { prepareLaunchScreen } from '../utils/setup/launch-screen';
 import { createClientConfig } from '../utils/setup/client';
@@ -16,8 +17,7 @@ import {
 } from '../utils/env';
 import { getAppleTeam } from '../utils/setup/apple';
 import { capitalize, checkFileExists } from '../utils/common';
-import { setupFastlane } from '../utils/setup/fastlane';
-import { provisionFirebase } from '../utils/setup/firebase';
+import { provisionFirebase, setupFastlane } from '../utils/setup/firebase';
 
 function addAppJsonEntry({ client, appName }: { client: string; appName?: string }) {
   const appJsonPath = path.join(process.cwd(), 'app.json');
@@ -68,13 +68,15 @@ hello world from ./src/setup.ts!
     const { client } = await inquirer.prompt(questions);
 
     let envPath = path.join(process.cwd(), `configs/${client}/.env.prod`);
-    if (!checkFileExists(envPath)) {
+    const isExistingClient = checkFileExists(envPath);
+    if (!isExistingClient) {
       envPath = path.join(process.cwd(), 'template/env.template');
     }
     const envVars = readEnvVars(envPath);
 
     const { bundleId, applicationId, appName } = await createClientConfig(
       client,
+      isExistingClient ? envVars.APP_NAME?.value : undefined,
     );
     setEnvValue('CLIENT', client, envVars);
     const deeplinkHost = envVars.DEEP_LINK_HOST.value.replace(
@@ -100,6 +102,11 @@ hello world from ./src/setup.ts!
       androidAssetFolder,
     });
     await prepareAndroidKeystore({ client, appName, configFolder: iosAssetFolder });
+    await addApplinksEntry({
+      client,
+      packageName: applicationId || bundleId,
+      configFolder: iosAssetFolder,
+    });
     const { launchScreen, launchScreenColor } = await prepareLaunchScreen({
       iosAssetFolder,
       androidAssetFolder,
@@ -154,7 +161,7 @@ hello world from ./src/setup.ts!
     saveEnvValues(prodEnvVars, prodEnvPath);
 
     // Setup fastlane
-    await setupFastlane({ client });
+    const { googleApplicationCredentials } = await setupFastlane({ client });
     const fastlaneDir = path.join(
       process.cwd(),
       `fastlane/clients/${client}/fastlane`,
@@ -178,6 +185,13 @@ hello world from ./src/setup.ts!
       setEnvValue('ITC_TEAM_ID', itcTeamId, fastlaneEnvVars);
     }
     setEnvValue('FLAVOR', capitalize(client), fastlaneEnvVars);
+    if (googleApplicationCredentials) {
+      setEnvValue(
+        'GOOGLE_APPLICATION_CREDENTIALS',
+        googleApplicationCredentials,
+        fastlaneEnvVars,
+      );
+    }
 
     saveEnvValues(fastlaneEnvVars, fastlaneDir + '/.env');
 

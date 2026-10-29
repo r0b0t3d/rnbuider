@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as inquirer from 'inquirer';
 import * as path from 'path';
 import * as shell from 'shelljs';
+import { copyDir, copyFile, getFastlaneConfigs } from '../common';
+import { listAdcFiles } from './gcp';
+import { readEnvVars, saveEnvValues, setEnvValue } from '../env';
 
 // Firebase apps are provisioned by the project's own script with the operator's
 // `firebase login`. The client → Firebase project mapping lives in the project too.
@@ -26,6 +29,55 @@ const pickProject = async (clients: Record<string, { project: string }>) => {
     },
   ]);
   return project as string;
+};
+
+export const setupFastlane = async ({ client }: { client: string }) => {
+  const fastlaneDir = path.join(
+    process.cwd(),
+    `fastlane/clients/${client}/fastlane`,
+  );
+  // Merge template files in without overwriting existing client files —
+  // fills gaps left by a partial/previous setup run (e.g. missing .env).
+  await copyDir(
+    path.join(process.cwd(), 'template/fastlane'),
+    fastlaneDir,
+    false,
+  );
+
+  const adcFiles = listAdcFiles();
+  if (!adcFiles.length) {
+    console.warn(
+      'No impersonated ADC file found in ~/.config/gcloud. Run the setup-gcp command, then set GOOGLE_APPLICATION_CREDENTIALS in the client fastlane .env.',
+    );
+    return { googleApplicationCredentials: undefined };
+  }
+
+  const { googleApplicationCredentials }: any = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'googleApplicationCredentials',
+      message: 'Impersonated ADC file for Google Play?',
+      choices: adcFiles,
+      default: '~/.config/gcloud/adc_fastlane.json',
+    },
+  ]);
+
+  return { googleApplicationCredentials: googleApplicationCredentials as string };
+};
+
+// fastlane/configs.json maps each Firebase project to its service account key
+// under `serviceAccounts`; the key is copied into the client's fastlane dir.
+const copyServiceAccountFile = async (project: string, fastlaneDir: string) => {
+  const file = getFastlaneConfigs().serviceAccounts?.[project];
+  if (!file) {
+    throw new Error(
+      `No service account key for ${project}; add it under serviceAccounts in fastlane/configs.json`,
+    );
+  }
+  await copyFile(
+    path.resolve(process.cwd(), file),
+    path.join(fastlaneDir, 'firebase.json'),
+  );
 };
 
 // Needs configs/<client>/.env.prod and fastlane/clients/<client>/fastlane/.env written:
@@ -67,6 +119,12 @@ export const provisionFirebase = async ({
       `Firebase provisioning failed; fix the error above and re-run: node ${PROVISION_SCRIPT} ${client}`,
     );
   }
+
+  const fastlaneEnvPath = path.join(fastlaneDir, '.env');
+  const fastlaneEnvVars = readEnvVars(fastlaneEnvPath);
+  await copyServiceAccountFile(clients[client].project, fastlaneDir);
+  setEnvValue('FIREBASE_SERVICE_ACCOUNT_FILE', 'firebase.json', fastlaneEnvVars);
+  saveEnvValues(fastlaneEnvVars, fastlaneEnvPath);
 
   const { apnsKey } = await inquirer.prompt([
     {

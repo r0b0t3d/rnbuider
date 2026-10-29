@@ -2,12 +2,16 @@ import * as inquirer from 'inquirer';
 import { addProductFlavor } from './android';
 import { createXcodeScheme } from './ios-scheme';
 
-export const createClientConfig = async (client: string) => {
+export const createClientConfig = async (
+  client: string,
+  existingAppName?: string,
+) => {
   const { appName, bundleId, applicationId } = await inquirer.prompt([
     {
       type: 'input',
       name: 'appName',
       message: 'What is app name?',
+      default: existingAppName,
     },
     {
       type: 'input',
