@@ -5,7 +5,6 @@ import * as shell from 'shelljs';
 import { normalise } from '../common';
 
 const DEFAULT_APPLINKS = '../../edular/edular-web/applinks.js';
-const TABLE_END = '\n}\n\nmodule.exports';
 
 const readKeystoreInfo = (infoPath: string) => {
   const info: Record<string, string> = {};
@@ -34,24 +33,44 @@ const getKeystoreSha256 = (configFolder: string) => {
   return /SHA256:\s*([0-9A-F:]+)/.exec(result.stdout)?.[1];
 };
 
+// Appends `client` to the top-level table `const <table> = {...}` unless it is already there.
+const addTableEntry = (
+  source: string,
+  table: string,
+  client: string,
+  entry: string,
+) => {
+  const tableStart = source.indexOf(`const ${table}`);
+  const tableEnd = source.indexOf('\n}\n', tableStart);
+  if (tableStart === -1 || tableEnd === -1) {
+    console.warn(`Unexpected applinks.js layout; skipping ${table}.`);
+    return source;
+  }
+  if (
+    new RegExp(`\\n    ${client}: \\{`).test(
+      source.slice(tableStart, tableEnd),
+    )
+  ) {
+    console.log(`${client} already in ${table}; edit it by hand.`);
+    return source;
+  }
+  return `${source.slice(0, tableEnd)},\n${entry}${source.slice(tableEnd)}`;
+};
+
 // The Play App Signing fingerprint is not known yet; add it by hand after the first upload.
 export const addApplinksEntry = async ({
   client,
   packageName,
+  bundleId,
+  appleTeamId,
   configFolder,
 }: {
   client: string;
   packageName: string;
+  bundleId: string;
+  appleTeamId?: string;
   configFolder: string;
 }) => {
-  const sha256 = getKeystoreSha256(configFolder);
-  if (!sha256) {
-    console.warn(
-      'No readable prod.keystore and keystore.info; skipping applinks.js update.',
-    );
-    return;
-  }
-
   const { applinksPath } = await inquirer.prompt([
     {
       type: 'input',
@@ -69,33 +88,43 @@ export const addApplinksEntry = async ({
     return;
   }
 
-  const source = fs.readFileSync(applinksPath, 'utf-8');
-  const tableStart = source.indexOf('const androidTargetParams');
-  const tableEnd = source.indexOf(TABLE_END);
-  if (tableStart === -1 || tableEnd === -1) {
-    console.warn('Unexpected applinks.js layout; skipping applinks.js update.');
-    return;
-  }
-  if (new RegExp(`\\n    ${client}: \\{`).test(source.slice(tableStart))) {
-    console.log(`${client} already in applinks.js; add fingerprints by hand.`);
-    return;
+  let source = fs.readFileSync(applinksPath, 'utf-8');
+
+  if (appleTeamId) {
+    source = addTableEntry(
+      source,
+      'appleConfigs',
+      client,
+      `    ${client}: { production: "${appleTeamId}.${bundleId}" }`,
+    );
+  } else {
+    console.warn('No Apple team ID; skipping appleConfigs.');
   }
 
-  const entry = [
-    `    ${client}: {`,
-    `        package_name: "${packageName}",`,
-    '        sha256_cert_fingerprints: [',
-    '            ...baseSha256,',
-    `            "${sha256}" // prod keystore`,
-    '        ]',
-    '    }',
-  ].join('\n');
-  fs.writeFileSync(
-    applinksPath,
-    `${source.slice(0, tableEnd)},\n${entry}${source.slice(tableEnd)}`,
-    'utf-8',
-  );
+  const sha256 = getKeystoreSha256(configFolder);
+  if (sha256) {
+    source = addTableEntry(
+      source,
+      'androidTargetParams',
+      client,
+      [
+        `    ${client}: {`,
+        `        package_name: "${packageName}",`,
+        '        sha256_cert_fingerprints: [',
+        '            ...baseSha256,',
+        `            "${sha256}" // prod keystore`,
+        '        ]',
+        '    }',
+      ].join('\n'),
+    );
+  } else {
+    console.warn(
+      'No readable prod.keystore and keystore.info; skipping androidTargetParams.',
+    );
+  }
+
+  fs.writeFileSync(applinksPath, source, 'utf-8');
   console.log(
-    `Added ${client} to ${applinksPath}. Add the Play App Signing SHA-256 after the first Play upload.`,
+    `Updated ${applinksPath}. Add the Play App Signing SHA-256 after the first Play upload.`,
   );
 };

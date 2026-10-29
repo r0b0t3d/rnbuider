@@ -105,6 +105,8 @@ hello world from ./src/setup.ts!
     await addApplinksEntry({
       client,
       packageName: applicationId || bundleId,
+      bundleId,
+      appleTeamId,
       configFolder: iosAssetFolder,
     });
     const { launchScreen, launchScreenColor } = await prepareLaunchScreen({
