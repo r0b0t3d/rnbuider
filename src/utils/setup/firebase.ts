@@ -123,7 +123,7 @@ export const provisionFirebase = async ({
   const fastlaneEnvPath = path.join(fastlaneDir, '.env');
   const fastlaneEnvVars = readEnvVars(fastlaneEnvPath);
   await copyServiceAccountFile(clients[client].project, fastlaneDir);
-  setEnvValue('FIREBASE_SERVICE_ACCOUNT_FILE', 'firebase.json', fastlaneEnvVars);
+  setEnvValue('FIREBASE_SERVICE_ACCOUNT_FILE', 'fastlane/firebase.json', fastlaneEnvVars);
   saveEnvValues(fastlaneEnvVars, fastlaneEnvPath);
 
   const { apnsKey } = await inquirer.prompt([
