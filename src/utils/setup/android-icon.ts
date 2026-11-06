@@ -29,7 +29,11 @@ function circleMask(size: number): Buffer {
   );
 }
 
-async function generateLegacyIcons(sourceFile: string, mipmapDir: string, size: number) {
+async function generateLegacyIcons(
+  sourceFile: string,
+  mipmapDir: string,
+  size: number,
+) {
   const square = await sharp(sourceFile).resize(size, size).png().toBuffer();
   await sharp(square).toFile(path.join(mipmapDir, 'ic_launcher.png'));
   await sharp(square)
@@ -46,54 +50,145 @@ async function generateAdaptiveLayers(
   backgroundColor: { r: number; g: number; b: number },
 ) {
   await sharp({
-    create: { width: canvasSize, height: canvasSize, channels: 4, background: { ...backgroundColor, alpha: 1 } },
+    create: {
+      width: canvasSize,
+      height: canvasSize,
+      channels: 4,
+      background: { ...backgroundColor, alpha: 1 },
+    },
   })
     .png()
     .toFile(path.join(mipmapDir, 'ic_launcher_background.png'));
 
   const offset = Math.round((canvasSize - safeZoneSize) / 2);
-  const foreground = await sharp(sourceFile).resize(safeZoneSize, safeZoneSize).toBuffer();
+  const foreground = await sharp(sourceFile)
+    .resize(safeZoneSize, safeZoneSize)
+    .toBuffer();
   await sharp({
-    create: { width: canvasSize, height: canvasSize, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    create: {
+      width: canvasSize,
+      height: canvasSize,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
   })
     .composite([{ input: foreground, left: offset, top: offset }])
     .png()
     .toFile(path.join(mipmapDir, 'ic_launcher_foreground.png'));
 }
 
-// Notification icons must be a white silhouette on transparent. If the source
-// has an alpha channel we use it directly (correct shape); otherwise we fall
-// back to a luminance threshold, which assumes a dark mark on a light background.
-async function buildSilhouetteMask(sourceFile: string, size: number): Promise<Buffer> {
-  const meta = await sharp(sourceFile).metadata();
-  if (meta.hasAlpha) {
-    return sharp(sourceFile).resize(size, size).ensureAlpha().png().toBuffer();
+const NOTIFICATION_ICON_NAME = 'ic_stat_notification';
+// Status bar icons render as the alpha shape only. Keep a 2dp-in-24dp margin around the mark.
+const NOTIFICATION_MARK_RATIO = 20 / 24;
+// A pixel counts as mark when it differs from the background by this much (0-255).
+const BACKGROUND_DIFF_FULL_ALPHA = 90;
+
+// Alpha mask of the logo mark, cropped to its bounding box. Uses the source alpha when the
+// source has transparency. Otherwise (opaque square icon) the mark is whatever differs from
+// the corner background color; using the opaque alpha would give a solid square.
+async function extractMark(
+  sourceFile: string,
+): Promise<{ data: Buffer; width: number; height: number }> {
+  const { data, info } = await sharp(sourceFile)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width, height } = info;
+  const pixelCount = width * height;
+  const alpha = Buffer.alloc(pixelCount);
+  let opaque = true;
+  for (let i = 0; i < pixelCount; i++) {
+    alpha[i] = data[i * 4 + 3];
+    if (alpha[i] !== 255) opaque = false;
   }
-  const alphaChannel = await sharp(sourceFile)
-    .resize(size, size)
-    .greyscale()
-    .negate()
-    .threshold(128)
-    .toBuffer();
-  const rgb = await sharp({
-    create: { width: size, height: size, channels: 3, background: { r: 255, g: 255, b: 255 } },
-  })
-    .png()
-    .toBuffer();
-  return sharp(rgb).joinChannel(alphaChannel).png().toBuffer();
+  const mask = opaque ? Buffer.alloc(pixelCount) : alpha;
+  if (opaque) {
+    const [bgR, bgG, bgB] = data;
+    for (let i = 0; i < pixelCount; i++) {
+      const diff = Math.max(
+        Math.abs(data[i * 4] - bgR),
+        Math.abs(data[i * 4 + 1] - bgG),
+        Math.abs(data[i * 4 + 2] - bgB),
+      );
+      mask[i] = Math.min(
+        255,
+        Math.round((diff * 255) / BACKGROUND_DIFF_FULL_ALPHA),
+      );
+    }
+  }
+
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (mask[y * width + x] > 16) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  if (maxX < 0)
+    throw new Error(
+      `No logo mark found in ${sourceFile} for the notification icon`,
+    );
+
+  const markWidth = maxX - minX + 1;
+  const markHeight = maxY - minY + 1;
+  const cropped = Buffer.alloc(markWidth * markHeight);
+  for (let y = 0; y < markHeight; y++) {
+    mask.copy(
+      cropped,
+      y * markWidth,
+      (minY + y) * width + minX,
+      (minY + y) * width + minX + markWidth,
+    );
+  }
+  return { data: cropped, width: markWidth, height: markHeight };
 }
 
-async function generateNotificationIcon(sourceFile: string, drawableDir: string, size: number) {
-  const mask = await buildSilhouetteMask(sourceFile, size);
+async function generateNotificationIcon(
+  mark: { data: Buffer; width: number; height: number },
+  drawableDir: string,
+  size: number,
+) {
+  const inner = Math.round(size * NOTIFICATION_MARK_RATIO);
+  const { data, info } = await sharp(mark.data, {
+    raw: { width: mark.width, height: mark.height, channels: 1 },
+  })
+    .resize(inner, inner, { fit: 'inside' })
+    .toBuffer({ resolveWithObject: true });
+  const left = Math.floor((size - info.width) / 2);
+  const top = Math.floor((size - info.height) / 2);
+  const alpha = await sharp(data, {
+    raw: { width: info.width, height: info.height, channels: info.channels },
+  })
+    .extend({
+      top,
+      bottom: size - info.height - top,
+      left,
+      right: size - info.width - left,
+      background: { r: 0, g: 0, b: 0 },
+    })
+    .png()
+    .toBuffer();
   const white = await sharp({
-    create: { width: size, height: size, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
+    create: {
+      width: size,
+      height: size,
+      channels: 3,
+      background: { r: 255, g: 255, b: 255 },
+    },
   })
     .png()
     .toBuffer();
   await sharp(white)
-    .composite([{ input: mask, blend: 'dest-in' }])
+    .joinChannel(alpha)
     .png()
-    .toFile(path.join(drawableDir, 'ic_notification.png'));
+    .toFile(path.join(drawableDir, `${NOTIFICATION_ICON_NAME}.png`));
 }
 
 export async function generateAndroidIcons({
@@ -105,10 +200,19 @@ export async function generateAndroidIcons({
   androidAssetFolder: string;
   backgroundColor?: { r: number; g: number; b: number };
 }): Promise<void> {
+  const notificationMark = await extractMark(sourceFile);
   const anydpiDir = path.join(androidAssetFolder, 'mipmap-anydpi-v26');
   ensureDir(anydpiDir);
-  fs.writeFileSync(path.join(anydpiDir, 'ic_launcher.xml'), ADAPTIVE_ICON_XML, 'utf-8');
-  fs.writeFileSync(path.join(anydpiDir, 'ic_launcher_round.xml'), ADAPTIVE_ICON_XML, 'utf-8');
+  fs.writeFileSync(
+    path.join(anydpiDir, 'ic_launcher.xml'),
+    ADAPTIVE_ICON_XML,
+    'utf-8',
+  );
+  fs.writeFileSync(
+    path.join(anydpiDir, 'ic_launcher_round.xml'),
+    ADAPTIVE_ICON_XML,
+    'utf-8',
+  );
 
   for (const { folder, scale } of DENSITIES) {
     const mipmapDir = path.join(androidAssetFolder, `mipmap-${folder}`);
@@ -116,7 +220,11 @@ export async function generateAndroidIcons({
     ensureDir(mipmapDir);
     ensureDir(drawableDir);
 
-    await generateLegacyIcons(sourceFile, mipmapDir, Math.round(LEGACY_BASE_SIZE * scale));
+    await generateLegacyIcons(
+      sourceFile,
+      mipmapDir,
+      Math.round(LEGACY_BASE_SIZE * scale),
+    );
     await generateAdaptiveLayers(
       sourceFile,
       mipmapDir,
@@ -124,11 +232,14 @@ export async function generateAndroidIcons({
       Math.round(ADAPTIVE_SAFE_ZONE_BASE_SIZE * scale),
       backgroundColor,
     );
-    await generateNotificationIcon(sourceFile, drawableDir, Math.round(NOTIFICATION_BASE_SIZE * scale));
+    await generateNotificationIcon(
+      notificationMark,
+      drawableDir,
+      Math.round(NOTIFICATION_BASE_SIZE * scale),
+    );
   }
 
-  console.log(`Generated Android launcher + adaptive + notification icons in ${androidAssetFolder}`);
   console.log(
-    'Note: reference "ic_notification" from AndroidManifest.xml / push SDK config manually if not already wired.',
+    `Generated Android launcher + adaptive + notification icons in ${androidAssetFolder}`,
   );
 }
