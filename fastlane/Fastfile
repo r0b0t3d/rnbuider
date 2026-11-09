@@ -1,6 +1,31 @@
 require_relative "./version.rb"
 require 'json'
 require "fileutils"
+require "tmpdir"
+
+# Match raises "certificate 'ID.cer' is not valid" when the stored cert is expired.
+# Remove that cert and every profile (all are bound to it) from the match repo branch,
+# then rerun match with write access so it creates a new cert and profiles.
+def match_with_renewal(params)
+  match(params)
+rescue FastlaneCore::Interface::FastlaneError => ex
+  cert_id = ex.message[/'([^']+)\.cer' is not valid, please check end date/, 1]
+  raise unless cert_id
+
+  UI.important("Certificate #{cert_id} expired. Removing it from #{params[:git_branch]} and regenerating.")
+  branch = params[:git_branch]
+  Dir.mktmpdir do |dir|
+    sh("git", "clone", "--depth", "1", "--branch", branch, params[:git_url], dir, log: false)
+    Dir.chdir(dir) do
+      FileUtils.rm_f(Dir["certs/distribution/#{cert_id}.*"])
+      FileUtils.rm_rf(Dir["profiles/*"])
+      sh("git", "add", "-A")
+      sh("git", "commit", "-m", "Remove expired certificate #{cert_id}")
+      sh("git", "push", "origin", branch)
+    end
+  end
+  match(params.merge(readonly: false))
+end
 
 # googleauth 1.16.2 bugs in ImpersonatedServiceAccountCredentials:
 # 1. fetch_access_token! is private but google-api-ruby-client calls it directly.
@@ -258,7 +283,7 @@ platform :ios do
       end
     end
     # Provisioning profiles for main app + extensions
-    match(
+    match_with_renewal(
       app_identifier: app_identifier,
       type: match_type,
       username: ENV['APPLE_ID'],
@@ -899,7 +924,7 @@ lane :match_check do |options|
   begin
     puts "Running match check for #{ENV['CLIENT']}"
     
-    match(
+    match_with_renewal(
       app_identifier: ENV['APP_IDENTIFIER'],
       type: 'appstore',
       username: ENV['APPLE_ID'],
