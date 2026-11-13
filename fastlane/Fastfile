@@ -125,6 +125,16 @@ platform :ios do
     Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] = build.app_version
   end
 
+  # App Store Connect rejects this request while a program license agreement is pending.
+  def ensure_agreements_accepted
+    if @api_key
+      Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: @api_key)
+    else
+      Spaceship::ConnectAPI.login(ENV['APPLE_ID'], use_portal: false, use_tunes: true, tunes_team_id: ENV['ITC_TEAM_ID'])
+    end
+    Spaceship::ConnectAPI::App.find(ENV['APP_IDENTIFIER'])
+  end
+
   def get_ios_version(increment = "patch", local_version = nil)
     puts "Get iOS version: Increment #{increment}"
     begin
@@ -923,7 +933,9 @@ end
 lane :match_check do |options|
   begin
     puts "Running match check for #{ENV['CLIENT']}"
-    
+
+    ensure_agreements_accepted
+
     match_with_renewal(
       app_identifier: ENV['APP_IDENTIFIER'],
       type: 'appstore',
