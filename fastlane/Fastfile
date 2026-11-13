@@ -125,18 +125,25 @@ platform :ios do
     Actions.lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION] = build.app_version
   end
 
-  # App Store Connect rejects this request while a program license agreement is pending.
+  # Reading an app succeeds while a license agreement is pending, so that call proves nothing.
+  # With an Apple ID session, ask App Store Connect for its contract messages (the web banner).
+  # With an API key, no session exists: App Store Connect raises ProgramLicenseAgreementUpdated
+  # on endpoints that need an in-effect agreement.
   def ensure_agreements_accepted
     if @api_key
       UI.message("Agreement check: using API key")
       Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(hash: @api_key)
+      Spaceship::ConnectAPI::App.find(ENV['APP_IDENTIFIER'])
     else
       UI.message("Agreement check: logging in with Apple ID #{ENV['APPLE_ID']}, team #{ENV['ITC_TEAM_ID']}")
       Spaceship::ConnectAPI.login(ENV['APPLE_ID'], use_portal: false, use_tunes: true, tunes_team_id: ENV['ITC_TEAM_ID'])
+      messages = Spaceship::ConnectAPI.client.tunes_client.fetch_program_license_agreement_messages
+      UI.message("Agreement check: #{messages.length} contract message(s)")
+      unless messages.empty?
+        raise Spaceship::ProgramLicenseAgreementUpdated,
+              "#{messages.join(' ')} Please log in to Apple Developer or App Store Connect to accept the updated agreement."
+      end
     end
-    UI.message("Agreement check: requesting app #{ENV['APP_IDENTIFIER']}")
-    app = Spaceship::ConnectAPI::App.find(ENV['APP_IDENTIFIER'])
-    UI.message("Agreement check: app #{app ? "found (#{app.id})" : 'not found'}")
     UI.success("Agreement check passed")
   rescue => ex
     UI.error("Agreement check failed: #{ex.class}: #{ex.message}")
